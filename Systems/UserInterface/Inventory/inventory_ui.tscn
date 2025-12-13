@@ -1,0 +1,71 @@
+[gd_scene load_steps=3 format=3 uid="uid://bl5kby8ys2uft"]
+
+[ext_resource type="Script" uid="uid://dhchpcnrapibx" path="res://Systems/UserInterface/Inventory/inventory_ui.gd" id="1_sp84r"]
+[ext_resource type="Script" uid="uid://blpcw14f670oa" path="res://Systems/UserInterface/Hover/inventory_slot_tooltip.gd" id="2_o2au4"]
+
+[node name="InventoryUi" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+mouse_filter = 1
+script = ExtResource("1_sp84r")
+
+[node name="InventoryPanel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 479.0
+offset_right = 46.0
+offset_bottom = 519.0
+mouse_filter = 1
+
+[node name="GridContainer" type="GridContainer" parent="InventoryPanel"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="WeightLabel" type="Label" parent="InventoryPanel"]
+layout_mode = 0
+offset_top = -26.0
+offset_right = 132.0
+offset_bottom = 8.0
+text = "Weight: 0.0 / 10.0"
+horizontal_alignment = 2
+
+[node name="GoldLabel" type="Label" parent="InventoryPanel"]
+layout_mode = 1
+offset_left = 203.0
+offset_top = -26.0
+offset_right = 335.0
+offset_bottom = 8.0
+theme_override_colors/font_color = Color(1, 0.8666667, 0.33333334, 1)
+text = "Gold: 0"
+
+[node name="StatsPanel" type="Panel" parent="InventoryPanel"]
+layout_mode = 0
+offset_top = -474.0
+offset_right = 268.0
+offset_bottom = -26.0
+
+[node name="EquipmentPanel" type="Panel" parent="InventoryPanel"]
+layout_mode = 0
+offset_left = 274.0
+offset_top = -474.0
+offset_right = 540.0
+offset_bottom = -26.0
+
+[node name="SlotTooltip" type="Control" parent="."]
+anchors_preset = 0
+offset_left = 6.0
+offset_top = 479.0
+offset_right = 46.0
+offset_bottom = 519.0
+mouse_filter = 1
+script = ExtResource("2_o2au4")
+
+[node name="TooltipPanel" type="PanelContainer" parent="SlotTooltip"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="ItemLabel" type="Label" parent="SlotTooltip/TooltipPanel"]
+layout_mode = 2
+text = "Item Name"

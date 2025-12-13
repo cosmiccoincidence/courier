@@ -1,0 +1,164 @@
+[gd_scene load_steps=4 format=3 uid="uid://docvfl8b2fe2f"]
+
+[ext_resource type="Script" uid="uid://bxt34c8k0klcm" path="res://Systems/UserInterface/HUD/hud.gd" id="1_uygrk"]
+[ext_resource type="Script" uid="uid://nyeg3tyuip6b" path="res://Systems/UserInterface/Hover/hover_tooltip_ui.gd" id="2_fsrcy"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uygrk"]
+content_margin_left = 20.0
+content_margin_top = 20.0
+content_margin_right = 20.0
+content_margin_bottom = 20.0
+bg_color = Color(0, 0, 0, 0.58431375)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_uygrk")
+
+[node name="StatBars" type="VBoxContainer" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 25.0
+offset_top = -89.0
+offset_right = 297.0
+offset_bottom = -25.0
+grow_vertical = 0
+theme_override_constants/separation = 10
+
+[node name="Health" type="HBoxContainer" parent="StatBars"]
+layout_mode = 2
+
+[node name="HealthBar" type="ProgressBar" parent="StatBars/Health"]
+modulate = Color(1, 0, 0, 1)
+custom_minimum_size = Vector2(300, 25)
+layout_mode = 2
+value = 100.0
+rounded = true
+
+[node name="HealthLabel" type="Label" parent="StatBars/Health/HealthBar"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+
+[node name="Stamina" type="HBoxContainer" parent="StatBars"]
+layout_mode = 2
+
+[node name="StaminaBar" type="ProgressBar" parent="StatBars/Stamina"]
+modulate = Color(0, 1, 0, 1)
+custom_minimum_size = Vector2(300, 25)
+layout_mode = 2
+value = 100.0
+rounded = true
+
+[node name="StaminaLabel" type="Label" parent="StatBars/Stamina/StaminaBar"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+
+[node name="TimeLabel" type="Label" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -1895.0
+offset_top = 947.0
+offset_right = -1779.0
+offset_bottom = 977.0
+grow_horizontal = 0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/line_spacing = 0
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 20
+text = "Day 1, 10:30"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EncumberedLabel" type="Label" parent="."]
+visible = false
+offset_left = 25.0
+offset_top = 916.0
+offset_right = 65.0
+offset_bottom = 939.0
+theme_override_colors/font_color = Color(1, 0.24313726, 0.24313726, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+text = "ENCUMBERED!"
+
+[node name="DeathLabel" type="Label" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -36.0
+offset_top = -11.5
+offset_right = 36.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 80
+theme_override_styles/normal = SubResource("StyleBoxFlat_uygrk")
+text = "You died!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EndingLabel" type="Label" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -199.0
+offset_top = -75.0
+offset_right = 199.0
+offset_bottom = 75.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 80
+theme_override_styles/normal = SubResource("StyleBoxFlat_uygrk")
+text = "You win!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TooltipUI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("2_fsrcy")
+
+[node name="TooltipPanel" type="PanelContainer" parent="TooltipUI"]
+custom_minimum_size = Vector2(50, 25)
+layout_mode = 1
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TooltipUI/TooltipPanel"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="TooltipUI/TooltipPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Name"
+horizontal_alignment = 1
+
+[node name="HPLabel" type="Label" parent="TooltipUI/TooltipPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3137255, 0.30980393, 1)
+theme_override_font_sizes/font_size = 16
+text = "HP: 10/10"
+horizontal_alignment = 1

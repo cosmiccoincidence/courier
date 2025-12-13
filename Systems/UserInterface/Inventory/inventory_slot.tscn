@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3 uid="uid://ckb2rdiiv02p8"]
+
+[ext_resource type="Script" uid="uid://dvbegw16igmwc" path="res://Systems/UserInterface/Inventory/inventory_slot.gd" id="1_xkoja"]
+
+[node name="InventorySlot" type="Panel"]
+script = ExtResource("1_xkoja")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_top = 28.0
+offset_right = 40.0
+offset_bottom = 51.0
