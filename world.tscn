@@ -1,0 +1,92 @@
+[gd_scene load_steps=16 format=3 uid="uid://b0cskr8viicis"]
+
+[ext_resource type="Script" uid="uid://w2sxg15vuu1m" path="res://world.gd" id="1_tlwt5"]
+[ext_resource type="PackedScene" uid="uid://ca1cn4h542dlw" path="res://Characters/Player/player.tscn" id="4_aqk2v"]
+[ext_resource type="PackedScene" uid="uid://brp71x65nf6h1" path="res://Maps/map_1a.tscn" id="4_gbfbk"]
+[ext_resource type="PackedScene" uid="uid://docvfl8b2fe2f" path="res://Systems/UserInterface/HUD/hud.tscn" id="4_ioo17"]
+[ext_resource type="PackedScene" uid="uid://bsxhkntrbcu7d" path="res://Maps/start.tscn" id="6_2o6r5"]
+[ext_resource type="PackedScene" uid="uid://bl5kby8ys2uft" path="res://Systems/UserInterface/Inventory/inventory_ui.tscn" id="6_dwbse"]
+[ext_resource type="Script" uid="uid://bhftitjhl280t" path="res://Systems/game_manager.gd" id="7_pkg7o"]
+[ext_resource type="PackedScene" uid="uid://bdatgtymbk87c" path="res://Maps/map_1b.tscn" id="8_ic0uy"]
+[ext_resource type="PackedScene" uid="uid://de1e8ihkli4jp" path="res://Maps/town_1.tscn" id="9_ioo17"]
+[ext_resource type="PackedScene" uid="uid://dkyaty4hl4h2d" path="res://Maps/map_1c.tscn" id="9_k3n1d"]
+[ext_resource type="PackedScene" uid="uid://bno3h4db5oos6" path="res://Maps/end.tscn" id="11_ic0uy"]
+[ext_resource type="Script" uid="uid://burgtmb4jmm5q" path="res://Systems/UserInterface/black_screen.gd" id="12_70uel"]
+[ext_resource type="Script" uid="uid://6ghdey4sqjxb" path="res://Systems/FOV/vision_cone.gd" id="13_2o6r5"]
+[ext_resource type="Script" uid="uid://dj4d8icofodij" path="res://Systems/FOV/entity_culling.gd" id="14_70uel"]
+[ext_resource type="Script" uid="uid://d3si6e1vt6vqs" path="res://Systems/FOV/fog_of_war.gd" id="15_hiqwa"]
+
+[node name="World" type="Node3D" groups=["world"]]
+script = ExtResource("1_tlwt5")
+
+[node name="GameManager" type="Node" parent="."]
+script = ExtResource("7_pkg7o")
+starting_map = ExtResource("6_2o6r5")
+ending_map = ExtResource("11_ic0uy")
+level_1a = ExtResource("4_gbfbk")
+level_1b = ExtResource("8_ic0uy")
+level_1c = ExtResource("9_k3n1d")
+town_1 = ExtResource("9_ioo17")
+
+[node name="Player" parent="." instance=ExtResource("4_aqk2v")]
+
+[node name="PlayerSpawn" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.251314, 0)
+
+[node name="SunMoonOrigin" type="Node3D" parent="."]
+transform = Transform3D(0.3826836, 0.92387944, 0, -0.92387944, 0.3826836, 0, 0, 0, 1, 0, 0, 10)
+
+[node name="Sun" type="DirectionalLight3D" parent="SunMoonOrigin"]
+transform = Transform3D(1, 0, 0, 0, 0.25881907, 0.9659259, 0, -0.9659259, 0.25881907, 0, 3, 0)
+light_color = Color(1, 1, 0.78431374, 1)
+light_energy = 1.5
+light_specular = 0.5
+shadow_enabled = true
+shadow_opacity = 0.9
+
+[node name="Moon" type="DirectionalLight3D" parent="SunMoonOrigin"]
+transform = Transform3D(1, 0, 0, 0, 0.25881907, -0.9659258, 0, 0.9659258, 0.25881907, 0, -3, 0)
+visible = false
+light_color = Color(0.7058824, 0.7058824, 1, 1)
+light_energy = 0.5
+light_specular = 0.5
+shadow_enabled = true
+shadow_opacity = 0.7
+shadow_blur = 2.0
+
+[node name="BlackScreen" type="CanvasLayer" parent="."]
+
+[node name="FadeRect" type="ColorRect" parent="BlackScreen"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+script = ExtResource("12_70uel")
+
+[node name="UI" type="Node3D" parent="."]
+
+[node name="HUD" parent="UI" instance=ExtResource("4_ioo17")]
+
+[node name="InventoryUi" parent="UI" instance=ExtResource("6_dwbse")]
+
+[node name="MapContainer" type="Node3D" parent="."]
+
+[node name="FOV" type="Node3D" parent="."]
+
+[node name="FogOfWar" type="Node3D" parent="FOV" node_paths=PackedStringArray("player", "map_container")]
+script = ExtResource("15_hiqwa")
+player = NodePath("../../Player")
+map_container = NodePath("../../MapContainer")
+
+[node name="VisionCone" type="Node3D" parent="FOV" node_paths=PackedStringArray("player", "map_container")]
+script = ExtResource("13_2o6r5")
+player = NodePath("../../Player")
+map_container = NodePath("../../MapContainer")
+
+[node name="EntityCulling" type="Node3D" parent="FOV" node_paths=PackedStringArray("player", "vision_cone", "map_container")]
+script = ExtResource("14_70uel")
+player = NodePath("../../Player")
+vision_cone = NodePath("../VisionCone")
+map_container = NodePath("../../MapContainer")
