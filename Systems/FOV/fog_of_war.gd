@@ -193,7 +193,7 @@ func _process(delta):
 	if Input.is_physical_key_pressed(KEY_COMMA):
 		if not debug_key_pressed.get("comma", false):
 			debug_key_pressed["comma"] = true
-			debug_reveal_all()
+			reveal_all()
 	else:
 		debug_key_pressed["comma"] = false
 	
@@ -398,8 +398,8 @@ func is_wall_tile(tile_id: int) -> bool:
 
 ## DEBUG FUNCTIONS
 
-func debug_reveal_all():
-	"""Debug: Reveal entire map - only tiles with actual geometry (comma key)"""
+func reveal_all():
+	"""Reveal entire map - only tiles with actual geometry (comma key)"""
 	if not map_generator:
 		return
 	
