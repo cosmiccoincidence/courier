@@ -27,7 +27,7 @@ const ENCUMBERED_ROTATION_MULT: float = 0.75  # 75% rotation speed
 @export var zoom_speed := 10.0
 @export var zoom_smooth := 8.0
 @export var max_health := 10
-@export var max_stamina := 10.0
+@export var max_stamina := 10
 @export var crit_chance := 0.1      # 10%
 @export var crit_multiplier: float = 2.0  # x2 damage
 

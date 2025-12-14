@@ -5,6 +5,7 @@ extends Control
 @onready var weight_label: Label = $InventoryPanel/WeightLabel
 @onready var gold_label: Label = $InventoryPanel/GoldLabel
 @onready var slot_tooltip: Control = $SlotTooltip  # Tooltip manager
+@onready var stats_panel: Panel = $EquipmentPanel/StatsPanel
 
 # Hardcoded path since export wasn't working
 const SLOT_SCENE_PATH = "res://Systems/UserInterface/Inventory/inventory_slot.tscn"
@@ -12,6 +13,9 @@ const SLOT_SCENE_PATH = "res://Systems/UserInterface/Inventory/inventory_slot.ts
 var slot_size: int = 64  # Size of each slot in pixels
 var columns: int = 0  # Will be calculated from Inventory.max_slots
 var rows: int = 5  # Fixed number of rows
+
+# Player reference for stats
+var player_ref: CharacterBody3D = null
 
 # Equipment grid configuration (4 columns x 5 rows with gaps)
 var equipment_columns: int = 4
@@ -161,6 +165,77 @@ func _ready():
 	
 	# Start hidden
 	hide()
+	
+	# Get player reference for stats
+	_setup_player_reference()
+
+func _setup_player_reference():
+	"""Get reference to player and setup stats display"""
+	# Try to find player in the scene
+	player_ref = get_tree().get_first_node_in_group("player")
+	if not player_ref:
+		push_warning("Player not found - stats panel will not update")
+		return
+	
+	# Setup stats panel if it exists
+	if stats_panel:
+		_setup_stats_panel()
+		_update_stats_display()
+
+func _setup_stats_panel():
+	"""Create labels in the stats panel"""
+	if not stats_panel:
+		return
+	
+	# Clear any existing children
+	for child in stats_panel.get_children():
+		child.queue_free()
+	
+	# Create VBoxContainer to stack labels vertically
+	var vbox = VBoxContainer.new()
+	vbox.name = "StatsVBox"
+	stats_panel.add_child(vbox)
+	
+	# Create title label
+	var title = Label.new()
+	title.text = "Player Stats"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 16)
+	title.add_theme_color_override("font_color", Color.GOLD)
+	vbox.add_child(title)
+	
+	# Create max health label
+	var health_label = Label.new()
+	health_label.name = "MaxHealthLabel"
+	health_label.text = "Max Health: 0"
+	health_label.add_theme_font_size_override("font_size", 14)
+	vbox.add_child(health_label)
+	
+	# Create max stamina label
+	var stamina_label = Label.new()
+	stamina_label.name = "MaxStaminaLabel"
+	stamina_label.text = "Max Stamina: 0"
+	stamina_label.add_theme_font_size_override("font_size", 14)
+	vbox.add_child(stamina_label)
+
+func _update_stats_display():
+	"""Update the stats panel with current player stats"""
+	if not stats_panel or not player_ref:
+		return
+	
+	var vbox = stats_panel.get_node_or_null("StatsVBox")
+	if not vbox:
+		return
+	
+	# Update max health
+	var health_label = vbox.get_node_or_null("MaxHealthLabel")
+	if health_label:
+		health_label.text = "Max Health: %d" % player_ref.max_health
+	
+	# Update max stamina (no decimal)
+	var stamina_label = vbox.get_node_or_null("MaxStaminaLabel")
+	if stamina_label:
+		stamina_label.text = "Max Stamina: %d" % int(player_ref.max_stamina)
 
 func _setup_equipment_grid():
 	"""Set up the equipment grid with gaps"""
