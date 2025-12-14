@@ -5,6 +5,11 @@ var slot_index: int = -1
 var item_data = null
 var tooltip_manager: Control = null  # Reference to tooltip manager
 
+# Drag and drop state (shared across all slots)
+static var dragged_item_data = null  # Item being dragged
+static var dragged_from_slot: int = -1  # Which slot it came from
+static var drag_preview: Control = null  # Visual preview following mouse
+
 @onready var icon: TextureRect = $TextureRect
 @onready var label: Label = $Label
 
@@ -58,6 +63,10 @@ func _process(_delta):
 	if mouse_filter != Control.MOUSE_FILTER_STOP:
 		mouse_filter = Control.MOUSE_FILTER_STOP
 	
+	# Update drag preview position if dragging
+	if drag_preview and is_instance_valid(drag_preview):
+		drag_preview.global_position = get_viewport().get_mouse_position() - drag_preview.size / 2
+	
 	# WORKAROUND: Since mouse_entered/exited signals aren't working,
 	# manually check if mouse is over this slot
 	if visible and is_visible_in_tree():
@@ -66,14 +75,15 @@ func _process(_delta):
 		var mouse_over = rect.has_point(mouse_pos)
 		
 		# Only call tooltip functions when hover state CHANGES
-		if mouse_over and item_data and tooltip_manager:
-			# Mouse is over slot with item - show tooltip only if not already showing
+		# BUT disable tooltips while dragging an item
+		if mouse_over and item_data and tooltip_manager and dragged_item_data == null:
+			# Mouse is over slot with item - show tooltip only if not already showing and not dragging
 			if not get_meta("tooltip_showing", false):
 				if tooltip_manager.has_method("show_tooltip"):
 					tooltip_manager.show_tooltip(self, item_data)
 					set_meta("tooltip_showing", true)
 		else:
-			# Mouse not over or no item - hide tooltip only if currently showing
+			# Mouse not over or no item or dragging - hide tooltip only if currently showing
 			if get_meta("tooltip_showing", false):
 				if tooltip_manager and tooltip_manager.has_method("hide_tooltip"):
 					tooltip_manager.hide_tooltip()
@@ -106,17 +116,108 @@ func clear_item():
 	icon.hide()
 	label.hide()
 
-# Use _input instead of _gui_input to test
 func _input(event):
 	if not visible or not is_visible_in_tree():
 		return
+	
+	# Check if mouse is over this slot
+	var local_pos = get_local_mouse_position()
+	var rect = Rect2(Vector2.ZERO, size)
+	var mouse_over = rect.has_point(local_pos)
+	
+	if not mouse_over:
+		return
+	
+	# Handle mouse button events
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				# Left click pressed - start dragging if there's an item
+				if item_data:
+					_start_drag()
+					get_viewport().set_input_as_handled()
+			else:
+				# Left click released - drop item (even on empty slots)
+				if dragged_item_data != null:
+					_drop_on_slot()
+					get_viewport().set_input_as_handled()
 		
-	if event is InputEventMouseButton and event.pressed:
-		# Check if mouse is over this slot
-		var local_pos = get_local_mouse_position()
-		var rect = Rect2(Vector2.ZERO, size)
-		
-		if rect.has_point(local_pos):
-			if event.button_index == MOUSE_BUTTON_RIGHT and item_data:
+		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			# Right click - drop item in world (only if this slot has an item)
+			if item_data:
 				Inventory.drop_item_at_slot(slot_index)
 				get_viewport().set_input_as_handled()
+
+func _start_drag():
+	"""Start dragging this slot's item"""
+	if not item_data:
+		return
+	
+	# Store drag state
+	dragged_item_data = item_data
+	dragged_from_slot = slot_index
+	
+	# Create visual preview
+	_create_drag_preview()
+	
+	# Make this slot semi-transparent to show it's being dragged
+	modulate = Color(1, 1, 1, 0.5)
+
+func _drop_on_slot():
+	"""Drop the dragged item on this slot"""
+	if dragged_item_data == null:
+		return
+	
+	# Restore original slot's appearance
+	var original_slot = _get_slot_by_index(dragged_from_slot)
+	if original_slot:
+		original_slot.modulate = Color(1, 1, 1, 1)
+	
+	# Swap items between slots
+	if dragged_from_slot != slot_index:
+		Inventory.swap_items(dragged_from_slot, slot_index)
+	
+	# Clean up drag state
+	_end_drag()
+
+func _create_drag_preview():
+	"""Create a visual preview of the dragged item"""
+	if drag_preview:
+		drag_preview.queue_free()
+	
+	# Create preview control
+	drag_preview = Control.new()
+	drag_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	drag_preview.z_index = 100  # Draw on top
+	get_tree().root.add_child(drag_preview)
+	
+	# Add icon
+	var preview_icon = TextureRect.new()
+	preview_icon.texture = item_data.icon
+	preview_icon.custom_minimum_size = Vector2(48, 48)
+	preview_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	preview_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	preview_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	drag_preview.add_child(preview_icon)
+	
+	# Position at mouse
+	drag_preview.global_position = get_viewport().get_mouse_position() - Vector2(24, 24)
+
+static func _end_drag():
+	"""Clean up drag state"""
+	dragged_item_data = null
+	dragged_from_slot = -1
+	
+	if drag_preview:
+		drag_preview.queue_free()
+		drag_preview = null
+
+static func _get_slot_by_index(index: int) -> Panel:
+	"""Helper to get a slot by its index"""
+	# This assumes slots are children of a GridContainer
+	var slots = []
+	# Find all inventory slot instances
+	for node in Engine.get_main_loop().root.get_tree().get_nodes_in_group("inventory_slots"):
+		if node.slot_index == index:
+			return node
+	return null
