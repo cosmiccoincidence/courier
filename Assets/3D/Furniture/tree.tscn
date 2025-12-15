@@ -1,0 +1,56 @@
+[gd_scene load_steps=6 format=4 uid="uid://bmtlt0x42s60v"]
+
+[ext_resource type="Script" uid="uid://ceuuk36q355nf" path="res://Assets/3D/Furniture/door.gd" id="1_yklbf"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tbb2s"]
+resource_name = "DarkGreen"
+cull_mode = 2
+albedo_color = Color(0.09321205, 0.48733225, 0.15837574, 1)
+roughness = 0.5
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_h8dym"]
+_surfaces = [{
+"aabb": AABB(-0.3846604, 0, -0.3846604, 0.7693208, 0.7693208, 0.7693208),
+"format": 34896613377,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAAADAAEABAACAAEAAwAEAAEABQAAAAIAAwAAAAUABAAGAAIABQACAAYAAwAHAAQAAwAFAAcABwAGAAQABwAFAAYA"),
+"name": "DarkGreen",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 8,
+"vertex_data": PackedByteArray("AAAAAP//AACZVP//mVQAAJlU//9lqwAAAAAAAAAAAABlq///mVQAAP//AAD//wAAZav//2WrAAD//wAAAAAAAA==")
+}]
+blend_shape_mode = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_jhqgj"]
+resource_name = "Tile_Cube_006"
+_surfaces = [{
+"aabb": AABB(-0.3846604, 0, -0.3846604, 0.7693208, 0.7693208, 0.7693208),
+"attribute_data": PackedByteArray("/1////+f/7//n////1//v/9f/7//n/9//5//v/9f/3//X/9//5//P/+f/3//X/8//1//P/+fAAD/n/8//18AAP8f/3//X/8//1//f/8f/z//n/9//9//P//f/3//n/8/"),
+"format": 34896613399,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAAADAAEABAAFAAYABAAHAAUACAAJAAoACAALAAkADAANAA4ADAAPAA0AEAARABIAEAATABEAFAAVABYAFAAXABUA"),
+"material": SubResource("StandardMaterial3D_tbb2s"),
+"name": "DarkGreen",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("AAAAAP//tMqZVP//mVS7zplU//9lq/nUAAAAAAAAisgAAAAAAACx92Wr//+ZVLf2mVT//5lUh/X//wAAAABS+P//AAAAAKHYZav//2Wrxt1lq///mVQ65f//AAD//6/V//8AAP//0bmZVP//ZavrwWWr//9lqyTNAAAAAP//ALUAAAAAAAD/v///AAD///+///8AAAAA/78AAAAA////v2Wr//+ZVP//mVT//2Wr//+ZVP//mVT//2Wr//9lq///N9S/zeHaZ8t642DI+c89z3e1McDyu526F8W7spaxiMPYM7cecC5cIpQn+yZUN14cyPBEEl7wRw/j79MLEfFUFAAA/38AAP9/AAD/fwAA/3//f/+//3//v/9//7//f/+/")
+}]
+blend_shape_mode = 0
+shadow_mesh = SubResource("ArrayMesh_h8dym")
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_yklbf"]
+points = PackedVector3Array(-0.13125323, 0.7667188, -0.13125323, 0.3676739, 0.05150673, 0.36767393, 0.31078184, 0.2236148, 0.31070977, 0.3846625, 0.00011333639, -0.38466254, -0.3846625, 0.00011333639, 0.38466254, -0.3846625, 0.00011333639, -0.38466254, 0.1312532, 0.7667188, 0.13125323, 0.1312532, 0.7667188, -0.13125323, -0.13125323, 0.7667188, 0.13125323, 0.3846625, 0.00011333639, 0.38466254)
+
+[node name="Tree" type="StaticBody3D"]
+script = ExtResource("1_yklbf")
+
+[node name="Tree" type="MeshInstance3D" parent="."]
+mesh = SubResource("ArrayMesh_jhqgj")
+skeleton = NodePath("")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("ConvexPolygonShape3D_yklbf")
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]

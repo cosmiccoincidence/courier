@@ -115,10 +115,10 @@ func create_fog_tiles():
 			revealed_tiles[tile_key] = false
 			created_count += 1
 	
-		if is_passive_mode:
-			# Wait a frame then reveal
-			await get_tree().process_frame
-			reveal_all()
+	if is_passive_mode:
+		# Wait a frame then reveal
+		await get_tree().process_frame
+		reveal_all()
 
 func create_tile_quad() -> Mesh:
 	var surface_tool = SurfaceTool.new()
@@ -342,6 +342,14 @@ func has_line_of_sight_to_wall(from: Vector3, to: Vector3) -> bool:
 		
 		# Check if blocked by a wall along the way
 		if is_wall_tile(check_tile_id):
+			# NEW: Check if this is a door tile with an open door
+			var door_floor_id = map_generator.get("door_floor_tile_id")
+			if door_floor_id != null and check_tile_id == door_floor_id:
+				if is_door_open_at_position(check_pos_3d):
+					# Door is open - don't block line of sight
+					current_dist += step_size
+					continue
+			
 			return false
 		
 		current_dist += step_size
@@ -367,11 +375,36 @@ func has_line_of_sight(from: Vector3, to: Vector3) -> bool:
 		
 		# Check if this is a wall
 		if is_wall_tile(check_tile_id):
+			# NEW: Check if this is a door tile with an open door
+			var door_floor_id = map_generator.get("door_floor_tile_id")
+			if door_floor_id != null and check_tile_id == door_floor_id:
+				if is_door_open_at_position(check_pos_3d):
+					# Door is open - don't block line of sight
+					current_dist += step_size
+					continue
+			
 			return false
 		
 		current_dist += step_size
 	
 	return true
+
+func is_door_open_at_position(world_pos: Vector3) -> bool:
+	"""Check if there's an open door at the given world position"""
+	# Get all doors in the scene
+	var doors = get_tree().get_nodes_in_group("door")
+	
+	# Check if any door is close to this position and is open
+	for door in doors:
+		if door is Door:  # Make sure it's actually a Door
+			var door_pos = door.global_position
+			var distance = Vector2(world_pos.x - door_pos.x, world_pos.z - door_pos.z).length()
+			
+			# If door is within 1 unit and is open (collision disabled)
+			if distance < 1.0 and door.is_open:
+				return true
+	
+	return false
 
 func is_wall_tile(tile_id: int) -> bool:
 	"""Check if a tile is a wall"""
@@ -382,7 +415,7 @@ func is_wall_tile(tile_id: int) -> bool:
 	var exterior_wall_id = map_generator.get("exterior_wall_tile_id")
 	var interior_wall_id = map_generator.get("interior_wall_tile_id") 
 	var interior_floor_id = map_generator.get("interior_floor_tile_id")
-	var door_floor_id = map_generator.get("door_tile_id")
+	var door_floor_id = map_generator.get("door_floor_tile_id")
 	var grass_id = map_generator.get("grass_tile_id")
 	var dirt_road_id = map_generator.get("dirt_road_tile_id")
 	var stone_road_id = map_generator.get("stone_road_tile_id")
@@ -395,12 +428,15 @@ func is_wall_tile(tile_id: int) -> bool:
 	if interior_wall_id != null and tile_id == interior_wall_id:
 		return true
 	
+	# NEW: Door tiles are treated as walls (will be checked separately for open state)
+	if door_floor_id != null and tile_id == door_floor_id:
+		return true
+	
 	# Check if walkable (not a wall)
 	var is_walkable = false
 	if interior_floor_id != null and tile_id == interior_floor_id:
 		is_walkable = true
-	if door_floor_id != null and tile_id == door_floor_id:
-		is_walkable = true
+	# Removed door_floor_id from here - doors are walls unless open
 	if grass_id != null and tile_id == grass_id:
 		is_walkable = true
 	if dirt_road_id != null and tile_id == dirt_road_id:
