@@ -10,6 +10,9 @@ var world_node: Node  # Parent node to add furniture to
 # Furniture configs (type -> FurnitureSpawnConfig)
 var furniture_configs: Dictionary = {}
 
+# Track spawned furniture for cleanup
+var spawned_furniture: Array = []
+
 # Settings (can be overridden per placement call)
 var default_spawn_chance: float = 0.5
 var default_min_distance_from_door: int = 2
@@ -17,7 +20,16 @@ var default_min_distance_from_door: int = 2
 func setup(generator: GridMap, world: Node):
 	map_generator = generator
 	world_node = world
+	spawned_furniture.clear()
 	print("[FurniturePlacer] Setup complete. World node: ", world_node.name if world_node else "NULL")
+
+func cleanup():
+	"""Remove all spawned furniture from the scene"""
+	print("[FurniturePlacer] Cleaning up ", spawned_furniture.size(), " furniture items")
+	for furniture in spawned_furniture:
+		if is_instance_valid(furniture) and furniture.get_parent():
+			furniture.queue_free()
+	spawned_furniture.clear()
 
 func register_furniture_config(config: FurnitureSpawnConfig):
 	"""Register a furniture spawn configuration"""
@@ -183,6 +195,9 @@ func spawn_furniture_with_rotation(grid_pos: Vector3i, scene: PackedScene, rotat
 		
 		# Add to world
 		world_node.add_child(furniture_instance)
+		
+		# Track for cleanup
+		spawned_furniture.append(furniture_instance)
 		
 		print("  [Furniture] Successfully placed ", type_name, " in scene tree")
 		print("  [Furniture] Final position: ", furniture_instance.global_position)

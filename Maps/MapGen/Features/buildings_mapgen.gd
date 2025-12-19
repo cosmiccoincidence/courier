@@ -105,6 +105,10 @@ func generate():
 	var num_buildings = randi_range(min_buildings, max_buildings)
 	print("Generating ", num_buildings, " buildings...")
 	
+	# Clear any existing furniture from previous generation
+	if furniture_placer:
+		furniture_placer.cleanup()
+	
 	placed_buildings.clear()
 	var buildings_created = 0
 	var max_attempts = 50
