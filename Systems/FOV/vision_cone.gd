@@ -355,12 +355,16 @@ func is_wall_tile(tile_id: int) -> bool:
 		if tile_id == wall_connector.x_triple_tile_id: return true
 		if tile_id == wall_connector.x_quad_tile_id: return true
 	
+	# Door tiles are walls (they block vision unless the door is open)
+	# The raycast function checks door state separately
+	if door_floor_id != null and tile_id == door_floor_id:
+		return true
+	
 	# Assume anything that's NOT floor/grass/road/path/entrance/exit is a wall
 	var is_walkable = false
 	if interior_floor_id != null and tile_id == interior_floor_id:
 		is_walkable = true
-	if door_floor_id != null and tile_id == door_floor_id:
-		is_walkable = true
+	# Removed door_floor_id from walkable - doors are walls unless open
 	if grass_id != null and tile_id == grass_id:
 		is_walkable = true
 	if dirt_road_id != null and tile_id == dirt_road_id:
