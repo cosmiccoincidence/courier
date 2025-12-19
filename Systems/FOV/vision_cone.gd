@@ -321,18 +321,39 @@ func is_wall_tile(tile_id: int) -> bool:
 	var exterior_wall_id = map_generator.get("exterior_wall_tile_id")
 	var interior_wall_id = map_generator.get("interior_wall_tile_id") 
 	var interior_floor_id = map_generator.get("interior_floor_tile_id")
-	var door_floor_id = map_generator.get("door_tile_id")
+	var door_floor_id = map_generator.get("door_floor_tile_id")
 	var grass_id = map_generator.get("grass_tile_id")
 	var dirt_road_id = map_generator.get("dirt_road_tile_id")
 	var stone_road_id = map_generator.get("stone_road_tile_id")
 	var entrance_id = map_generator.get("entrance_tile_id")
 	var exit_id = map_generator.get("exit_tile_id")
 	
+	# NEW: Get wall connector to check for all wall variations
+	var wall_connector = map_generator.get("interior_wall_connector")
+	
 	# Explicit wall check
 	if exterior_wall_id != null and tile_id == exterior_wall_id:
 		return true
 	if interior_wall_id != null and tile_id == interior_wall_id:
 		return true
+	
+	# NEW: Check if it's any of the wall variations
+	if wall_connector:
+		if tile_id == wall_connector.o_tile_id: return true
+		if tile_id == wall_connector.u_tile_id: return true
+		if tile_id == wall_connector.i_tile_id: return true
+		if tile_id == wall_connector.l_none_tile_id: return true
+		if tile_id == wall_connector.l_single_tile_id: return true
+		if tile_id == wall_connector.t_none_tile_id: return true
+		if tile_id == wall_connector.t_single_right_tile_id: return true
+		if tile_id == wall_connector.t_single_left_tile_id: return true
+		if tile_id == wall_connector.t_double_tile_id: return true
+		if tile_id == wall_connector.x_none_tile_id: return true
+		if tile_id == wall_connector.x_single_tile_id: return true
+		if tile_id == wall_connector.x_side_tile_id: return true
+		if tile_id == wall_connector.x_opposite_tile_id: return true
+		if tile_id == wall_connector.x_triple_tile_id: return true
+		if tile_id == wall_connector.x_quad_tile_id: return true
 	
 	# Assume anything that's NOT floor/grass/road/path/entrance/exit is a wall
 	var is_walkable = false

@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://w5n52mm1flfd"
-path="res://.godot/imported/Tile.glb-a0a8325301471c2ab1b88b42675a975d.scn"
+uid="uid://c3faalhd6fpne"
+path="res://.godot/imported/Furniture.glb-4e920f5cb70710e2754f553728e68df5.scn"
 
 [deps]
 
-source_file="res://Assets/3D/Tiles/Tile.glb"
-dest_files=["res://.godot/imported/Tile.glb-a0a8325301471c2ab1b88b42675a975d.scn"]
+source_file="res://Assets/3D/Furniture/Furniture.glb"
+dest_files=["res://.godot/imported/Furniture.glb-4e920f5cb70710e2754f553728e68df5.scn"]
 
 [params]
 

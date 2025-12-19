@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="AdvancedWallConnector" load_steps=2 format=3 uid="uid://cwn4875vg684d"]
+
+[ext_resource type="Script" uid="uid://cseye3jgvnhc" path="res://Maps/MapGen/Connections/advanced_wall_connector.gd" id="1_14lmm"]
+
+[resource]
+script = ExtResource("1_14lmm")
+metadata/_custom_type_script = "uid://cseye3jgvnhc"

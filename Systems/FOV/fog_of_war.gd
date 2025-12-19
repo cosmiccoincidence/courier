@@ -422,13 +422,34 @@ func is_wall_tile(tile_id: int) -> bool:
 	var entrance_id = map_generator.get("entrance_tile_id")
 	var exit_id = map_generator.get("exit_tile_id")
 	
+	# NEW: Get wall connector to check for all wall variations
+	var wall_connector = map_generator.get("interior_wall_connector")
+	
 	# Explicit wall check
 	if exterior_wall_id != null and tile_id == exterior_wall_id:
 		return true
 	if interior_wall_id != null and tile_id == interior_wall_id:
 		return true
 	
-	# NEW: Door tiles are treated as walls (will be checked separately for open state)
+	# NEW: Check if it's any of the wall variations
+	if wall_connector:
+		if tile_id == wall_connector.o_tile_id: return true
+		if tile_id == wall_connector.u_tile_id: return true
+		if tile_id == wall_connector.i_tile_id: return true
+		if tile_id == wall_connector.l_none_tile_id: return true
+		if tile_id == wall_connector.l_single_tile_id: return true
+		if tile_id == wall_connector.t_none_tile_id: return true
+		if tile_id == wall_connector.t_single_right_tile_id: return true
+		if tile_id == wall_connector.t_single_left_tile_id: return true
+		if tile_id == wall_connector.t_double_tile_id: return true
+		if tile_id == wall_connector.x_none_tile_id: return true
+		if tile_id == wall_connector.x_single_tile_id: return true
+		if tile_id == wall_connector.x_side_tile_id: return true
+		if tile_id == wall_connector.x_opposite_tile_id: return true
+		if tile_id == wall_connector.x_triple_tile_id: return true
+		if tile_id == wall_connector.x_quad_tile_id: return true
+	
+	# Door tiles are treated as walls (will be checked separately for open state)
 	if door_floor_id != null and tile_id == door_floor_id:
 		return true
 	

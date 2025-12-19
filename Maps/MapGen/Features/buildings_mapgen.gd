@@ -47,6 +47,7 @@ var building_zone_buffer: int = 25
 
 var placed_buildings: Array = []
 var furniture_placer: FurniturePlacer = null 
+var wall_connector: AdvancedWallConnector = null  # NEW: Advanced wall mesh system 
 
 # ============================================================================
 # SETUP
@@ -88,6 +89,13 @@ func setup(generator: CoreMapGen):
 	chest_config.min_distance_from_door = 2
 	chest_config.requires_interior = true
 	furniture_placer.register_furniture_config(chest_config)
+	
+	# Setup wall connector (if provided by generator)
+	wall_connector = generator.get("interior_wall_connector")
+	if wall_connector:
+		print("[BuildingsMapGen] Wall connector found, will apply advanced connections")
+	else:
+		print("[BuildingsMapGen] No wall connector, using simple walls")
 
 # ============================================================================
 # GENERATION
@@ -122,6 +130,15 @@ func generate():
 			print("  Could not place building ", i + 1, " after ", max_attempts, " attempts")
 	
 	print("Successfully placed ", buildings_created, " buildings")
+	
+	# Apply advanced wall connections if wall connector is available
+	if wall_connector:
+		WallConnectorHelper.apply_interior_wall_connections(
+			map_generator,
+			wall_connector,
+			interior_wall_tile_id,
+			placed_buildings
+		)
 
 func find_valid_building_position(width: int, length: int) -> Vector3i:
 	var used_cells = map_generator.get_used_cells()

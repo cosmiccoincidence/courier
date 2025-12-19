@@ -68,6 +68,9 @@ signal generation_started
 signal generation_complete
 signal player_reached_exit
 
+# Tile connections
+@export var interior_wall_connector: AdvancedWallConnector
+
 # ============================================================================
 # MAIN GENERATION FLOW
 # ============================================================================
