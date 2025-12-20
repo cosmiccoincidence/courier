@@ -293,18 +293,52 @@ func get_neighbor_positions_for_mesh(mesh_name: String, grid_pos: Vector3i, rota
 					neighbors.append(grid_pos + Vector3i(1, 0, 1))  # SE diagonal
 				elif mesh_name == "FloorNW":
 					neighbors.append(grid_pos + Vector3i(1, 0, -1))  # NE diagonal
-			
-			print("[DEBUG T-SHAPE] ", mesh_name, " at ", grid_pos, " rot:", int(rotation_deg), "° checking:", neighbors[0] if neighbors.size() > 0 else "none", " = ", gridmap.get_cell_item(neighbors[0]) if neighbors.size() > 0 else -1)
 		
 		WallShape.X_NONE, WallShape.X_SINGLE, WallShape.X_OPPOSITE, WallShape.X_SIDE, WallShape.X_TRIPLE, WallShape.X_QUAD:
-			if mesh_name == "FloorNE":
-				neighbors.append(grid_pos + get_rotated_direction(Vector3i(1, 0, -1), rotation))
-			elif mesh_name == "FloorNW":
-				neighbors.append(grid_pos + get_rotated_direction(Vector3i(-1, 0, -1), rotation))
-			elif mesh_name == "FloorSE":
-				neighbors.append(grid_pos + get_rotated_direction(Vector3i(1, 0, 1), rotation))
-			elif mesh_name == "FloorSW":
-				neighbors.append(grid_pos + get_rotated_direction(Vector3i(-1, 0, 1), rotation))
+			var rotation_deg = rad_to_deg(rotation)
+			var normalized = fmod(rotation_deg, 360.0)
+			if normalized < 0:
+				normalized += 360.0
+			
+			# X-shape has 4 corners that rotate with the wall
+			if normalized < 45:  # 0°
+				if mesh_name == "FloorNE":
+					neighbors.append(grid_pos + Vector3i(1, 0, -1))  # NE
+				elif mesh_name == "FloorNW":
+					neighbors.append(grid_pos + Vector3i(-1, 0, -1))  # NW
+				elif mesh_name == "FloorSE":
+					neighbors.append(grid_pos + Vector3i(1, 0, 1))  # SE
+				elif mesh_name == "FloorSW":
+					neighbors.append(grid_pos + Vector3i(-1, 0, 1))  # SW
+			elif normalized < 135:  # 90° - all meshes rotate 90° clockwise
+				if mesh_name == "FloorNE":
+					neighbors.append(grid_pos + Vector3i(-1, 0, -1))  # NW (FloorNE → NW position)
+				elif mesh_name == "FloorNW":
+					neighbors.append(grid_pos + Vector3i(-1, 0, 1))  # SW (FloorNW → SW position)
+				elif mesh_name == "FloorSE":
+					neighbors.append(grid_pos + Vector3i(1, 0, -1))  # NE (FloorSE → NE position)
+				elif mesh_name == "FloorSW":
+					neighbors.append(grid_pos + Vector3i(1, 0, 1))  # SE (FloorSW → SE position)
+			elif normalized < 225:  # 180° - all meshes rotate 180°
+				if mesh_name == "FloorNE":
+					neighbors.append(grid_pos + Vector3i(-1, 0, 1))  # SW (FloorNE → SW position)
+				elif mesh_name == "FloorNW":
+					neighbors.append(grid_pos + Vector3i(1, 0, 1))  # SE (FloorNW → SE position)
+				elif mesh_name == "FloorSE":
+					neighbors.append(grid_pos + Vector3i(-1, 0, -1))  # NW (FloorSE → NW position)
+				elif mesh_name == "FloorSW":
+					neighbors.append(grid_pos + Vector3i(1, 0, -1))  # NE (FloorSW → NE position)
+			else:  # 270° - all meshes rotate 270° clockwise
+				if mesh_name == "FloorNE":
+					neighbors.append(grid_pos + Vector3i(1, 0, 1))  # SE (FloorNE → SE position)
+				elif mesh_name == "FloorNW":
+					neighbors.append(grid_pos + Vector3i(1, 0, -1))  # NE (FloorNW → NE position)
+				elif mesh_name == "FloorSE":
+					neighbors.append(grid_pos + Vector3i(-1, 0, 1))  # SW (FloorSE → SW position)
+				elif mesh_name == "FloorSW":
+					neighbors.append(grid_pos + Vector3i(-1, 0, -1))  # NW (FloorSW → NW position)
+			
+			print("[DEBUG X-SHAPE] ", mesh_name, " at ", grid_pos, " rot:", int(rotation_deg), "° checking:", neighbors[0] if neighbors.size() > 0 else "none", " = ", gridmap.get_cell_item(neighbors[0]) if neighbors.size() > 0 else -1)
 	
 	return neighbors
 
