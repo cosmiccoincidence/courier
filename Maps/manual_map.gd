@@ -27,6 +27,9 @@ signal generation_complete
 signal player_reached_exit
 
 func _ready():
+	# Offset the floor grid
+	floor_grid.position = Vector3(0.5, 0, 0.5)
+	
 	# Apply advanced wall connections if available
 	if interior_wall_connector:
 		apply_wall_connections()
