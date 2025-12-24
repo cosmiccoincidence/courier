@@ -10,6 +10,10 @@ class_name MultiGridFloor
 var primary_grid: GridMap
 var floor_grids: Array = []  # Array of up to 4 GridMaps
 
+# Dictionary to preserve floor types at each position (for FOV/pathfinding)
+# Key: Vector3i position, Value: floor type name (e.g. "grass", "stone_road")
+var floor_type_map: Dictionary = {}
+
 # Dictionary to store tile IDs for different floor types and shapes
 # Structure: { "floor_type": { "whole": id, "half": id, "threequarter": id, "quarter": id } }
 var floor_tile_sets: Dictionary = {}
@@ -102,6 +106,29 @@ func _process_dual_grid_cell(x: int, z: int, cell_usage: Dictionary) -> bool:
 		_get_floor_type_for_quadrant(x, floor_y_level, z+1, 2),    # Quadrant 2
 		_get_floor_type_for_quadrant(x+1, floor_y_level, z+1, 3)   # Quadrant 3
 	]
+	
+	# Store floor type for this dual-grid position (use most common type)
+	var valid_types = []
+	for tile_type in tiles:
+		if tile_type != null:
+			valid_types.append(tile_type)
+	
+	if not valid_types.is_empty():
+		# Count occurrences
+		var type_counts = {}
+		for t in valid_types:
+			type_counts[t] = type_counts.get(t, 0) + 1
+		
+		# Find most common
+		var most_common = valid_types[0]
+		var max_count = type_counts[most_common]
+		for type_name in type_counts.keys():
+			if type_counts[type_name] > max_count:
+				most_common = type_name
+				max_count = type_counts[type_name]
+		
+		# Store in map for FOV/pathfinding
+		floor_type_map[Vector3i(x, floor_y_level, z)] = most_common
 	
 	# Filter out null tiles
 	var valid_tiles = []
@@ -311,3 +338,13 @@ func _clear_floor_tiles_from_primary() -> void:
 			cleared_count += 1
 	
 	print("[MultiGridFloor] Cleared %d floor/door tiles from primary grid" % cleared_count)
+
+
+## Get the floor type at a given position (for FOV/pathfinding systems)
+func get_floor_type_at(position: Vector3i) -> String:
+	return floor_type_map.get(position, "")
+
+
+## Check if a position is walkable (has any floor type)
+func is_walkable_at(position: Vector3i) -> bool:
+	return floor_type_map.has(position)

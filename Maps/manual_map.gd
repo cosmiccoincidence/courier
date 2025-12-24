@@ -5,7 +5,6 @@ class_name ManualMap
 @export var entrance_tile_id: int = 0
 @export var exit_tile_id: int = 1
 @export var grass_tile_id: int = 6
-@export var water_tile_id: int = 7
 @export var stone_road_tile_id: int = 2
 @export var dirt_road_tile_id: int = 3
 @export var interior_wall_tile_id: int = 8
@@ -13,6 +12,7 @@ class_name ManualMap
 @export var interior_floor_tile_id: int = 5
 @export var door_tile_id: int = 27
 @export var door_floor_tile_id: int = 4
+@export var water_tile_id: int = 7
 @export var is_passive_map: bool = false  # Disable fog/vision for towns
 
 # Advanced wall connections
@@ -372,3 +372,20 @@ func get_entrance_zone_spawn_position() -> Vector3:
 	
 	print("Spawning at: ", world_pos)
 	return world_pos
+
+
+## Get floor type at position (after multi-grid processing)
+func get_floor_type_at_position(x: int, z: int) -> String:
+	if multi_grid_processor:
+		return multi_grid_processor.get_floor_type_at(Vector3i(x, 0, z))
+	return ""
+
+
+## Check if position is walkable (after multi-grid processing)
+func is_position_walkable(x: int, z: int) -> bool:
+	if multi_grid_processor:
+		return multi_grid_processor.is_walkable_at(Vector3i(x, 0, z))
+	
+	# Fallback: check primary grid
+	var tile_id = get_cell_item(Vector3i(x, 0, z))
+	return tile_id != -1 and tile_id != exterior_wall_tile_id and tile_id != interior_wall_tile_id

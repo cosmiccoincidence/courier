@@ -26,7 +26,6 @@ var active_chunks: Dictionary = {}
 @export var entrance_tile_id: int = 0
 @export var exit_tile_id: int = 1
 @export var grass_tile_id: int = 6
-@export var water_tile_id: int = 7
 @export var stone_road_tile_id: int = 2
 @export var dirt_road_tile_id: int = 3
 @export var interior_wall_tile_id: int = 8
@@ -34,6 +33,7 @@ var active_chunks: Dictionary = {}
 @export var interior_floor_tile_id: int = 5
 @export var door_tile_id: int = 27
 @export var door_floor_tile_id: int = 4
+@export var water_tile_id: int = 7
 
 # Floor Grid Tile IDs - for dual-grid floor meshes
 @export_group("Dual-Grid Floor Tiles")
@@ -234,11 +234,12 @@ func _generate_map_internal():
 	place_exit_zone()
 	
 	# PHASE 6: FEATURES (handled by subclasses)
+	print("\n--- PHASE 6: Features ---")
 	generate_features()
 	
 	# PHASE 7: MULTI-GRID FLOOR PROCESSING
 	if enable_multi_grid_floors:
-		print("\n--- PHASE 9: Multi-Grid Floor Processing ---")
+		print("\n--- PHASE 7: Multi-Grid Floor Processing ---")
 		process_multi_grid_floors()
 	
 	print("\n=== Map Generation Complete ===")
@@ -911,3 +912,19 @@ func is_walkable(x: int, z: int) -> bool:
 
 func get_tile_at_position(x: int, z: int) -> int:
 	return get_cell_item(Vector3i(x, 0, z))
+
+
+## Get floor type at position (after multi-grid processing)
+func get_floor_type_at_position(x: int, z: int) -> String:
+	if multi_grid_processor:
+		return multi_grid_processor.get_floor_type_at(Vector3i(x, 0, z))
+	return ""
+
+
+## Check if position is walkable (after multi-grid processing)
+func is_position_walkable(x: int, z: int) -> bool:
+	if multi_grid_processor:
+		return multi_grid_processor.is_walkable_at(Vector3i(x, 0, z))
+	
+	# Fallback: check primary grid
+	return is_walkable(x, z)

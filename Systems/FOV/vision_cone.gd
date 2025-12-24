@@ -247,6 +247,13 @@ func raycast_to_wall(from: Vector3, direction: Vector2, max_dist: float) -> Vect
 		var tile_pos = map_generator.local_to_map(check_pos_3d)
 		var tile_id = map_generator.get_cell_item(tile_pos)
 		
+		# Check if this is a cleared floor (after multi-grid processing)
+		if tile_id == -1 and map_generator.has_method("is_position_walkable"):
+			if map_generator.is_position_walkable(tile_pos.x, tile_pos.z):
+				# This is a walkable floor, not a wall
+				dist += step_size
+				continue
+		
 		# Check current tile
 		if is_wall_tile(tile_id):
 			# Check if this is a door tile and if there's an open door here
@@ -261,7 +268,7 @@ func raycast_to_wall(from: Vector3, direction: Vector2, max_dist: float) -> Vect
 			var return_dist = max(0.1, dist - step_size)
 			return from_2d + direction * return_dist
 		
-		# NEW IMPROVED: Check for diagonal wall corner gaps
+		# Check for diagonal wall corner gaps
 		# Only check if moving diagonally AND we're in an empty/walkable tile
 		if abs(direction.x) > 0.1 and abs(direction.y) > 0.1 and tile_id == -1:
 			# Get world position of current check point
@@ -312,7 +319,8 @@ func is_door_open_at_position(world_pos: Vector3) -> bool:
 
 func is_wall_tile(tile_id: int) -> bool:
 	if tile_id == -1:
-		return true  # Empty/outside map = wall
+		# Empty tile - will be checked by caller with position
+		return true
 	
 	if not map_generator:
 		return false
@@ -320,15 +328,11 @@ func is_wall_tile(tile_id: int) -> bool:
 	# Try to get specific wall IDs
 	var exterior_wall_id = map_generator.get("exterior_wall_tile_id")
 	var interior_wall_id = map_generator.get("interior_wall_tile_id") 
-	var interior_floor_id = map_generator.get("interior_floor_tile_id")
 	var door_floor_id = map_generator.get("door_floor_tile_id")
-	var grass_id = map_generator.get("grass_tile_id")
-	var dirt_road_id = map_generator.get("dirt_road_tile_id")
-	var stone_road_id = map_generator.get("stone_road_tile_id")
 	var entrance_id = map_generator.get("entrance_tile_id")
 	var exit_id = map_generator.get("exit_tile_id")
 	
-	# NEW: Get wall connector to check for all wall variations
+	# Get wall connector to check for all wall variations
 	var wall_connector = map_generator.get("interior_wall_connector")
 	
 	# Explicit wall check
@@ -337,7 +341,7 @@ func is_wall_tile(tile_id: int) -> bool:
 	if interior_wall_id != null and tile_id == interior_wall_id:
 		return true
 	
-	# NEW: Check if it's any of the wall variations
+	# Check if it's any of the wall variations
 	if wall_connector:
 		if tile_id == wall_connector.o_tile_id: return true
 		if tile_id == wall_connector.u_tile_id: return true
@@ -356,27 +360,17 @@ func is_wall_tile(tile_id: int) -> bool:
 		if tile_id == wall_connector.x_quad_tile_id: return true
 	
 	# Door tiles are walls (they block vision unless the door is open)
-	# The raycast function checks door state separately
 	if door_floor_id != null and tile_id == door_floor_id:
 		return true
 	
-	# Assume anything that's NOT floor/grass/road/path/entrance/exit is a wall
-	var is_walkable = false
-	if interior_floor_id != null and tile_id == interior_floor_id:
-		is_walkable = true
-	# Removed door_floor_id from walkable - doors are walls unless open
-	if grass_id != null and tile_id == grass_id:
-		is_walkable = true
-	if dirt_road_id != null and tile_id == dirt_road_id:
-		is_walkable = true
-	if stone_road_id != null and tile_id == stone_road_id:
-		is_walkable = true
+	# Entrance/exit are walkable
 	if entrance_id != null and tile_id == entrance_id:
-		is_walkable = true
+		return false
 	if exit_id != null and tile_id == exit_id:
-		is_walkable = true
+		return false
 	
-	return not is_walkable
+	# If not explicitly a wall, assume it's walkable
+	return false
 
 ## Check if a world position is visible (for entity culling)
 func is_position_visible(world_pos: Vector3) -> bool:

@@ -40,6 +40,9 @@ func _ready():
 func find_map():
 	map_generator = find_gridmap_recursive(map_container)
 	if map_generator:
+		print("[FOV] Found map_generator: ", map_generator.name, " script: ", map_generator.get_script())
+		print("[FOV] Has is_position_walkable method: ", map_generator.has_method("is_position_walkable"))
+		
 		# Check if this is a passive map
 		is_passive_mode = map_generator.get("is_passive_map")
 		if is_passive_mode == null:
@@ -287,6 +290,9 @@ func update_fog():
 	# Reveal tiles within radius
 	var reveal_tiles_count = int(reveal_radius)
 	
+	var debug_count = 0
+	var debug_max = 5  # Only log first 5 tiles for debugging
+	
 	for x_offset in range(-reveal_tiles_count, reveal_tiles_count + 1):
 		for z_offset in range(-reveal_tiles_count, reveal_tiles_count + 1):
 			var check_pos = Vector3i(player_grid.x + x_offset, 0, player_grid.z + z_offset)
@@ -296,30 +302,49 @@ func update_fog():
 			if dist <= reveal_radius:
 				var tile_key = Vector2i(check_pos.x, check_pos.z)
 				
-				# Only reveal if this tile has actual map geometry
+				# Get tile_id
 				var tile_id = map_generator.get_cell_item(check_pos)
-				if tile_id == -1:
+				var tile_exists = false
+				var is_wall = false
+				
+				if tile_id != -1:
+					# Tile exists (wall or pre-processing floor)
+					tile_exists = true
+					is_wall = is_wall_tile(tile_id)
+					if debug_count < debug_max:
+						print("[FOV] Pos ", check_pos, " tile_id=", tile_id, " is_wall=", is_wall)
+						debug_count += 1
+				else:
+					# Tile is empty (-1) - check if it's a cleared floor
+					if map_generator.has_method("is_position_walkable"):
+						var is_walkable = map_generator.is_position_walkable(check_pos.x, check_pos.z)
+						if is_walkable:
+							# This is a cleared floor
+							tile_exists = true
+							is_wall = false
+							if debug_count < debug_max:
+								print("[FOV] Pos ", check_pos, " CLEARED FLOOR (walkable)")
+								debug_count += 1
+						elif debug_count < debug_max:
+							print("[FOV] Pos ", check_pos, " tile_id=-1, NOT walkable (empty)")
+							debug_count += 1
+					elif debug_count < debug_max:
+						print("[FOV] Pos ", check_pos, " tile_id=-1, NO is_position_walkable method")
+						debug_count += 1
+				
+				if not tile_exists:
 					# No tile here, don't reveal
 					continue
 				
-				# Check if this tile itself is a wall
-				var is_wall = is_wall_tile(tile_id)
-				
-				# For walls: check line of sight to the tile itself
-				# For floors: check line of sight (walls can block)
+				# Check line of sight
 				var can_reveal = false
-				
 				if is_wall:
-					# Wall tiles reveal if we have line of sight TO them (not through them)
 					can_reveal = has_line_of_sight_to_wall(player.global_position, world_pos)
 				else:
-					# Floor tiles reveal if we have clear line of sight
 					can_reveal = has_line_of_sight(player.global_position, world_pos)
 				
 				if can_reveal and revealed_tiles.has(tile_key) and not revealed_tiles[tile_key]:
 					revealed_tiles[tile_key] = true
-					
-					# Hide fog mesh for this tile
 					if fog_meshes.has(tile_key):
 						fog_meshes[tile_key].visible = false
 
@@ -340,9 +365,16 @@ func has_line_of_sight_to_wall(from: Vector3, to: Vector3) -> bool:
 		var check_grid = map_generator.local_to_map(check_pos_3d)
 		var check_tile_id = map_generator.get_cell_item(check_grid)
 		
+		# Check if this is a cleared floor (walkable)
+		if check_tile_id == -1 and map_generator.has_method("is_position_walkable"):
+			if map_generator.is_position_walkable(check_grid.x, check_grid.z):
+				# Cleared floor - doesn't block vision
+				current_dist += step_size
+				continue
+		
 		# Check if blocked by a wall along the way
 		if is_wall_tile(check_tile_id):
-			# NEW: Check if this is a door tile with an open door
+			# Check if this is a door tile with an open door
 			var door_floor_id = map_generator.get("door_floor_tile_id")
 			if door_floor_id != null and check_tile_id == door_floor_id:
 				if is_door_open_at_position(check_pos_3d):
@@ -373,9 +405,16 @@ func has_line_of_sight(from: Vector3, to: Vector3) -> bool:
 		var check_grid = map_generator.local_to_map(check_pos_3d)
 		var check_tile_id = map_generator.get_cell_item(check_grid)
 		
+		# Check if this is a cleared floor (walkable)
+		if check_tile_id == -1 and map_generator.has_method("is_position_walkable"):
+			if map_generator.is_position_walkable(check_grid.x, check_grid.z):
+				# Cleared floor - doesn't block vision
+				current_dist += step_size
+				continue
+		
 		# Check if this is a wall
 		if is_wall_tile(check_tile_id):
-			# NEW: Check if this is a door tile with an open door
+			# Check if this is a door tile with an open door
 			var door_floor_id = map_generator.get("door_floor_tile_id")
 			if door_floor_id != null and check_tile_id == door_floor_id:
 				if is_door_open_at_position(check_pos_3d):
@@ -414,15 +453,11 @@ func is_wall_tile(tile_id: int) -> bool:
 	# Get tile IDs from map
 	var exterior_wall_id = map_generator.get("exterior_wall_tile_id")
 	var interior_wall_id = map_generator.get("interior_wall_tile_id") 
-	var interior_floor_id = map_generator.get("interior_floor_tile_id")
 	var door_floor_id = map_generator.get("door_floor_tile_id")
-	var grass_id = map_generator.get("grass_tile_id")
-	var dirt_road_id = map_generator.get("dirt_road_tile_id")
-	var stone_road_id = map_generator.get("stone_road_tile_id")
 	var entrance_id = map_generator.get("entrance_tile_id")
 	var exit_id = map_generator.get("exit_tile_id")
 	
-	# NEW: Get wall connector to check for all wall variations
+	# Get wall connector to check for all wall variations
 	var wall_connector = map_generator.get("interior_wall_connector")
 	
 	# Explicit wall check
@@ -431,7 +466,7 @@ func is_wall_tile(tile_id: int) -> bool:
 	if interior_wall_id != null and tile_id == interior_wall_id:
 		return true
 	
-	# NEW: Check if it's any of the wall variations
+	# Check if it's any of the wall variations
 	if wall_connector:
 		if tile_id == wall_connector.o_tile_id: return true
 		if tile_id == wall_connector.u_tile_id: return true
@@ -453,23 +488,14 @@ func is_wall_tile(tile_id: int) -> bool:
 	if door_floor_id != null and tile_id == door_floor_id:
 		return true
 	
-	# Check if walkable (not a wall)
-	var is_walkable = false
-	if interior_floor_id != null and tile_id == interior_floor_id:
-		is_walkable = true
-	# Removed door_floor_id from here - doors are walls unless open
-	if grass_id != null and tile_id == grass_id:
-		is_walkable = true
-	if dirt_road_id != null and tile_id == dirt_road_id:
-		is_walkable = true
-	if stone_road_id != null and tile_id == stone_road_id:
-		is_walkable = true
+	# Entrance/exit are walkable
 	if entrance_id != null and tile_id == entrance_id:
-		is_walkable = true
+		return false
 	if exit_id != null and tile_id == exit_id:
-		is_walkable = true
+		return false
 	
-	return not is_walkable
+	# If not explicitly a wall, assume it's walkable
+	return false
 
 ## DEBUG FUNCTIONS
 
@@ -482,10 +508,19 @@ func reveal_all():
 		if not revealed_tiles[tile_key]:
 			# Check if this tile has actual map geometry
 			var check_pos = Vector3i(tile_key.x, 0, tile_key.y)
-			var tile_id = map_generator.get_cell_item(check_pos)
 			
-			# Only reveal if tile is occupied (not empty space)
-			if tile_id != -1:
+			# Check using floor type map if available
+			var has_tile = false
+			if map_generator.has_method("is_position_walkable"):
+				has_tile = map_generator.is_position_walkable(check_pos.x, check_pos.z)
+			
+			# Fallback to direct tile check
+			if not has_tile:
+				var tile_id = map_generator.get_cell_item(check_pos)
+				has_tile = (tile_id != -1)
+			
+			# Only reveal if tile exists
+			if has_tile:
 				revealed_tiles[tile_key] = true
 				if fog_meshes.has(tile_key):
 					fog_meshes[tile_key].visible = false
