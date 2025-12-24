@@ -389,3 +389,10 @@ func is_position_walkable(x: int, z: int) -> bool:
 	# Fallback: check primary grid
 	var tile_id = get_cell_item(Vector3i(x, 0, z))
 	return tile_id != -1 and tile_id != exterior_wall_tile_id and tile_id != interior_wall_tile_id
+
+
+## Check if position has a door (after multi-grid processing)
+func has_door_at_position(x: int, z: int) -> bool:
+	if multi_grid_processor:
+		return multi_grid_processor.has_door_at(Vector3i(x, 0, z))
+	return false

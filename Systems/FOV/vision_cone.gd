@@ -247,6 +247,19 @@ func raycast_to_wall(from: Vector3, direction: Vector2, max_dist: float) -> Vect
 		var tile_pos = map_generator.local_to_map(check_pos_3d)
 		var tile_id = map_generator.get_cell_item(tile_pos)
 		
+		# Check if this position has a door FIRST (before walkable check)
+		if tile_id == -1 and map_generator.has_method("has_door_at_position"):
+			if map_generator.has_door_at_position(tile_pos.x, tile_pos.z):
+				# Door position - check if door scene instance is open
+				if is_door_open_at_position(check_pos_3d):
+					# Door is open - don't block vision
+					dist += step_size
+					continue
+				else:
+					# Door is closed - blocks vision
+					var return_dist = max(0.1, dist - step_size)
+					return from_2d + direction * return_dist
+		
 		# Check if this is a cleared floor (after multi-grid processing)
 		if tile_id == -1 and map_generator.has_method("is_position_walkable"):
 			if map_generator.is_position_walkable(tile_pos.x, tile_pos.z):
@@ -256,15 +269,6 @@ func raycast_to_wall(from: Vector3, direction: Vector2, max_dist: float) -> Vect
 		
 		# Check current tile
 		if is_wall_tile(tile_id):
-			# Check if this is a door tile and if there's an open door here
-			var door_floor_id = map_generator.get("door_floor_tile_id")
-			if door_floor_id != null and tile_id == door_floor_id:
-				# This is a door tile - check if there's an open door at this position
-				if is_door_open_at_position(check_pos_3d):
-					# Door is open - treat as walkable, don't block vision
-					dist += step_size
-					continue
-			
 			var return_dist = max(0.1, dist - step_size)
 			return from_2d + direction * return_dist
 		
@@ -328,7 +332,6 @@ func is_wall_tile(tile_id: int) -> bool:
 	# Try to get specific wall IDs
 	var exterior_wall_id = map_generator.get("exterior_wall_tile_id")
 	var interior_wall_id = map_generator.get("interior_wall_tile_id") 
-	var door_floor_id = map_generator.get("door_floor_tile_id")
 	var entrance_id = map_generator.get("entrance_tile_id")
 	var exit_id = map_generator.get("exit_tile_id")
 	
@@ -358,10 +361,6 @@ func is_wall_tile(tile_id: int) -> bool:
 		if tile_id == wall_connector.x_opposite_tile_id: return true
 		if tile_id == wall_connector.x_triple_tile_id: return true
 		if tile_id == wall_connector.x_quad_tile_id: return true
-	
-	# Door tiles are walls (they block vision unless the door is open)
-	if door_floor_id != null and tile_id == door_floor_id:
-		return true
 	
 	# Entrance/exit are walkable
 	if entrance_id != null and tile_id == entrance_id:

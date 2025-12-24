@@ -24,6 +24,9 @@ var tile_id_to_type: Dictionary = {}
 # Door tile IDs that act like walls but get cleared after processing
 var door_tile_ids: Array = []
 
+# Preserve door positions after clearing (for FOV/door detection)
+var door_positions: Dictionary = {}  # Key: Vector3i position, Value: true
+
 # Y level to process in primary grid (usually 0 for floors)
 var floor_y_level: int = 0
 
@@ -50,6 +53,7 @@ func map_tile_to_type(tile_id: int, type_name: String) -> void:
 
 
 ## Register door tile IDs (treated like walls but cleared after processing)
+## NOTE: This is for door_floor_tile placeholder, NOT the actual door_tile mesh
 func register_door_tiles(tile_ids: Array) -> void:
 	door_tile_ids = tile_ids
 
@@ -329,15 +333,24 @@ func _clear_floor_tiles_from_primary() -> void:
 		if tile_id == GridMap.INVALID_CELL_ITEM:
 			continue
 		
-		# Clear if it's a registered floor type OR a door tile
-		var type_name = tile_id_to_type.get(tile_id)
+		# Check if it's a door tile
 		var is_door = door_tile_ids.has(tile_id)
 		
-		if type_name != null or is_door:
+		if is_door:
+			# Store door position before clearing
+			print("[MultiGridFloor] Clearing door_floor_tile (ID ", tile_id, ") at ", cell_pos)
+			door_positions[cell_pos] = true
 			primary_grid.set_cell_item(cell_pos, GridMap.INVALID_CELL_ITEM)
 			cleared_count += 1
+		else:
+			# Clear regular floor tiles
+			var type_name = tile_id_to_type.get(tile_id)
+			if type_name != null:
+				primary_grid.set_cell_item(cell_pos, GridMap.INVALID_CELL_ITEM)
+				cleared_count += 1
 	
 	print("[MultiGridFloor] Cleared %d floor/door tiles from primary grid" % cleared_count)
+	print("[MultiGridFloor] Preserved %d door positions" % door_positions.size())
 
 
 ## Get the floor type at a given position (for FOV/pathfinding systems)
@@ -348,3 +361,8 @@ func get_floor_type_at(position: Vector3i) -> String:
 ## Check if a position is walkable (has any floor type)
 func is_walkable_at(position: Vector3i) -> bool:
 	return floor_type_map.has(position)
+
+
+## Check if a position has a door tile
+func has_door_at(position: Vector3i) -> bool:
+	return door_positions.has(position)

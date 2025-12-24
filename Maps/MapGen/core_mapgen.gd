@@ -928,3 +928,10 @@ func is_position_walkable(x: int, z: int) -> bool:
 	
 	# Fallback: check primary grid
 	return is_walkable(x, z)
+
+
+## Check if position has a door (after multi-grid processing)
+func has_door_at_position(x: int, z: int) -> bool:
+	if multi_grid_processor:
+		return multi_grid_processor.has_door_at(Vector3i(x, 0, z))
+	return false
