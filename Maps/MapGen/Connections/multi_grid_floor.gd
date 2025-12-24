@@ -145,7 +145,7 @@ func _process_dual_grid_cell(x: int, z: int, cell_usage: Dictionary) -> bool:
 
 
 ## Get floor type for a specific quadrant of a primary grid cell
-## If the cell contains a wall, look at the opposite neighbor's corresponding quadrant
+## If the cell contains a wall, look at neighbors to find floor type
 func _get_floor_type_for_quadrant(x: int, y: int, z: int, quadrant: int):
 	var tile_id = primary_grid.get_cell_item(Vector3i(x, y, z))
 	if tile_id == GridMap.INVALID_CELL_ITEM:
@@ -161,53 +161,44 @@ func _get_floor_type_for_quadrant(x: int, y: int, z: int, quadrant: int):
 	# This is a wall - add debug
 	print("[Wall] Cell (%d,%d) quadrant %d is a wall (ID %d)" % [x, z, quadrant, tile_id])
 	
-	# This is NOT a floor tile (wall, door, etc)
-	# Check all 4 cardinal neighbors to find floor tiles
-	var neighbor_positions = [
-		Vector3i(x - 1, y, z),  # Left
-		Vector3i(x + 1, y, z),  # Right
-		Vector3i(x, y, z - 1),  # Up
-		Vector3i(x, y, z + 1)   # Down
-	]
+	# For each quadrant, check OPPOSITE directions (into the room)
+	# Q0 (top-left): look RIGHT and DOWN (away from top-left edge)
+	# Q1 (top-right): look LEFT and DOWN (away from top-right edge)
+	# Q2 (bottom-left): look RIGHT and UP (away from bottom-left edge)
+	# Q3 (bottom-right): look LEFT and UP (away from bottom-right edge)
+	var check_positions = []
+	var diagonal_pos: Vector3i
 	
-	var found_types = []
-	for check_pos in neighbor_positions:
+	match quadrant:
+		0:
+			check_positions = [Vector3i(x + 1, y, z), Vector3i(x, y, z + 1)]
+			diagonal_pos = Vector3i(x + 1, y, z + 1)
+		1:
+			check_positions = [Vector3i(x - 1, y, z), Vector3i(x, y, z + 1)]
+			diagonal_pos = Vector3i(x - 1, y, z + 1)
+		2:
+			check_positions = [Vector3i(x + 1, y, z), Vector3i(x, y, z - 1)]
+			diagonal_pos = Vector3i(x + 1, y, z - 1)
+		3:
+			check_positions = [Vector3i(x - 1, y, z), Vector3i(x, y, z - 1)]
+			diagonal_pos = Vector3i(x - 1, y, z - 1)
+	
+	# Check the two cardinal neighbors for this quadrant
+	for check_pos in check_positions:
 		var neighbor_id = primary_grid.get_cell_item(check_pos)
 		if neighbor_id != GridMap.INVALID_CELL_ITEM:
 			var neighbor_type = tile_id_to_type.get(neighbor_id)
-			if neighbor_type != null and not found_types.has(neighbor_type):
-				found_types.append(neighbor_type)
-	
-	# If we found floor types, decide which to use based on quadrant
-	if found_types.is_empty():
-		return null
-	
-	# For each quadrant, check the OPPOSITE direction (inward to room, not outward)
-	# Quadrant 0 (top-left): look RIGHT (+x) and DOWN (+z) instead of left/up
-	# Quadrant 1 (top-right): look LEFT (-x) and DOWN (+z) instead of right/up
-	# Quadrant 2 (bottom-left): look RIGHT (+x) and UP (-z) instead of left/down
-	# Quadrant 3 (bottom-right): look LEFT (-x) and UP (-z) instead of right/down
-	
-	var preferred_positions = []
-	match quadrant:
-		0: preferred_positions = [Vector3i(x + 1, y, z), Vector3i(x, y, z + 1)]
-		1: preferred_positions = [Vector3i(x - 1, y, z), Vector3i(x, y, z + 1)]
-		2: preferred_positions = [Vector3i(x + 1, y, z), Vector3i(x, y, z - 1)]
-		3: preferred_positions = [Vector3i(x - 1, y, z), Vector3i(x, y, z - 1)]
-	
-	# Check preferred neighbors first
-	for pref_pos in preferred_positions:
-		var neighbor_id = primary_grid.get_cell_item(pref_pos)
-		if neighbor_id != GridMap.INVALID_CELL_ITEM:
-			var neighbor_type = tile_id_to_type.get(neighbor_id)
 			if neighbor_type != null:
-				print("  → Using %s from preferred neighbor (%d,%d)" % [neighbor_type, pref_pos.x, pref_pos.z])
+				print("  → Using %s from cardinal" % neighbor_type)
 				return neighbor_type
 	
-	# Fallback: return first found type
-	if not found_types.is_empty():
-		print("  → Fallback to %s" % found_types[0])
-		return found_types[0]
+	# If both cardinals are walls, check diagonal
+	var diagonal_id = primary_grid.get_cell_item(diagonal_pos)
+	if diagonal_id != GridMap.INVALID_CELL_ITEM:
+		var diagonal_type = tile_id_to_type.get(diagonal_id)
+		if diagonal_type != null:
+			print("  → Using %s from diagonal (corner)" % diagonal_type)
+			return diagonal_type
 	
 	return null
 
@@ -218,27 +209,20 @@ func _place_floor_at_layer(grid_x: int, grid_z: int, layer: int, quadrants: Arra
 	var target_grid = floor_grids[layer]
 	
 	if count == 4:
-		# Whole tile
 		_place_tile(target_grid, grid_x, grid_z, tile_set["whole"], 0)
 	elif count == 3:
-		# Threequarter tile
 		_place_threequarter_tile(target_grid, grid_x, grid_z, quadrants, tile_set)
 	elif count == 2:
-		# Half tile (caller ensures these are adjacent)
 		_place_half_tile(target_grid, grid_x, grid_z, quadrants, tile_set)
 	elif count == 1:
-		# Quarter tile
 		_place_quarter_tile(target_grid, grid_x, grid_z, quadrants[0], tile_set)
 
 
-## Check if two quadrants are adjacent
 func _are_quadrants_adjacent(q1: int, q2: int) -> bool:
-	# Vertical adjacency (left or right half)
 	if (q1 == 0 and q2 == 2) or (q1 == 2 and q2 == 0):
 		return true
 	if (q1 == 1 and q2 == 3) or (q1 == 3 and q2 == 1):
 		return true
-	# Horizontal adjacency (top or bottom half)
 	if (q1 == 0 and q2 == 1) or (q1 == 1 and q2 == 0):
 		return true
 	if (q1 == 2 and q2 == 3) or (q1 == 3 and q2 == 2):
@@ -246,18 +230,15 @@ func _are_quadrants_adjacent(q1: int, q2: int) -> bool:
 	return false
 
 
-## Place a tile on a GridMap
 func _place_tile(grid: GridMap, x: int, z: int, tile_id: int, rotation: int) -> void:
 	grid.set_cell_item(Vector3i(x, floor_grid_base_y, z), tile_id, rotation)
 
 
-## Place quarter tile
 func _place_quarter_tile(grid: GridMap, grid_x: int, grid_z: int, quadrant: int, tile_set: Dictionary) -> void:
 	var rotation = _get_quarter_tile_rotation(quadrant)
 	_place_tile(grid, grid_x, grid_z, tile_set["quarter"], rotation)
 
 
-## Get rotation for quarter tile based on quadrant
 func _get_quarter_tile_rotation(quadrant: int) -> int:
 	match quadrant:
 		0: return 0
@@ -267,30 +248,24 @@ func _get_quarter_tile_rotation(quadrant: int) -> int:
 	return 0
 
 
-## Place half tile (only called for adjacent quadrants)
 func _place_half_tile(grid: GridMap, grid_x: int, grid_z: int, quadrants: Array, tile_set: Dictionary) -> void:
 	var q1 = quadrants[0]
 	var q2 = quadrants[1]
 	var rotation = 0
 	
-	# Determine rotation based on which quadrants are filled
-	# Vertical adjacency (left or right half)
 	if (q1 == 0 and q2 == 2) or (q1 == 2 and q2 == 0):
-		rotation = 16  # Left half
+		rotation = 16
 	elif (q1 == 1 and q2 == 3) or (q1 == 3 and q2 == 1):
-		rotation = 22  # Right half
-	# Horizontal adjacency (top or bottom half)
+		rotation = 22
 	elif (q1 == 0 and q2 == 1) or (q1 == 1 and q2 == 0):
-		rotation = 0   # Top half
+		rotation = 0
 	elif (q1 == 2 and q2 == 3) or (q1 == 3 and q2 == 2):
-		rotation = 10  # Bottom half
+		rotation = 10
 	
 	_place_tile(grid, grid_x, grid_z, tile_set["half"], rotation)
 
 
-## Place threequarter tile
 func _place_threequarter_tile(grid: GridMap, grid_x: int, grid_z: int, quadrants: Array, tile_set: Dictionary) -> void:
-	# Find the missing quadrant
 	var all_quads = [0, 1, 2, 3]
 	var missing_quad = -1
 	
@@ -300,15 +275,13 @@ func _place_threequarter_tile(grid: GridMap, grid_x: int, grid_z: int, quadrants
 			break
 	
 	if missing_quad == -1:
-		push_warning("[MultiGridFloor] Could not determine missing quadrant for threequarter tile")
+		push_warning("[MultiGridFloor] Could not determine missing quadrant")
 		return
 	
-	# Rotate threequarter mesh based on which quadrant is missing
 	var rotation = _get_quarter_tile_rotation(missing_quad)
 	_place_tile(grid, grid_x, grid_z, tile_set["threequarter"], rotation)
 
 
-## Clear floor tiles from primary grid
 func _clear_floor_tiles_from_primary() -> void:
 	print("[MultiGridFloor] Clearing processed floor tiles from primary grid...")
 	
