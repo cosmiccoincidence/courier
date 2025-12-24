@@ -284,10 +284,6 @@ func update_fog():
 	# Get player's grid position
 	var player_grid = map_generator.local_to_map(player.global_position)
 	
-	# Debug: log once per second
-	if Engine.get_frames_drawn() % 60 == 0:
-		print("[FOV] update_fog called, player at grid:", player_grid)
-	
 	# Reveal tiles within radius
 	var reveal_tiles_count = int(reveal_radius)
 	
@@ -297,25 +293,13 @@ func update_fog():
 			var world_pos = map_generator.map_to_local(check_pos)
 			var dist = Vector2(world_pos.x - player.global_position.x, world_pos.z - player.global_position.z).length()
 			
-			# Debug: log when we check the door position
-			if check_pos == Vector3i(-4, 0, 1):
-				print("[FOV] Checking door position (-4, 0, 1), dist:", dist, " reveal_radius:", reveal_radius)
-			
 			if dist <= reveal_radius:
 				var tile_key = Vector2i(check_pos.x, check_pos.z)
-				
-				# Debug: log if we're checking door tile
-				if check_pos == Vector3i(-4, 0, 1):
-					print("[FOV] Door tile within radius, tile_key:", tile_key)
 				
 				# Get tile_id
 				var tile_id = map_generator.get_cell_item(check_pos)
 				var tile_exists = false
 				var is_wall = false
-				
-				# Debug: log door tile info
-				if check_pos == Vector3i(-4, 0, 1):
-					print("[FOV] Door tile_id:", tile_id)
 				
 				if tile_id != -1:
 					# Tile exists (wall or pre-processing floor)
@@ -332,31 +316,46 @@ func update_fog():
 				
 				if not tile_exists:
 					# No tile here, don't reveal
-					if check_pos == Vector3i(-4, 0, 1):
-						print("[FOV] Door tile_exists=false, skipping")
 					continue
 				
-				# Debug: log before line of sight check
-				if check_pos == Vector3i(-4, 0, 1):
-					print("[FOV] Door tile exists, is_wall:", is_wall, " checking line of sight")
+				# Check if this is a door position
+				var is_door_position = false
+				if map_generator.has_method("has_door_at_position"):
+					is_door_position = map_generator.has_door_at_position(check_pos.x, check_pos.z)
 				
 				# Check line of sight
 				var can_reveal = false
-				if is_wall:
+				if is_door_position:
+					# Door positions use special logic: check if we have line of sight to adjacent tiles
+					# This allows doors to be discovered from either side
+					var adjacent_visible = false
+					var offsets = [Vector3i(1,0,0), Vector3i(-1,0,0), Vector3i(0,0,1), Vector3i(0,0,-1)]
+					for offset in offsets:
+						var adjacent_pos = check_pos + offset
+						var adjacent_world = map_generator.map_to_local(adjacent_pos)
+						if has_line_of_sight(player.global_position, adjacent_world):
+							adjacent_visible = true
+							break
+					can_reveal = adjacent_visible
+				elif is_wall:
 					can_reveal = has_line_of_sight_to_wall(player.global_position, world_pos)
 				else:
 					can_reveal = has_line_of_sight(player.global_position, world_pos)
 				
-				# Update fog visibility based on line of sight
+				# Mark as explored if we can see it
+				if can_reveal:
+					revealed_tiles[tile_key] = true
+				
+				# Update fog visibility
+				# Fog is hidden only if: 1) explored AND 2) currently visible
 				if fog_meshes.has(tile_key):
-					if can_reveal:
-						# Can see it - hide fog, mark as revealed
+					var is_explored = revealed_tiles.get(tile_key, false)
+					if is_explored:
+						# Tile is explored - keep fog hidden permanently
 						fog_meshes[tile_key].visible = false
-						revealed_tiles[tile_key] = true
 					else:
-						# Cannot see it - show fog
+						# Not explored yet - show fog
 						fog_meshes[tile_key].visible = true
-						# Don't mark as unrevealed - keep exploration progress
 
 func has_line_of_sight_to_wall(from: Vector3, to: Vector3) -> bool:
 	"""Check if we can see a wall tile - stops at the wall itself, not blocked by it"""
@@ -413,8 +412,6 @@ func has_line_of_sight(from: Vector3, to: Vector3) -> bool:
 	var step_size = 0.25  # Smaller steps to avoid missing cells
 	var current_dist = step_size
 	
-	var debug_door_check_count = 0  # Count door checks
-	
 	while current_dist < distance:
 		var check_pos_2d = from_2d + direction * current_dist
 		var check_pos_3d = Vector3(check_pos_2d.x, 0, check_pos_2d.y)
@@ -424,22 +421,15 @@ func has_line_of_sight(from: Vector3, to: Vector3) -> bool:
 		# Check if this position has a door FIRST (before walkable check)
 		if check_tile_id == -1 and map_generator.has_method("has_door_at_position"):
 			var has_door = map_generator.has_door_at_position(check_grid.x, check_grid.z)
-			if debug_door_check_count < 3:  # Log first 3 door checks
-				if has_door or check_grid == Vector3i(-4, 0, 1):  # Log if door OR if it's the door position
-					print("[FOV LOS] Checking grid:", check_grid, " has_door:", has_door)
-					debug_door_check_count += 1
-			
 			if has_door:
 				# Door position - check if door scene instance is open
 				var door_open = is_door_open_at_position(check_pos_3d)
-				print("[FOV LOS] FOUND Door at grid:", check_grid, " world:", check_pos_3d, " open:", door_open)
 				if door_open:
 					# Door is open - don't block
 					current_dist += step_size
 					continue
 				else:
 					# Door is closed - blocks vision
-					print("[FOV LOS] BLOCKING vision due to closed door")
 					return false
 		
 		# Check if this is a cleared floor (walkable)

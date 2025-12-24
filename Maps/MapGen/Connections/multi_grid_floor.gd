@@ -338,7 +338,6 @@ func _clear_floor_tiles_from_primary() -> void:
 		
 		if is_door:
 			# Store door position before clearing
-			print("[MultiGridFloor] Clearing door_floor_tile (ID ", tile_id, ") at ", cell_pos)
 			door_positions[cell_pos] = true
 			primary_grid.set_cell_item(cell_pos, GridMap.INVALID_CELL_ITEM)
 			cleared_count += 1
