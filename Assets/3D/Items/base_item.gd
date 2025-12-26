@@ -11,6 +11,7 @@ class_name BaseItem
 
 # NEW: Level-based system
 var item_level: int = 1  # Set by loot system when spawned
+var item_quality: int = ItemQuality.Quality.NORMAL  # Damaged, Normal, or Fine
 var rolled_stats: Dictionary = {}  # Future: store randomized stats based on item_level
 
 var is_hovered: bool = false
@@ -201,13 +202,18 @@ func update_label_text():
 			display_text = "%s (x%d)" % [item_name, stack_count]
 		
 		label_3d.text = display_text
+		
+		# Set color based on item quality
+		label_3d.modulate = ItemQuality.get_quality_color(item_quality)
 
-# NEW: Method called by loot system to set the item level
-func set_item_level(level: int):
+# NEW: Method called by loot system to set item properties
+func set_item_properties(level: int, quality: int, final_value: int):
 	item_level = level
-	update_label_text()  # Update label to show level
+	item_quality = quality
+	value = final_value
+	update_label_text()  # Update label with quality color
 	
-	# FUTURE: Roll stats based on item_level
+	# FUTURE: Roll stats based on item_level and quality
 	# roll_item_stats()
 
 # FUTURE: Roll randomized stats based on item_level
@@ -228,10 +234,22 @@ func pickup():
 	
 	being_picked_up = true  # Immediately mark as being picked up
 	
-	# Pass the scene reference AND weight/value/stackable/item_type so the item can be dropped later
+	# Pass the scene reference AND all item properties including level and quality
 	var item_scene = load(scene_file_path) if scene_file_path else null
 	
-	if Inventory.add_item(item_name, item_icon, item_scene, weight, value, stackable, max_stack_size, stack_count, item_type):
+	if Inventory.add_item(
+		item_name, 
+		item_icon, 
+		item_scene, 
+		weight, 
+		value, 
+		stackable, 
+		max_stack_size, 
+		stack_count, 
+		item_type,
+		item_level,  # NEW: Pass item level
+		item_quality  # NEW: Pass item quality
+	):
 		queue_free()
 	else:
 		being_picked_up = false  # Re-enable if inventory was full

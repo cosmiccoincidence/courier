@@ -1,36 +1,24 @@
 # res://resources/loot_profile.gd
 extends Resource
-class_name LootProfile  # This makes it globally accessible in Godot
+class_name LootProfile
 
-# How items are selected based on level matching
-@export_group("Level Matching")
-@export var level_range: int = 5  # Will consider items within ±5 levels of target level
-@export var level_curve: Curve  # Drop probability based on level difference (optional, for fine control)
-@export var prefer_exact_level: bool = true  # Higher weight for items matching target level
+# Item type filtering - which types of items can drop
+@export_group("Item Type Filtering")
+@export var allowed_item_types: Array[String] = []  # If empty, allows all types
+@export var excluded_item_types: Array[String] = []  # Blacklist specific types
 
-# Quality shift - makes drops skew higher/lower than entity level
-@export_group("Quality Adjustment")
-@export var level_offset: int = 0  # +5 = drops items 5 levels higher, -5 = 5 levels lower
-@export var allow_higher_level: bool = true  # Can drop items above target level
-@export var allow_lower_level: bool = true  # Can drop items below target level
-
-# Item level calculation
-@export_group("Item Level Formula")
-@export var item_level_multiplier: float = 2.0  # item_level = enemy_level * multiplier
-@export var item_level_bonus: int = 0  # Additional flat bonus to item level
-
-# Quantity
+# Drop quantity
 @export_group("Drop Quantity")
 @export var min_drops: int = 1
 @export var max_drops: int = 3
-@export var drop_chance: float = 1.0  # 0.0-1.0, chance that ANY loot drops at all
+@export var drop_chance: float = 1.0  # 0.0-1.0, chance that ANY loot drops
 
-# Tag filtering (for enemy-specific or special drops)
-@export_group("Filters")
+# Item level variance
+@export_group("Level Variance")
+@export var level_variance: int = 2  # ±variance from enemy_level (e.g., enemy lv10 drops items lv8-12)
+
+# Optional tag filtering
+@export_group("Advanced Filters")
 @export var required_tags: Array[String] = []  # Must have at least one of these tags
 @export var excluded_tags: Array[String] = []  # Cannot have any of these tags
-@export var bonus_tags: Dictionary = {}  # e.g., {"goblin_favorite": 2.0} multiplies weight by 2.0
-
-# Advanced
-@export_group("Advanced")
-@export var weight_falloff_rate: float = 0.15  # How quickly weight decreases with level difference
+@export var bonus_tags: Dictionary = {}  # e.g., {"rare": 2.0} multiplies weight by 2.0

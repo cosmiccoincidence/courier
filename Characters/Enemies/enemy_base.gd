@@ -261,26 +261,25 @@ func spawn_loot():
 	print("[LOOT DEBUG] ✓ LootManager found")
 	print("[LOOT DEBUG] LootManager has %d total items in database" % loot_manager.all_items.size())
 	
-	# Generate loot based on enemy_level
-	# item_level will be calculated as: enemy_level * loot_profile.item_level_multiplier
-	var target_item_level = int(enemy_level * loot_profile.item_level_multiplier) + loot_profile.item_level_bonus
-	print("[LOOT DEBUG] Target item level: %d (enemy_level %d * multiplier %.1f + bonus %d)" % [
-		target_item_level,
-		enemy_level,
-		loot_profile.item_level_multiplier,
-		loot_profile.item_level_bonus
-	])
+	# Get player luck stat
+	var player_luck = 0.0
+	if player and player.has_method("get_total_luck"):
+		player_luck = player.get_total_luck()
+	elif player and "luck" in player:
+		player_luck = player.luck
 	
-	var loot_data = loot_manager.generate_loot(enemy_level, loot_profile)
+	print("[LOOT DEBUG] Player luck: %.1f" % player_luck)
+	
+	# Generate loot based on enemy_level and player_luck
+	var loot_data = loot_manager.generate_loot(enemy_level, loot_profile, player_luck)
 	
 	print("[LOOT DEBUG] Generated %d loot items" % loot_data.size())
 	
 	if loot_data.is_empty():
 		print("[LOOT DEBUG] ⚠️ No loot generated. Check:")
 		print("  - Drop chance: %.2f" % loot_profile.drop_chance)
-		print("  - Level range: ±%d" % loot_profile.level_range)
-		print("  - Required tags: %s" % str(loot_profile.required_tags))
-		print("  - Excluded tags: %s" % str(loot_profile.excluded_tags))
+		print("  - Allowed types: %s" % str(loot_profile.allowed_item_types))
+		print("  - Excluded types: %s" % str(loot_profile.excluded_item_types))
 	
 	for item_data in loot_data:
 		_spawn_loot_item(item_data)
@@ -290,9 +289,15 @@ func _spawn_loot_item(item_data: Dictionary):
 	
 	var item: LootItem = item_data["item"]
 	var item_level: int = item_data["item_level"]
+	var item_quality: int = item_data["item_quality"]
+	var item_value: int = item_data["item_value"]
 	
 	print("[LOOT DEBUG]   Item: %s" % item.item_name)
-	print("[LOOT DEBUG]   Item Level: %d" % item_level)
+	print("[LOOT DEBUG]   Level: %d, Quality: %s, Value: %d" % [
+		item_level,
+		ItemQuality.get_quality_name(item_quality),
+		item_value
+	])
 	
 	if not item.item_scene:
 		push_warning("[LOOT DEBUG] ❌ No scene set for item: %s" % item.item_name)
@@ -306,18 +311,20 @@ func _spawn_loot_item(item_data: Dictionary):
 	# Set up the item before adding to scene
 	if loot_instance is BaseItem:
 		print("[LOOT DEBUG]   ✓ Instance is BaseItem, copying properties...")
-		# Copy properties from LootItem resource to BaseItem instance
+		# Copy base properties from LootItem resource
 		loot_instance.item_name = item.item_name
 		loot_instance.item_icon = item.icon
 		loot_instance.item_type = item.item_type
 		loot_instance.weight = item.weight
-		loot_instance.value = item.base_value
 		loot_instance.stackable = item.stackable
 		loot_instance.max_stack_size = item.max_stack_size
 		
-		# Set the rolled item level
+		# Set rolled properties (level, quality, value)
 		loot_instance.item_level = item_level
-		print("[LOOT DEBUG]   ✓ Properties copied, item_level set to %d" % item_level)
+		loot_instance.item_quality = item_quality
+		loot_instance.value = item_value
+		
+		print("[LOOT DEBUG]   ✓ Properties copied")
 	else:
 		push_warning("[LOOT DEBUG] ⚠️ Instance is not a BaseItem: %s" % loot_instance.get_class())
 	
@@ -326,14 +333,15 @@ func _spawn_loot_item(item_data: Dictionary):
 	loot_instance.global_position = global_position + Vector3(0, 0.5, 0)
 	print("[LOOT DEBUG]   ✓ Added to scene at position: %s" % loot_instance.global_position)
 	
-	# Call set_item_level after it's in the tree (so label exists)
-	if loot_instance.has_method("set_item_level"):
-		loot_instance.set_item_level(item_level)
-		print("[LOOT DEBUG]   ✓ Called set_item_level()")
+	# Call set_item_properties after it's in the tree (so label exists)
+	if loot_instance.has_method("set_item_properties"):
+		loot_instance.set_item_properties(item_level, item_quality, item_value)
+		print("[LOOT DEBUG]   ✓ Called set_item_properties()")
 	
-	print("[LOOT DEBUG] ✓ Successfully spawned %s (level %d) from level %d %s" % [
-		item.item_name, 
-		item_level, 
-		enemy_level, 
+	print("[LOOT DEBUG] ✓ Spawned %s (Lv.%d, %s, %dg) from %s" % [
+		item.item_name,
+		item_level,
+		ItemQuality.get_quality_name(item_quality),
+		item_value,
 		display_name
 	])
