@@ -16,5 +16,5 @@ stackable = true
 max_stack_size = 1000000
 min_drop_amount = 5
 max_drop_amount = 10
-scaled_quantity = true
+base_weight = 50.0
 metadata/_custom_type_script = "uid://bm5i53gst3tyr"

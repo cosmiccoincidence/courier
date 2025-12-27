@@ -18,6 +18,9 @@ signal mass_changed(current_mass, max_mass)
 signal gold_changed(amount)
 signal encumbered_status_changed(is_encumbered)
 
+# Store reference to item scenes for dropping
+var item_scene_lookup: Dictionary = {}
+
 func _ready():
 	# Calculate hard max mass
 	hard_max_mass = soft_max_mass * 1.1
@@ -46,9 +49,6 @@ func _update_mass_signals():
 	var current_mass = get_total_mass()
 	mass_changed.emit(current_mass, soft_max_mass)
 	encumbered_status_changed.emit(is_encumbered())
-
-# Store reference to item scenes for dropping
-var item_scene_lookup: Dictionary = {}
 
 func add_item(item_name: String, icon: Texture2D = null, item_scene: PackedScene = null, item_mass: float = 1.0, item_value: int = 10, is_stackable: bool = false, max_stack: int = 99, amount: int = 1, item_type: String = "", item_level: int = 1, item_quality: int = 1) -> bool:
 	# Special handling for gold - add directly to gold counter
@@ -109,8 +109,8 @@ func add_item(item_name: String, icon: Texture2D = null, item_scene: PackedScene
 			"max_stack_size": max_stack,
 			"stack_count": stack_size,
 			"item_type": item_type,
-			"item_level": item_level,  # NEW: Store item level
-			"item_quality": item_quality  # NEW: Store item quality
+			"item_level": item_level,  # Store item level
+			"item_quality": item_quality  # Store item quality
 		}
 		
 		amount -= stack_size
@@ -161,7 +161,7 @@ func drop_item_at_slot(slot_index: int):
 					# Set position
 					item_instance.global_position = drop_position
 					
-					# NEW: Restore item properties from inventory data
+					# Restore item properties from inventory data
 					if item_instance is BaseItem:
 						# Restore level and quality
 						if item.has("item_level"):
@@ -212,19 +212,19 @@ func get_items() -> Array:
 func clear():
 	items.clear()
 	inventory_changed.emit()
-	weight_changed.emit(get_total_weight(), soft_max_weight)
+	mass_changed.emit(get_total_mass(), soft_max_mass)
 
-func get_total_weight() -> float:
+func get_total_mass() -> float:
 	var total: float = 0.0
 	
-	# Add weight from inventory items
+	# Add mass from inventory items
 	for item in items:
 		if item != null and item.has("mass"):
 			var item_mass = item.mass
 			var count = item.get("stack_count", 1)
 			total += item_mass * count
 	
-	# Add weight from equipped items
+	# Add mass from equipped items
 	if has_node("/root/Equipment"):
 		var equipped_items = Equipment.get_items()
 		for item in equipped_items:
