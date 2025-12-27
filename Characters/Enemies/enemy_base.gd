@@ -292,9 +292,14 @@ func _spawn_loot_item(item_data: Dictionary):
 		loot_instance.item_quality = item_quality
 		loot_instance.value = item_value
 	
-	# Add to scene and position
+	# Add to scene and position with dispersion
 	get_tree().current_scene.add_child(loot_instance)
-	loot_instance.global_position = global_position + Vector3(0, 0.5, 0)
+	
+	# Spawn items in a circle around the enemy with random dispersion
+	var angle = randf() * TAU  # Random angle (0 to 2π)
+	var radius = randf_range(0.5, 1.0)  # Random distance from enemy
+	var offset = Vector3(cos(angle) * radius, 0.5, sin(angle) * radius)
+	loot_instance.global_position = global_position + offset
 	
 	# Call set_item_properties after it's in the tree (so label exists)
 	if loot_instance.has_method("set_item_properties"):
