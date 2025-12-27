@@ -43,7 +43,7 @@ const ENCUMBERED_ROTATION_MULT: float = 0.75  # 75% rotation speed
 
 # Calculated combat stats (modified by gear/buffs/god mode)
 var crit_chance: float = 0.1
-var crit_multiplier: float = 2.0
+var crit_multiplier: float = 1.0
 
 # ===== MOVEMENT =====
 @export_group("Movement")
