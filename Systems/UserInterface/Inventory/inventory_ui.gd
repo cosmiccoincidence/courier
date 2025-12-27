@@ -49,6 +49,11 @@ var equipment_slot_names: Array = [
 	"R Hand 2"   # Slot 12
 ]
 
+func _process(_delta):
+	# Update stats every frame when inventory is visible
+	if visible and player_ref:
+		_update_stats_display()
+		
 func _input(event):
 	"""Handle inventory toggle and drops outside the inventory grid"""
 	# Toggle inventory visibility
@@ -264,8 +269,8 @@ func _setup_stats_panel():
 	var title = RichTextLabel.new()
 	title.bbcode_enabled = true
 	title.text = "[center][color=gold][u]Player Stats[/u][/color][/center]"
-	title.fit_content = true  # Makes it resize to fit the content
-	title.scroll_active = false  # Disables scrolling
+	title.fit_content = true
+	title.scroll_active = false
 	title.add_theme_font_size_override("normal_font_size", 18)
 	vbox.add_child(title)
 	
@@ -285,6 +290,19 @@ func _setup_stats_panel():
 	dex_label.add_theme_color_override("font_color", Color.GRAY)
 	vbox.add_child(dex_label)
 	
+	# NEW: Create luck label
+	var luck_label = Label.new()
+	luck_label.name = "LuckLabel"
+	luck_label.text = "Luck: 0"
+	luck_label.add_theme_font_size_override("font_size", 16)
+	luck_label.add_theme_color_override("font_color", Color(0.5, 1.0, 0.5))  # Light green
+	vbox.add_child(luck_label)
+	
+	# Add spacer
+	var spacer1 = Control.new()
+	spacer1.custom_minimum_size = Vector2(0, 10)
+	vbox.add_child(spacer1)
+	
 	# Create max health label
 	var health_label = Label.new()
 	health_label.name = "MaxHealthLabel"
@@ -295,9 +313,14 @@ func _setup_stats_panel():
 	# Create health regen label
 	var health_regen_label = Label.new()
 	health_regen_label.name = "HealthRegenLabel"
-	health_regen_label.text = "Health Regeneration: 0"
+	health_regen_label.text = "Health Regen: 0 / 0s"
 	health_regen_label.add_theme_font_size_override("font_size", 14)
 	vbox.add_child(health_regen_label)
+	
+	# Add spacer
+	var spacer2 = Control.new()
+	spacer2.custom_minimum_size = Vector2(0, 10)
+	vbox.add_child(spacer2)
 	
 	# Create max stamina label
 	var stamina_label = Label.new()
@@ -309,23 +332,31 @@ func _setup_stats_panel():
 	# Create stamina regen label
 	var stamina_regen_label = Label.new()
 	stamina_regen_label.name = "StaminaRegenLabel"
-	stamina_regen_label.text = "Stamina Regeneration: 0"
+	stamina_regen_label.text = "Stamina Regen: 0 / 0s"
 	stamina_regen_label.add_theme_font_size_override("font_size", 14)
 	vbox.add_child(stamina_regen_label)
+	
+	# Add spacer
+	var spacer3 = Control.new()
+	spacer3.custom_minimum_size = Vector2(0, 10)
+	vbox.add_child(spacer3)
 	
 	# Create crit chance label
 	var crit_chance_label = Label.new()
 	crit_chance_label.name = "CritChanceLabel"
-	crit_chance_label.text = "Crit Chance: 0"
+	crit_chance_label.text = "Crit Chance: 0%"
 	crit_chance_label.add_theme_font_size_override("font_size", 14)
 	vbox.add_child(crit_chance_label)
 	
 	# Create crit damage label
 	var crit_damage_label = Label.new()
 	crit_damage_label.name = "CritDamageLabel"
-	crit_damage_label.text = "Crit Damage: 0"
+	crit_damage_label.text = "Crit Damage: 0x"
 	crit_damage_label.add_theme_font_size_override("font_size", 14)
 	vbox.add_child(crit_damage_label)
+
+
+# Replace the entire _update_stats_display() function with this:
 
 func _update_stats_display():
 	"""Update the stats panel with current player stats"""
@@ -346,36 +377,51 @@ func _update_stats_display():
 	if dex_label:
 		dex_label.text = "Dexterity: %d" % player_ref.dexterity
 	
+	# NEW: Update luck
+	var luck_label = vbox.get_node_or_null("LuckLabel")
+	if luck_label:
+		var luck_value = player_ref.luck
+		# Color based on positive/negative luck
+		if luck_value > 0:
+			luck_label.add_theme_color_override("font_color", Color(0.5, 1.0, 0.5))  # Green for positive
+		elif luck_value < 0:
+			luck_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.5))  # Red for negative
+		else:
+			luck_label.add_theme_color_override("font_color", Color.WHITE)  # White for zero
+		luck_label.text = "Luck: %.1f" % luck_value
+	
 	# Update max health
 	var health_label = vbox.get_node_or_null("MaxHealthLabel")
 	if health_label:
 		health_label.text = "Max Health: %d" % player_ref.max_health
 	
-	# Update health regen
+	# Update health regen - FIXED FORMAT
 	var health_regen_label = vbox.get_node_or_null("HealthRegenLabel")
 	if health_regen_label:
-		health_regen_label.text = "Health Regeneration: %d every %ds" % [player_ref.health_regen, player_ref.health_regen_interval]
+		health_regen_label.text = "Health Regen: %.0f / %.0fs" % [player_ref.health_regen, player_ref.health_regen_interval]
 	
 	# Update max stamina (no decimal)
 	var stamina_label = vbox.get_node_or_null("MaxStaminaLabel")
 	if stamina_label:
 		stamina_label.text = "Max Stamina: %d" % int(player_ref.max_stamina)
 	
-	# Update stamina regen
+	# Update stamina regen - FIXED FORMAT
 	var stamina_regen_label = vbox.get_node_or_null("StaminaRegenLabel")
 	if stamina_regen_label:
-		stamina_regen_label.text = "Stamina Regeneration: %d every %.1fs" % [player_ref.stamina_regen, player_ref.stamina_regen_interval]
+		stamina_regen_label.text = "Stamina Regen: %.1f / %.1fs" % [player_ref.stamina_regen, player_ref.stamina_regen_interval]
 	
-	# Update crit chance
+	# Update crit chance - FIXED: Convert to percentage and use correct variable
 	var crit_chance_label = vbox.get_node_or_null("CritChanceLabel")
 	if crit_chance_label:
-		crit_chance_label.text = "Crit Chance: %d" % player_ref.crit_chance
+		var crit_percent = player_ref.crit_chance * 100  # Convert 0.1 to 10%
+		crit_chance_label.text = "Crit Chance: %.1f%%" % crit_percent
 	
-	# Update crit damage
-	var crit_damage_label = vbox.get_node_or_null("CritDamageeLabel")
+	# Update crit damage - FIXED: Use crit_multiplier variable
+	var crit_damage_label = vbox.get_node_or_null("CritDamageLabel")
 	if crit_damage_label:
-		crit_damage_label.text = "Crit Damage: %d" % player_ref.crit_damage
-	
+		crit_damage_label.text = "Crit Damage: %.1fx" % player_ref.crit_multiplier
+
+
 func _setup_equipment_grid():
 	"""Set up the equipment grid with gaps"""
 	if not equipment_grid:
