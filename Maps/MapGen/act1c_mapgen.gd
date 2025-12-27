@@ -1,13 +1,13 @@
-# act1a_mapgen.gd
-# Level 1A configuration - individual level settings
-class_name Act1aMapGen
+# act1c_mapgen.gd
+# Level 1C configuration - individual level settings
+class_name Act1cMapGen
 extends Act1MapGen
 
 # ============================================================================
 # MAP CONFIGURATION
 # ============================================================================
 
-@export var map_number: int = 1  # First map in Act 1
+@export var map_number: int = 3  # First map in Act 3
 var map_level: int  # Calculated: (act_number + map_number) * act_number
 
 func _ready():

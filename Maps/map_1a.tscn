@@ -19,7 +19,7 @@ enemy_scene = ExtResource("5_nlslb")
 spawn_weight = 0.2
 metadata/_custom_type_script = "uid://rc6qhmcd5qi6"
 
-[node name="Map1a" type="Node3D"]
+[node name="Map1a" type="Node3D" groups=["map_generator"]]
 
 [node name="PrimaryGridMap" type="GridMap" parent="."]
 mesh_library = ExtResource("1_x6ul5")

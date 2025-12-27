@@ -3,6 +3,12 @@ class_name Act1MapGen
 extends CoreMapGen
 
 # ============================================================================
+# ACT CONFIGURATION
+# ============================================================================
+
+@export var act_number: int = 1  # Act 1
+
+# ============================================================================
 # FEATURE GENERATORS
 # ============================================================================
 
@@ -140,7 +146,7 @@ func sync_feature_settings():
 
 func spawn_enemies():
 	print("Spawning enemies...")
-	print("Enemy spawn list size: ", enemy_spawn_list.size())  # Debug
+	print("Enemy spawn list size: ", enemy_spawn_list.size())
 	
 	if enemy_spawn_list.size() == 0:
 		print("Warning: No enemy spawn data assigned")

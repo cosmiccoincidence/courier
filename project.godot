@@ -36,6 +36,7 @@ world=""
 player=""
 tooltip_manager=""
 npc=""
+map_generator=""
 
 [input]
 
