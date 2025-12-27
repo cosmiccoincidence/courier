@@ -4,5 +4,4 @@
 
 [resource]
 script = ExtResource("1_sd4o3")
-allowed_item_types = Array[String](["Helmet", "Belt", "Weapon"])
 metadata/_custom_type_script = "uid://dly44gmovhexn"
