@@ -124,7 +124,7 @@ func show_tooltip(slot: Control, item_data: Dictionary):
 	
 	# Item level - below name, white color
 	var item_level = item_data.get("item_level", 1)
-	lines.append("[center]Level %d[/center]" % item_level)
+	lines.append("[center]Level: %d[/center]" % item_level)
 	
 	# Value - gold color
 	var value = item_data.get("value", 0)

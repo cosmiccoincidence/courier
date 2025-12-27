@@ -244,22 +244,13 @@ func die():
 	queue_free()
 
 func spawn_loot():
-	print("[LOOT DEBUG] === Starting loot spawn for %s (level %d) ===" % [display_name, enemy_level])
-	
-	# Use LootProfile to generate level-based loot
 	if not loot_profile:
-		push_warning("[LOOT DEBUG] ❌ No loot profile set for %s (level %d)" % [display_name, enemy_level])
 		return
-	
-	print("[LOOT DEBUG] ✓ Loot profile found: %s" % loot_profile.resource_path)
 	
 	var loot_manager = get_node_or_null("/root/LootManager")
 	if not loot_manager:
-		push_error("[LOOT DEBUG] ❌ LootManager not found! Add it as an autoload singleton in Project Settings.")
+		push_error("LootManager not found! Add it as an autoload singleton.")
 		return
-	
-	print("[LOOT DEBUG] ✓ LootManager found")
-	print("[LOOT DEBUG] LootManager has %d total items in database" % loot_manager.all_items.size())
 	
 	# Get player luck stat
 	var player_luck = 0.0
@@ -268,49 +259,26 @@ func spawn_loot():
 	elif player and "luck" in player:
 		player_luck = player.luck
 	
-	print("[LOOT DEBUG] Player luck: %.1f" % player_luck)
-	
 	# Generate loot based on enemy_level and player_luck
 	var loot_data = loot_manager.generate_loot(enemy_level, loot_profile, player_luck)
-	
-	print("[LOOT DEBUG] Generated %d loot items" % loot_data.size())
-	
-	if loot_data.is_empty():
-		print("[LOOT DEBUG] ⚠️ No loot generated. Check:")
-		print("  - Drop chance: %.2f" % loot_profile.drop_chance)
-		print("  - Allowed types: %s" % str(loot_profile.allowed_item_types))
-		print("  - Excluded types: %s" % str(loot_profile.excluded_item_types))
 	
 	for item_data in loot_data:
 		_spawn_loot_item(item_data)
 
 func _spawn_loot_item(item_data: Dictionary):
-	print("[LOOT DEBUG] Spawning item from data...")
-	
 	var item: LootItem = item_data["item"]
 	var item_level: int = item_data["item_level"]
 	var item_quality: int = item_data["item_quality"]
 	var item_value: int = item_data["item_value"]
 	
-	print("[LOOT DEBUG]   Item: %s" % item.item_name)
-	print("[LOOT DEBUG]   Level: %d, Quality: %s, Value: %d" % [
-		item_level,
-		ItemQuality.get_quality_name(item_quality),
-		item_value
-	])
-	
 	if not item.item_scene:
-		push_warning("[LOOT DEBUG] ❌ No scene set for item: %s" % item.item_name)
+		push_warning("No scene set for item: %s" % item.item_name)
 		return
 	
-	print("[LOOT DEBUG]   Scene path: %s" % item.item_scene.resource_path)
-	
 	var loot_instance = item.item_scene.instantiate()
-	print("[LOOT DEBUG]   ✓ Instance created: %s" % loot_instance.name)
 	
 	# Set up the item before adding to scene
 	if loot_instance is BaseItem:
-		print("[LOOT DEBUG]   ✓ Instance is BaseItem, copying properties...")
 		# Copy base properties from LootItem resource
 		loot_instance.item_name = item.item_name
 		loot_instance.item_icon = item.icon
@@ -323,25 +291,11 @@ func _spawn_loot_item(item_data: Dictionary):
 		loot_instance.item_level = item_level
 		loot_instance.item_quality = item_quality
 		loot_instance.value = item_value
-		
-		print("[LOOT DEBUG]   ✓ Properties copied")
-	else:
-		push_warning("[LOOT DEBUG] ⚠️ Instance is not a BaseItem: %s" % loot_instance.get_class())
 	
 	# Add to scene and position
 	get_tree().current_scene.add_child(loot_instance)
 	loot_instance.global_position = global_position + Vector3(0, 0.5, 0)
-	print("[LOOT DEBUG]   ✓ Added to scene at position: %s" % loot_instance.global_position)
 	
 	# Call set_item_properties after it's in the tree (so label exists)
 	if loot_instance.has_method("set_item_properties"):
 		loot_instance.set_item_properties(item_level, item_quality, item_value)
-		print("[LOOT DEBUG]   ✓ Called set_item_properties()")
-	
-	print("[LOOT DEBUG] ✓ Spawned %s (Lv.%d, %s, %dg) from %s" % [
-		item.item_name,
-		item_level,
-		ItemQuality.get_quality_name(item_quality),
-		item_value,
-		display_name
-	])

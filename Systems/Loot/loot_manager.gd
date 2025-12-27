@@ -9,19 +9,7 @@ var items_by_type: Dictionary = {}
 
 
 func _ready():
-	print("[LOOT MANAGER] Initializing...")
-	print("[LOOT MANAGER] Total items in all_items array: %d" % all_items.size())
-	
-	if all_items.is_empty():
-		push_error("[LOOT MANAGER] ❌ No items in all_items array!")
-	else:
-		print("[LOOT MANAGER] Sample items:")
-		for i in range(min(5, all_items.size())):
-			var item = all_items[i]
-			print("  - %s (type: %s)" % [item.item_name, item.item_type])
-	
 	_build_lookup_tables()
-	print("[LOOT MANAGER] ✓ Lookup tables built")
 
 
 func _build_lookup_tables():
