@@ -4,7 +4,7 @@
 [ext_resource type="AudioStream" uid="uid://cul4u25ut4wuc" path="res://Assets/Audio/Characters/Grunt.wav" id="2_jprqx"]
 [ext_resource type="AudioStream" uid="uid://bdlgag1sqx7dg" path="res://Assets/Audio/Characters/Attack.wav" id="3_hcwkc"]
 [ext_resource type="AudioStream" uid="uid://bkikoslj3l0me" path="res://Assets/Audio/Characters/Hit.wav" id="4_usps0"]
-[ext_resource type="Resource" uid="uid://cko25xbv42m76" path="res://Systems/Loot/Enemies/enemy1.tres" id="5_onsks"]
+[ext_resource type="Resource" uid="uid://dp1vamq3q3bdt" path="res://Systems/Loot/Enemies/enemy2.tres" id="5_onsks"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_onrkg"]
 
