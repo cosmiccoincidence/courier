@@ -15,6 +15,10 @@ var item_level: int = 1  # Set by loot system when spawned
 var item_quality: int = ItemQuality.Quality.NORMAL  # Damaged, Normal, or Fine
 var rolled_stats: Dictionary = {}  # Future: store randomized stats based on item_level
 
+# NEW: Weapon and Armor stats
+var weapon_damage: int = 0  # Only for weapons
+var armor_defense: int = 0  # Only for armor
+
 var is_hovered: bool = false
 var label_3d: Label3D
 var collision_body: CollisionObject3D
@@ -257,7 +261,9 @@ func pickup():
 		item_type,
 		item_level,  # Pass item level
 		item_quality,  # Pass item quality
-		item_subtype  # Pass item subtype
+		item_subtype,  # Pass item subtype
+		weapon_damage,  # Pass weapon damage
+		armor_defense  # Pass armor defense
 	):
 		queue_free()
 	else:

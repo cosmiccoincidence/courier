@@ -2,7 +2,7 @@ extends Node
 # inventory.gd
 
 var items: Array = []
-var max_slots: int = 32  # Match the UI grid (4 columns × 8 rows)
+var max_slots: int = 40  # Match the UI grid (8 columns × 5 rows)
 var player_ref: Node3D = null  # Reference to player for drop position
 
 # Mass system
@@ -50,7 +50,7 @@ func _update_mass_signals():
 	mass_changed.emit(current_mass, soft_max_mass)
 	encumbered_status_changed.emit(is_encumbered())
 
-func add_item(item_name: String, icon: Texture2D = null, item_scene: PackedScene = null, item_mass: float = 1.0, item_value: int = 10, is_stackable: bool = false, max_stack: int = 99, amount: int = 1, item_type: String = "", item_level: int = 1, item_quality: int = 1, item_subtype: String = "") -> bool:
+func add_item(item_name: String, icon: Texture2D = null, item_scene: PackedScene = null, item_mass: float = 1.0, item_value: int = 10, is_stackable: bool = false, max_stack: int = 99, amount: int = 1, item_type: String = "", item_level: int = 1, item_quality: int = 1, item_subtype: String = "", weapon_damage: int = 0, armor_defense: int = 0) -> bool:
 	# Special handling for gold - add directly to gold counter
 	if item_name.to_lower() == "gold" or item_name.to_lower() == "coin":
 		add_gold(amount)
@@ -111,7 +111,9 @@ func add_item(item_name: String, icon: Texture2D = null, item_scene: PackedScene
 			"item_type": item_type,
 			"item_level": item_level,  # Store item level
 			"item_quality": item_quality,  # Store item quality
-			"item_subtype": item_subtype  # NEW: Store item subtype
+			"item_subtype": item_subtype,  # Store item subtype
+			"weapon_damage": weapon_damage,  # Store weapon damage
+			"armor_defense": armor_defense   # Store armor defense
 		}
 		
 		amount -= stack_size
@@ -175,6 +177,12 @@ func drop_item_at_slot(slot_index: int):
 						# NEW: Restore item subtype
 						if item.has("item_subtype"):
 							item_instance.item_subtype = item.item_subtype
+							# NEW: Restore weapon/armor stats
+							if item.has("weapon_damage"):
+								item_instance.weapon_damage = item.weapon_damage
+							if item.has("armor_defense"):
+								item_instance.armor_defense = item.armor_defense
+
 						
 						# Set stack count if item is stackable
 						if item.get("stackable", false) and item.get("stack_count", 1) > 1:

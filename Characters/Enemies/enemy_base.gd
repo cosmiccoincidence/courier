@@ -327,6 +327,19 @@ func _spawn_loot_item(item_data: Dictionary):
 	var offset = Vector3(cos(angle) * radius, 0.5, sin(angle) * radius)
 	loot_instance.global_position = global_position + offset
 	
-	# Call set_item_properties after it's in the tree (so label exists)
+	# Roll item stats based on type
 	if loot_instance.has_method("set_item_properties"):
 		loot_instance.set_item_properties(item_level, item_quality, item_value)
+	
+	# Roll weapon/armor stats if applicable
+	if item.item_type.to_lower() == "weapon" and item.item_subtype != "":
+		var weapon_damage = WeaponStatRoller.roll_weapon_damage(item.item_subtype, item_level, item_quality)
+		if "weapon_damage" in loot_instance:
+			loot_instance.weapon_damage = weapon_damage
+		print("  Rolled weapon damage: ", weapon_damage)
+	
+	elif item.item_type.to_lower() == "armor" and item.item_subtype != "":
+		var armor_defense = ArmorStatRoller.roll_armor_defense(item.item_subtype, item_level, item_quality)
+		if "armor_defense" in loot_instance:
+			loot_instance.armor_defense = armor_defense
+		print("  Rolled armor defense: ", armor_defense)

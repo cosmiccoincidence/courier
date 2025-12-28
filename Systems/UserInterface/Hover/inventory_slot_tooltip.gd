@@ -136,6 +136,14 @@ func show_tooltip(slot: Control, item_data: Dictionary):
 	var item_level = item_data.get("item_level", 1)
 	lines.append("[center]Level: %d[/center]" % item_level)
 	
+	# Weapon damage - red color (only for weapons)
+	if item_data.has("weapon_damage") and item_data.weapon_damage > 0:
+		lines.append("[center][color=#ff6b6b]Damage: %d[/color][/center]" % item_data.weapon_damage)
+	
+	# Armor defense - blue color (only for armor)
+	if item_data.has("armor_defense") and item_data.armor_defense > 0:
+		lines.append("[center][color=#6bb6ff]Defense: %d[/color][/center]" % item_data.armor_defense)
+	
 	# Value - gold color
 	var value = item_data.get("value", 0)
 	lines.append("[center][color=gold]Value: %d[/color][/center]" % value)
