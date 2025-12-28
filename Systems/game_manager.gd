@@ -85,22 +85,40 @@ func load_map(map_scene: PackedScene) -> void:
 func update_map_label(map_gen: Node):
 	"""Update the HUD map label with current map info"""
 	if not player or not player.hud:
+		print("GameManager: No player or HUD found")
 		return
 	
 	var act_num = 1  # Default
 	var map_num = 1  # Default
+	var map_name = ""  # Optional map name
+	
+	print("GameManager: Map generator class: ", map_gen.get_class())
+	print("GameManager: Map generator script: ", map_gen.get_script())
 	
 	# Get act_number if it exists
 	if map_gen.get("act_number") != null:
 		act_num = map_gen.get("act_number")
+		print("GameManager: Found act_number = ", act_num)
+	else:
+		print("GameManager: No act_number found, using default: ", act_num)
 	
 	# Get map_number if it exists
 	if map_gen.get("map_number") != null:
 		map_num = map_gen.get("map_number")
+		print("GameManager: Found map_number = ", map_num)
+	else:
+		print("GameManager: No map_number found, using default: ", map_num)
+	
+	# Get map_name if it exists (for manual maps like towns, start, end)
+	if map_gen.get("map_name") != null:
+		map_name = map_gen.get("map_name")
+		print("GameManager: Found map_name = ", map_name)
+	
+	print("GameManager: Updating HUD to Map ", act_num, ":", map_num, " - ", map_name)
 	
 	# Update the HUD
 	if player.hud.has_method("_on_map_loaded"):
-		player.hud._on_map_loaded(act_num, map_num)
+		player.hud._on_map_loaded(act_num, map_num, map_name)
 
 func find_map_generator(map_root: Node) -> Node:
 	"""
