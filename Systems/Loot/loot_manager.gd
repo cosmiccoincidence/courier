@@ -27,9 +27,24 @@ func _build_lookup_tables():
 
 
 func generate_loot(enemy_level: int, loot_profile: LootProfile, player_luck: float = 0.0) -> Array[Dictionary]:
+	"""
+	Generate loot from an enemy/chest based on level and profile.
+	
+	Generation Steps:
+	1. Check drop chance - does any loot drop at all?
+	2. Determine number of items to drop (min_drops to max_drops)
+	3. For each item drop:
+	   a. Roll item type (from item_type_pool with weights)
+	   b. Roll specific item (from items of that type)
+	   c. Roll item level (enemy_level ± variance)
+	   d. Roll item quality (based on player luck)
+	   e. Roll stack size (if stackable)
+	   f. Calculate final value
+	4. Return array of item data dictionaries
+	"""
 	print("[LOOT MANAGER] generate_loot - enemy_level: %d, player_luck: %.1f" % [enemy_level, player_luck])
 	
-	# Check if any loot drops at all
+	# STEP 1: Check if any loot drops at all
 	var drop_roll = randf()
 	print("[LOOT MANAGER] Drop chance roll: %.2f vs %.2f" % [drop_roll, loot_profile.drop_chance])
 	
@@ -39,10 +54,12 @@ func generate_loot(enemy_level: int, loot_profile: LootProfile, player_luck: flo
 	
 	print("[LOOT MANAGER] ✓ Passed drop chance")
 	
+	# STEP 2: Determine number of items to drop
 	var dropped_items: Array[Dictionary] = []
 	var num_drops = randi_range(loot_profile.min_drops, loot_profile.max_drops)
 	print("[LOOT MANAGER] Rolling for %d items" % num_drops)
 	
+	# STEP 3: Roll each item
 	for i in range(num_drops):
 		print("[LOOT MANAGER] Rolling item %d/%d..." % [i + 1, num_drops])
 		var item_data = _roll_single_item(enemy_level, loot_profile, player_luck)
@@ -65,28 +82,49 @@ func generate_loot(enemy_level: int, loot_profile: LootProfile, player_luck: flo
 
 
 func _roll_single_item(enemy_level: int, profile: LootProfile, player_luck: float) -> Dictionary:
-	# Get eligible items based on item type filters
-	var eligible_items = _filter_eligible_items(profile)
+	"""
+	Roll a single item drop.
+	
+	Sub-steps:
+	a. Roll item type (from item_type_pool)
+	b. Get eligible items of that type
+	c. Select specific item (weighted random)
+	d. Roll item level (enemy_level ± variance)
+	e. Roll item quality (based on luck)
+	f. Roll stack size (if stackable)
+	g. Calculate final value
+	"""
+	
+	# STEP 3a: Roll item type
+	var selected_type = _roll_item_type(profile)
+	if selected_type == "":
+		# No type pool defined, use legacy filtering
+		print("[LOOT MANAGER]   Using legacy type filtering")
+	else:
+		print("[LOOT MANAGER]   Rolled item type: %s" % selected_type)
+	
+	# STEP 3b: Get eligible items based on type and filters
+	var eligible_items = _filter_eligible_items(profile, selected_type)
 	
 	if eligible_items.is_empty():
 		return {}
 	
-	# Weighted random selection
+	# STEP 3c: Weighted random selection of specific item
 	var selected_item = _weighted_select(eligible_items, profile)
 	
 	if not selected_item:
 		return {}
 	
-	# Calculate item level (enemy_level ± variance)
+	# STEP 3d: Calculate item level (enemy_level ± variance)
 	var item_level = enemy_level
 	if profile.level_variance > 0:
 		item_level += randi_range(-profile.level_variance, profile.level_variance)
 	item_level = max(1, item_level)  # Minimum level 1
 	
-	# Roll item quality based on player luck
+	# STEP 3e: Roll item quality based on player luck
 	var item_quality = ItemQuality.roll_quality(player_luck)
 	
-	# Calculate stack size if stackable
+	# STEP 3f: Calculate stack size if stackable
 	var stack_size = 1
 	if selected_item.stackable:
 		var min_amount = selected_item.min_drop_amount
@@ -111,7 +149,7 @@ func _roll_single_item(enemy_level: int, profile: LootProfile, player_luck: floa
 		# Cap at max_stack_size
 		stack_size = min(stack_size, selected_item.max_stack_size)
 	
-	# Calculate final value: base_value * (item_level * 0.1) * quality_mod
+	# STEP 3g: Calculate final value: base_value * (item_level * 0.1) * quality_mod
 	var quality_mod = ItemQuality.get_value_modifier(item_quality)
 	var final_value = int(selected_item.base_value * (item_level * 0.1) * quality_mod)
 	
@@ -124,7 +162,32 @@ func _roll_single_item(enemy_level: int, profile: LootProfile, player_luck: floa
 	}
 
 
-func _filter_eligible_items(profile: LootProfile) -> Array[LootItem]:
+func _roll_item_type(profile: LootProfile) -> String:
+	"""Roll an item type from the profile's item_type_pool using weighted random selection"""
+	
+	# If no type pool defined, return empty string (use legacy filtering)
+	if profile.item_type_pool.is_empty():
+		return ""
+	
+	# Calculate total weight
+	var total_weight = 0.0
+	for item_type in profile.item_type_pool:
+		total_weight += item_type.drop_weight
+	
+	# Weighted random selection
+	var roll = randf() * total_weight
+	var cumulative = 0.0
+	
+	for item_type in profile.item_type_pool:
+		cumulative += item_type.drop_weight
+		if roll <= cumulative:
+			return item_type.type_name
+	
+	# Fallback (shouldn't happen)
+	return profile.item_type_pool[0].type_name if profile.item_type_pool.size() > 0 else ""
+
+
+func _filter_eligible_items(profile: LootProfile, selected_type: String = "") -> Array[LootItem]:
 	var eligible: Array[LootItem] = []
 	
 	for item in all_items:

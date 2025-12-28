@@ -4,7 +4,8 @@ class_name LootProfile
 
 # Item type filtering - which types of items can drop
 @export_group("Item Type Filtering")
-@export var allowed_item_types: Array[String] = []  # If empty, allows all types
+@export var item_type_pool: Array[LootItemType] = []  # Pool of item types that can drop (with weights)
+@export var allowed_item_types: Array[String] = []  # If empty, allows all types (legacy support)
 @export var excluded_item_types: Array[String] = []  # Blacklist specific types
 
 # Drop quantity
