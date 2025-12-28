@@ -15,7 +15,7 @@ const SLOT_SCENE_PATH = "res://Systems/UserInterface/Inventory/inventory_slot.ts
 # ===== GRID CONFIGURATION =====
 var slot_size: int = 64
 var rows: int = 0  # Calculated from Inventory.max_slots
-var columns: int = 4 # Fixed number of columns
+var columns: int = 5 # Fixed number of columns
 
 # ===== STATE =====
 var player_ref: CharacterBody3D = null
@@ -328,18 +328,24 @@ func _handle_outside_drop():
 	
 	var mouse_pos = get_global_mouse_position()
 	var inventory_rect = grid_container.get_global_rect()
+	var equipment_rect = Rect2()
+	
+	if equipment_ui and equipment_ui.has_method("get_equipment_rect"):
+		equipment_rect = equipment_ui.get_equipment_rect()
 	
 	var outside_inventory = not inventory_rect.has_point(mouse_pos)
+	var outside_equipment = not equipment_rect.has_point(mouse_pos)
 	
-	# Check if equipment UI handled the drop
-	var equipment_handled = false
-	if equipment_ui and equipment_ui.has_method("handle_outside_drop"):
-		equipment_handled = equipment_ui.handle_outside_drop(mouse_pos, dragged_slot)
-	
-	# If outside both grids, drop from inventory
-	if outside_inventory and not equipment_handled:
+	# If outside BOTH grids, drop to world
+	if outside_inventory and outside_equipment:
 		var is_equipment = dragged_slot.get_meta("is_equipment_slot", false)
-		if not is_equipment:
+		
+		if is_equipment:
+			# Drop from equipment
+			if equipment_ui and equipment_ui.has_method("handle_outside_drop"):
+				equipment_ui.handle_outside_drop(mouse_pos, dragged_slot)
+		else:
+			# Drop from inventory
 			_drop_item_in_world(dragged_slot)
 		
 		dragged_slot.modulate = Color(1, 1, 1, 1)

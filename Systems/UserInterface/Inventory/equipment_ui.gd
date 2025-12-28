@@ -151,18 +151,9 @@ func _update_equipment():
 
 # ===== DROP HANDLING =====
 
-func handle_outside_drop(mouse_pos: Vector2, dragged_slot: Control) -> bool:
-	"""
-	Check if drop is outside equipment grid and handle it.
-	Returns true if drop was handled (outside grid).
-	"""
-	var equipment_rect = equipment_grid.get_global_rect()
-	
-	if not equipment_rect.has_point(mouse_pos):
-		_drop_item_in_world(dragged_slot)
-		return true
-	
-	return false
+func handle_outside_drop(mouse_pos: Vector2, dragged_slot: Control):
+	"""Drop item from equipment to world when dropped outside grid"""
+	_drop_item_in_world(dragged_slot)
 
 func _drop_item_in_world(dragged_slot: Control):
 	"""Drop item from equipment into the game world"""
