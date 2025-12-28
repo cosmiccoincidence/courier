@@ -24,8 +24,6 @@ func _build_lookup_tables():
 		if not items_by_type.has(type):
 			items_by_type[type] = []
 		items_by_type[type].append(item)
-	
-	print("[LOOT MANAGER] Items organized into %d type categories" % items_by_type.size())
 
 
 func generate_loot(enemy_level: int, loot_profile: LootProfile, player_luck: float = 0.0) -> Array[Dictionary]:
@@ -50,10 +48,14 @@ func generate_loot(enemy_level: int, loot_profile: LootProfile, player_luck: flo
 		var item_data = _roll_single_item(enemy_level, loot_profile, player_luck)
 		if item_data:
 			dropped_items.append(item_data)
-			print("[LOOT MANAGER] ✓ Rolled: %s (Lv.%d, %s)" % [
+			var stack_info = ""
+			if item_data.has("stack_size") and item_data.stack_size > 1:
+				stack_info = " x%d" % item_data.stack_size
+			print("[LOOT MANAGER] ✓ Rolled: %s (Lv.%d, %s)%s" % [
 				item_data.item.item_name,
 				item_data.item_level,
-				ItemQuality.get_quality_name(item_data.item_quality)
+				ItemQuality.get_quality_name(item_data.item_quality),
+				stack_info
 			])
 		else:
 			print("[LOOT MANAGER] ❌ Failed to roll item")
@@ -66,10 +68,7 @@ func _roll_single_item(enemy_level: int, profile: LootProfile, player_luck: floa
 	# Get eligible items based on item type filters
 	var eligible_items = _filter_eligible_items(profile)
 	
-	print("[LOOT MANAGER]   Found %d eligible items" % eligible_items.size())
-	
 	if eligible_items.is_empty():
-		push_warning("[LOOT MANAGER]   ❌ No eligible items match the filters")
 		return {}
 	
 	# Weighted random selection
@@ -87,15 +86,41 @@ func _roll_single_item(enemy_level: int, profile: LootProfile, player_luck: floa
 	# Roll item quality based on player luck
 	var item_quality = ItemQuality.roll_quality(player_luck)
 	
-	# Calculate final value: base_value * (item_level) * quality_mod
+	# Calculate stack size if stackable
+	var stack_size = 1
+	if selected_item.stackable:
+		var min_amount = selected_item.min_drop_amount
+		var max_amount = selected_item.max_drop_amount
+		
+		print("[LOOT MANAGER]   Item is stackable: %s" % selected_item.item_name)
+		print("[LOOT MANAGER]   Base min/max: %d-%d" % [min_amount, max_amount])
+		
+		# Scale by enemy level if enabled
+		if selected_item.scaled_quantity:
+			min_amount = max(1, int(min_amount * enemy_level))
+			max_amount = max(1, int(max_amount * enemy_level))
+			print("[LOOT MANAGER]   Scaled by level %d: %d-%d" % [enemy_level, min_amount, max_amount])
+		
+		# Ensure min doesn't exceed max
+		min_amount = min(min_amount, max_amount)
+		
+		# Roll random stack size
+		stack_size = randi_range(min_amount, max_amount)
+		print("[LOOT MANAGER]   Final stack size: %d" % stack_size)
+		
+		# Cap at max_stack_size
+		stack_size = min(stack_size, selected_item.max_stack_size)
+	
+	# Calculate final value: base_value * (item_level * 0.1) * quality_mod
 	var quality_mod = ItemQuality.get_value_modifier(item_quality)
-	var final_value = int(selected_item.base_value * (item_level) * quality_mod)
+	var final_value = int(selected_item.base_value * (item_level * 0.1) * quality_mod)
 	
 	return {
 		"item": selected_item,
 		"item_level": item_level,
 		"item_quality": item_quality,
-		"item_value": final_value
+		"item_value": final_value,
+		"stack_size": stack_size
 	}
 
 
