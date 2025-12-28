@@ -11,7 +11,7 @@ extends Act1MapGen
 
 func _ready():
 	# Calculate map_level before calling super._ready()
-	map_level = (act_number + map_number) + (5 * (act_number - 1))
+	map_level = ((act_number + map_number) + (5 * (act_number - 1))) * 3
 	print("Map Level: ", map_level, " (Act ", act_number, ", Map ", map_number, ")")
 	
 	# ========================================
