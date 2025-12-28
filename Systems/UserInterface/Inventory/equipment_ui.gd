@@ -11,29 +11,26 @@ const SLOT_SCENE_PATH = "res://Systems/UserInterface/Inventory/inventory_slot.ts
 # ===== GRID CONFIGURATION =====
 var slot_size: int = 64
 var equipment_columns: int = 4
-var equipment_rows: int = 5
+var equipment_rows: int = 4
 
-# Equipment slot gaps (indices to skip in grid)
-var equipment_skip_slots: Array = [
-	1, 5, 9, 13, 17,  # Entire 2nd column
-	10, 11            # Row 3 positions 3 and 4
-]
-
-# Equipment slot names (in order of actual slots, not grid positions)
+# Equipment slot names (in order, 16 total slots for 4x4 grid)
 var equipment_slot_names: Array = [
-	"Helmet",    # Slot 0
-	"Amulet",    # Slot 1
-	"Bag",       # Slot 2
-	"Armor",     # Slot 3
-	"Ring 1",    # Slot 4
-	"Ring 2",    # Slot 5
-	"Belt",      # Slot 6
-	"Gloves",    # Slot 7
-	"L Hand 1",  # Slot 8
-	"R Hand 1",  # Slot 9
-	"Boots",     # Slot 10
-	"L Hand 2",  # Slot 11
-	"R Hand 2"   # Slot 12
+	"Helmet",     # Slot 0 (Row 1, Col 1)
+	"Bag",        # Slot 1 (Row 1, Col 2)
+	"Amulet",     # Slot 2 (Row 1, Col 3)
+	"Totem",      # Slot 3 (Row 1, Col 4)
+	"Bodyarmor",  # Slot 4 (Row 2, Col 1)
+	"Cape",       # Slot 5 (Row 2, Col 2)
+	"Ring 1",     # Slot 6 (Row 2, Col 3)
+	"Ring 2",     # Slot 7 (Row 2, Col 4)
+	"Pants",      # Slot 8 (Row 3, Col 1)
+	"Belt",       # Slot 9 (Row 3, Col 2)
+	"L Hand 1",   # Slot 10 (Row 3, Col 3)
+	"R Hand 1",   # Slot 11 (Row 3, Col 4)
+	"Boots",      # Slot 12 (Row 4, Col 1)
+	"Gloves",     # Slot 13 (Row 4, Col 2)
+	"L Hand 2",   # Slot 14 (Row 4, Col 3)
+	"R Hand 2"    # Slot 15 (Row 4, Col 4)
 ]
 
 # ===== STATE =====
@@ -87,44 +84,33 @@ func _setup_transparent_panel():
 	mouse_filter = Control.MOUSE_FILTER_PASS
 
 func _setup_equipment_grid(slot_scene: PackedScene):
-	"""Create equipment grid with gaps"""
+	"""Create simple 4x4 equipment grid"""
 	if not equipment_grid:
 		return
 	
 	equipment_grid.columns = equipment_columns
 	equipment_grid.mouse_filter = Control.MOUSE_FILTER_PASS
 	
-	var equipment_slot_index = 0
-	
+	# Create all 16 slots (4x4 grid)
 	for i in range(equipment_columns * equipment_rows):
-		if i in equipment_skip_slots:
-			# Create spacer for gap
-			var spacer = Control.new()
-			spacer.custom_minimum_size = Vector2(slot_size, slot_size)
-			spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			equipment_grid.add_child(spacer)
-		else:
-			# Create equipment slot
-			var slot = slot_scene.instantiate()
-			if not slot:
-				continue
-			
-			slot.set_mouse_filter(Control.MOUSE_FILTER_STOP)
-			slot.mouse_filter = Control.MOUSE_FILTER_STOP
-			slot.custom_minimum_size = Vector2(slot_size, slot_size)
-			slot.slot_index = equipment_slot_index
-			slot.set_meta("is_equipment_slot", true)
-			slot.add_to_group("equipment_slots")
-			equipment_grid.add_child(slot)
-			
-			# Add slot name label
-			if equipment_slot_index < equipment_slot_names.size():
-				_add_slot_name_label(slot, equipment_slot_names[equipment_slot_index])
-			
-			if slot.has_method("set_tooltip_manager") and slot_tooltip:
-				slot.set_tooltip_manager(slot_tooltip)
-			
-			equipment_slot_index += 1
+		var slot = slot_scene.instantiate()
+		if not slot:
+			continue
+		
+		slot.set_mouse_filter(Control.MOUSE_FILTER_STOP)
+		slot.mouse_filter = Control.MOUSE_FILTER_STOP
+		slot.custom_minimum_size = Vector2(slot_size, slot_size)
+		slot.slot_index = i
+		slot.set_meta("is_equipment_slot", true)
+		slot.add_to_group("equipment_slots")
+		equipment_grid.add_child(slot)
+		
+		# Add slot name label
+		if i < equipment_slot_names.size():
+			_add_slot_name_label(slot, equipment_slot_names[i])
+		
+		if slot.has_method("set_tooltip_manager") and slot_tooltip:
+			slot.set_tooltip_manager(slot_tooltip)
 
 func _add_slot_name_label(slot: Control, slot_name: String):
 	"""Add name label to equipment slot"""
@@ -153,13 +139,9 @@ func _add_slot_name_label(slot: Control, slot_name: String):
 func _update_equipment():
 	"""Update equipment slots to display equipped items"""
 	var equipped_items = Equipment.get_items()
+	var equipment_slots = equipment_grid.get_children()
 	
-	# Get only actual equipment slots (not spacers)
-	var equipment_slots = []
-	for child in equipment_grid.get_children():
-		if child.has_method("set_item"):
-			equipment_slots.append(child)
-	
+	# All children are now equipment slots (no spacers)
 	for i in range(min(equipped_items.size(), equipment_slots.size())):
 		var slot = equipment_slots[i]
 		if equipped_items[i] != null:
