@@ -13,9 +13,6 @@ class_name LootProfile
 @export var min_drops: int = 1
 @export var max_drops: int = 3
 @export var drop_chance: float = 1.0  # 0.0-1.0, chance that ANY loot drops
-
-# Item level variance
-@export_group("Level Variance")
 @export var level_variance: int = 2  # ±variance from enemy_level (e.g., enemy lv10 drops items lv8-12)
 
 # Optional tag filtering
