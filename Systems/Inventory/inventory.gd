@@ -118,7 +118,9 @@ func add_item(item_name: String, icon: Texture2D = null, item_scene: PackedScene
 			"weapon_range": weapon_range,  # Store weapon range
 			"weapon_speed": weapon_speed,  # Store weapon speed
 			"weapon_block_window": weapon_block_window,
-			"weapon_parry_window": weapon_parry_window 
+			"weapon_parry_window": weapon_parry_window,
+			"weapon_crit_chance": weapon_crit_chance,
+			"weapon_crit_multiplier": weapon_crit_multiplier 
 		}
 		
 		amount -= stack_size

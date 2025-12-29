@@ -24,6 +24,8 @@ var weapon_range: float = 2.0  # Attack range in meters (default 2.0)
 var weapon_speed: float = 1.0  # Attack speed multiplier (default 1.0 = normal speed)
 var weapon_block_window: float = 0.0  # Time window to successfully block (seconds)
 var weapon_parry_window: float = 0.0  # Time window to successfully parry (seconds)
+var weapon_crit_chance: float = 0.0  # Critical hit chance (0.0 to 1.0)
+var weapon_crit_multiplier: float = 1.0  # Critical hit damage multiplier
 
 # Internal state
 var is_hovered: bool = false
@@ -270,13 +272,6 @@ func pickup():
 	# Pass the scene reference AND all item properties including level and quality
 	var item_scene = load(scene_file_path) if scene_file_path else null
 	
-	print("=== PICKUP DEBUG ===")
-	print("Item: ", item_name)
-	print("Type: ", item_type)
-	if item_type.to_lower() == "weapon":
-		print("Weapon Block Window: ", weapon_block_window)
-		print("Weapon Parry Window: ", weapon_parry_window)
-	
 	if Inventory.add_item(
 		item_name, 
 		item_icon, 
@@ -296,7 +291,9 @@ func pickup():
 		weapon_range,  # Pass weapon range
 		weapon_speed,  # Pass weapon speed
 		weapon_block_window,  # Pass weapon block window
-		weapon_parry_window  # Pass weapon parry window
+		weapon_parry_window,  # Pass weapon parry window
+		weapon_crit_chance,  # Pass weapon crit chance
+		weapon_crit_multiplier  # Pass weapon crit multiplier
 	):
 		queue_free()
 	else:

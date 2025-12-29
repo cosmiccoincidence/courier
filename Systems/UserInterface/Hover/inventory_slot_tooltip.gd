@@ -2,7 +2,7 @@ extends Control
 class_name InventorySlotTooltip
 
 ## Tooltip that appears when hovering over inventory slots
-## Shows item name, traits, & stats
+## Shows item name, level, quality, value, type, subtype, and mass
 
 var tooltip_panel: PanelContainer = null
 var item_label: RichTextLabel = null
@@ -109,17 +109,6 @@ func show_tooltip(slot: Control, item_data: Dictionary):
 		
 	current_slot = slot
 	
-	# DEBUG: Print what's in item_data
-	print("=== TOOLTIP DEBUG ===")
-	print("Item: ", item_data.get("name", "Unknown"))
-	print("Has weapon_damage: ", item_data.has("weapon_damage"))
-	print("Has weapon_block_window: ", item_data.has("weapon_block_window"))
-	print("Has weapon_parry_window: ", item_data.has("weapon_parry_window"))
-	if item_data.has("weapon_block_window"):
-		print("Block window value: ", item_data.weapon_block_window)
-	if item_data.has("weapon_parry_window"):
-		print("Parry window value: ", item_data.weapon_parry_window)
-	
 	# Build tooltip text with BBCode formatting
 	var lines = []
 	
@@ -159,7 +148,7 @@ func show_tooltip(slot: Control, item_data: Dictionary):
 	# Weapon speed - yellow color (only for weapons with speed)
 	if item_data.has("weapon_speed") and item_data.get("weapon_damage", 0) > 0:
 		var speed = item_data.weapon_speed
-		var speed_text = "Normal (%.1fx)" % speed
+		var speed_text = "Normal (1.0x)"
 		if speed > 1.0:
 			speed_text = "Fast (%.1fx)" % speed
 		elif speed < 1.0:
@@ -173,6 +162,15 @@ func show_tooltip(slot: Control, item_data: Dictionary):
 	# Weapon parry window - light green color (only for weapons with parry window)
 	if item_data.has("weapon_parry_window") and item_data.get("weapon_damage", 0) > 0 and item_data.weapon_parry_window > 0.0:
 		lines.append("[center][color=#77ff77]Parry Window: %.1fs[/color][/center]" % item_data.weapon_parry_window)
+	
+	# Weapon crit chance - pink color (only for weapons with crit chance)
+	if item_data.has("weapon_crit_chance") and item_data.get("weapon_damage", 0) > 0 and item_data.weapon_crit_chance > 0.0:
+		var crit_pct = item_data.weapon_crit_chance * 100
+		lines.append("[center][color=#ff77ff]Crit Chance: %.0f%%[/color][/center]" % crit_pct)
+	
+	# Weapon crit multiplier - magenta color (only for weapons with crit multiplier > 1)
+	if item_data.has("weapon_crit_multiplier") and item_data.get("weapon_damage", 0) > 0 and item_data.weapon_crit_multiplier > 1.0:
+		lines.append("[center][color=#ff55ff]Crit Multiplier: %.1fx[/color][/center]" % item_data.weapon_crit_multiplier)
 	
 	# Armor defense - blue color (only for armor)
 	if item_data.has("armor_defense") and item_data.armor_defense > 0:

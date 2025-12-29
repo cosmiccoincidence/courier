@@ -178,14 +178,15 @@ func _update_combat_stats():
 			attack_speed = equip_stats.weapon_speed
 			block_window = equip_stats.weapon_block_window
 			parry_window = equip_stats.weapon_parry_window
+			crit_chance = equip_stats.weapon_crit_chance
+			crit_multiplier = equip_stats.weapon_crit_multiplier
 		else:
 			attack_range = base_attack_range
 			attack_speed = base_attack_speed
 			block_window = base_block_window
 			parry_window = base_parry_window
-		
-		crit_chance = base_crit_chance
-		crit_multiplier = base_crit_multiplier
+			crit_chance = base_crit_chance
+			crit_multiplier = base_crit_multiplier
 		
 		# TODO: Add buff bonuses
 	

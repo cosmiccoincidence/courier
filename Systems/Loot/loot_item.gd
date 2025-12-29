@@ -16,6 +16,8 @@ extends Resource
 # Physical properties
 @export var mass: float = 1.0
 @export var base_value: int = 10  # Base value before level/quality modifiers
+@export var stackable: bool = false
+@export var max_stack_size: int = 1
 
 # Weapon stats (only for weapons)
 @export_group("Weapon Stats")
@@ -25,6 +27,8 @@ extends Resource
 @export var weapon_speed: float = 1.0  # Attack speed multiplier (1.0 = normal, 2.0 = twice as fast)
 @export var weapon_block_window: float = 0.0  # Time window to successfully block (seconds)
 @export var weapon_parry_window: float = 0.0  # Time window to successfully parry (seconds)
+@export_range(0.0, 1.0) var weapon_crit_chance: float = 0.0  # Critical hit chance (0.0 to 1.0)
+@export var weapon_crit_multiplier: float = 1.0  # Critical hit damage multiplier
 
 # Weapon hand restrictions
 enum WeaponHand {
@@ -40,15 +44,11 @@ enum WeaponHand {
 @export var base_armor_defense: int = 0  # Base defense value
 
 # Stackable item settings
-@export_group("Stack Settings")
-@export var stackable: bool = false
-@export var max_stack_size: int = 1
 @export var min_drop_amount: int = 1  # Minimum stack size when dropped
 @export var max_drop_amount: int = 1  # Maximum stack size when dropped
 @export var scaled_quantity: bool = false  # Scale drop amount by enemy level
 
 # Loot table properties
-@export_group("Drop Settings")
 @export var item_drop_weight: float = 1.0  # How common this specific item is (higher = more common)
 @export var min_quantity: int = 1  # For stackable items
 @export var max_quantity: int = 1  # For stackable items
