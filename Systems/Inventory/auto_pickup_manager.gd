@@ -10,7 +10,7 @@ extends Node
 	]
 
 # Distance threshold for pickup (in meters/units)
-@export var pickup_range: float = 0.5
+@export var pickup_range: float = 0.75
 
 # Check interval (to avoid checking every frame)
 @export var check_interval: float = 0.1
