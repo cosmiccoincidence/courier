@@ -33,9 +33,9 @@ static func spawn_loot_item(item_data: Dictionary, spawn_position: Vector3, pare
 	# Add to scene first
 	parent_node.add_child(loot_instance)
 	
-	# Set position with slight randomness
-	var random_offset = Vector3(randf_range(-0.3, 0.3), 0, randf_range(-0.3, 0.3))
-	loot_instance.global_position = spawn_position + random_offset
+	# Find a valid spawn position with proper spacing
+	var final_position = _find_valid_spawn_position(spawn_position, parent_node)
+	loot_instance.global_position = final_position
 	
 	if loot_instance is BaseItem:
 		# Copy base properties from LootItem resource
@@ -54,6 +54,8 @@ static func spawn_loot_item(item_data: Dictionary, spawn_position: Vector3, pare
 			loot_instance.weapon_speed = item.weapon_speed
 			loot_instance.weapon_block_window = item.weapon_block_window
 			loot_instance.weapon_parry_window = item.weapon_parry_window
+			loot_instance.weapon_crit_chance = item.weapon_crit_chance
+			loot_instance.weapon_crit_multiplier = item.weapon_crit_multiplier
 		
 		# Set rolled properties (level, quality, value)
 		loot_instance.item_level = item_level
@@ -93,6 +95,62 @@ static func spawn_loot_item(item_data: Dictionary, spawn_position: Vector3, pare
 		if "armor_defense" in loot_instance:
 			loot_instance.armor_defense = armor_defense
 		print("  Rolled armor defense: ", armor_defense, " (base: ", item.base_armor_defense, ")")
+
+
+static func _find_valid_spawn_position(origin: Vector3, parent_node: Node) -> Vector3:
+	"""
+	Find a valid spawn position that is:
+	- At least MIN_SPACING tiles from origin (source)
+	- At least MIN_SPACING tiles from player
+	- At least MIN_SPACING tiles from other items
+	"""
+	const MIN_SPACING = 0.3
+	const MAX_ATTEMPTS = 20
+	const MAX_RADIUS = 1.25
+	
+	# Get player position
+	var player = parent_node.get_tree().get_first_node_in_group("player")
+	var player_pos = player.global_position if player else Vector3.ZERO
+	
+	# Get all existing items
+	var existing_items = parent_node.get_tree().get_nodes_in_group("item")
+	
+	for attempt in range(MAX_ATTEMPTS):
+		# Generate random position in a circle around origin
+		var angle = randf() * TAU
+		var radius = randf_range(MIN_SPACING, MAX_RADIUS)
+		var offset = Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		var candidate_pos = origin + offset
+		
+		# Check spacing from origin
+		var dist_from_origin = Vector2(candidate_pos.x - origin.x, candidate_pos.z - origin.z).length()
+		if dist_from_origin < MIN_SPACING:
+			continue
+		
+		# Check spacing from player (2D distance, ignore Y)
+		if player:
+			var dist_from_player = Vector2(candidate_pos.x - player_pos.x, candidate_pos.z - player_pos.z).length()
+			if dist_from_player < MIN_SPACING:
+				continue
+		
+		# Check spacing from other items
+		var too_close = false
+		for item in existing_items:
+			if is_instance_valid(item):
+				var item_pos = item.global_position
+				var dist_from_item = Vector2(candidate_pos.x - item_pos.x, candidate_pos.z - item_pos.z).length()
+				if dist_from_item < MIN_SPACING:
+					too_close = true
+					break
+		
+		if not too_close:
+			# Found a valid position!
+			return candidate_pos
+	
+	# If we couldn't find a valid position after MAX_ATTEMPTS, just return a position at MIN_SPACING
+	var fallback_angle = randf() * TAU
+	var fallback_offset = Vector3(cos(fallback_angle) * MIN_SPACING, 0.0, sin(fallback_angle) * MIN_SPACING)
+	return origin + fallback_offset
 
 
 static func spawn_all_loot(loot_profile: LootProfile, enemy_level: int, spawn_position: Vector3, parent_node: Node, player: Node = null) -> void:
