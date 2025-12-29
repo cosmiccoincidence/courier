@@ -269,32 +269,35 @@ func pickup():
 	
 	being_picked_up = true  # Immediately mark as being picked up
 	
-	# Pass the scene reference AND all item properties including level and quality
+	# Pass the scene reference AND all item properties
 	var item_scene = load(scene_file_path) if scene_file_path else null
 	
-	if Inventory.add_item(
-		item_name, 
-		item_icon, 
-		item_scene, 
-		mass, 
-		value, 
-		stackable, 
-		max_stack_size, 
-		stack_count, 
-		item_type,
-		item_level,  # Pass item level
-		item_quality,  # Pass item quality
-		item_subtype,  # Pass item subtype
-		weapon_damage,  # Pass weapon damage
-		armor_defense,  # Pass armor defense
-		weapon_hand,  # Pass weapon hand restriction
-		weapon_range,  # Pass weapon range
-		weapon_speed,  # Pass weapon speed
-		weapon_block_window,  # Pass weapon block window
-		weapon_parry_window,  # Pass weapon parry window
-		weapon_crit_chance,  # Pass weapon crit chance
-		weapon_crit_multiplier  # Pass weapon crit multiplier
-	):
+	# Build item data dictionary
+	var item_data = {
+		"name": item_name,
+		"icon": item_icon,
+		"scene": item_scene,
+		"mass": mass,
+		"value": value,
+		"stackable": stackable,
+		"max_stack_size": max_stack_size,
+		"amount": stack_count,
+		"item_type": item_type,
+		"item_level": item_level,
+		"item_quality": item_quality,
+		"item_subtype": item_subtype,
+		"weapon_damage": weapon_damage,
+		"armor_defense": armor_defense,
+		"weapon_hand": weapon_hand,
+		"weapon_range": weapon_range,
+		"weapon_speed": weapon_speed,
+		"weapon_block_window": weapon_block_window,
+		"weapon_parry_window": weapon_parry_window,
+		"weapon_crit_chance": weapon_crit_chance,
+		"weapon_crit_multiplier": weapon_crit_multiplier
+	}
+	
+	if Inventory.add_item(item_data):
 		queue_free()
 	else:
 		being_picked_up = false  # Re-enable if inventory was full

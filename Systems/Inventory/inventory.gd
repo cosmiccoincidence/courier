@@ -7,7 +7,7 @@ var player_ref: Node3D = null  # Reference to player for drop position
 
 # Mass system
 var soft_max_mass: float = 10.0
-var hard_max_mass: float = 11.0  # Will be calculated
+var hard_max_mass: float = 11.0  # Calculated below in _redy (currently +10%)
 
 # Gold system
 var gold: int = 0
@@ -50,27 +50,54 @@ func _update_mass_signals():
 	mass_changed.emit(current_mass, soft_max_mass)
 	encumbered_status_changed.emit(is_encumbered())
 
-func add_item(item_name: String, icon: Texture2D = null, item_scene: PackedScene = null, item_mass: float = 1.0, item_value: int = 10, is_stackable: bool = false, max_stack: int = 99, amount: int = 1, item_type: String = "", item_level: int = 1, item_quality: int = 1, item_subtype: String = "", weapon_damage: int = 0, armor_defense: int = 0, weapon_hand: int = 0, weapon_range: float = 2.0, weapon_speed: float = 1.0, weapon_block_window: float = 0.0, weapon_parry_window: float = 0.0) -> bool:
-	# Special handling for gold - add directly to gold counter
-	if item_name.to_lower() == "gold" or item_name.to_lower() == "coin":
+func add_item(item_data: Dictionary) -> bool:
+	"""
+	Add item using a dictionary of properties.
+	
+	Required keys:
+	- name: String
+	- mass: float
+	
+	Common keys:
+	- icon: Texture2D
+	- scene: PackedScene
+	- value: int
+	- stackable: bool
+	- max_stack_size: int
+	- amount: int (how many to add, default: 1)
+	
+	Optional weapon/armor keys:
+	- item_type, item_level, item_quality, item_subtype
+	- weapon_damage, armor_defense, weapon_hand
+	- weapon_range, weapon_speed
+	- weapon_block_window, weapon_parry_window
+	- weapon_crit_chance, weapon_crit_multiplier
+	"""
+	var item_name = item_data.get("name", "Unknown Item")
+	var amount = item_data.get("amount", 1)
+	var item_mass = item_data.get("mass", 1.0)
+	var is_stackable = item_data.get("stackable", false)
+	var max_stack = item_data.get("max_stack_size", 99)
+	
+	# Special handling for gold
+	if item_name.to_lower() == "gold":
 		add_gold(amount)
 		return true
 	
-	# Calculate what the mass would be if we add this item
+	# Calculate projected mass
 	var current_mass = get_total_mass()
 	var new_item_mass = item_mass * amount
 	var projected_mass = current_mass + new_item_mass
 	
-	# Check if adding would exceed hard max mass
+	# Check mass limit
 	if projected_mass > hard_max_mass:
 		print("Cannot add item: Would exceed maximum carry mass (", projected_mass, "/", hard_max_mass, ")")
 		return false
 	
-	# If stackable, try to add to existing stack first
+	# Try to stack with existing items
 	if is_stackable:
 		for item in items:
-			if item != null and item.name == item_name and item.has("stackable") and item.stackable:
-				# Found existing stack - add to it
+			if item != null and item.name == item_name and item.get("stackable", false):
 				var space_in_stack = item.max_stack_size - item.stack_count
 				var amount_to_add = min(amount, space_in_stack)
 				
@@ -80,7 +107,6 @@ func add_item(item_name: String, icon: Texture2D = null, item_scene: PackedScene
 					inventory_changed.emit()
 					_update_mass_signals()
 					
-					# If we added everything, we're done
 					if amount <= 0:
 						return true
 	
@@ -95,32 +121,33 @@ func add_item(item_name: String, icon: Texture2D = null, item_scene: PackedScene
 		
 		if empty_slot == -1:
 			print("Cannot add item: Inventory full")
-			return false  # No empty slots
+			return false
 		
 		var stack_size = min(amount, max_stack if is_stackable else 1)
 		
+		# Create item entry from dictionary
 		items[empty_slot] = {
 			"name": item_name,
-			"icon": icon,
-			"scene": item_scene,
-			"mass": item_mass,  # Changed from 'weight' to 'mass'
-			"value": item_value,
+			"icon": item_data.get("icon"),
+			"scene": item_data.get("scene"),
+			"mass": item_mass,
+			"value": item_data.get("value", 0),
 			"stackable": is_stackable,
 			"max_stack_size": max_stack,
 			"stack_count": stack_size,
-			"item_type": item_type,
-			"item_level": item_level,  # Store item level
-			"item_quality": item_quality,  # Store item quality
-			"item_subtype": item_subtype,  # Store item subtype
-			"weapon_damage": weapon_damage,  # Store weapon damage
-			"armor_defense": armor_defense,   # Store armor defense
-			"weapon_hand": weapon_hand,  # Store weapon hand restriction
-			"weapon_range": weapon_range,  # Store weapon range
-			"weapon_speed": weapon_speed,  # Store weapon speed
-			"weapon_block_window": weapon_block_window,
-			"weapon_parry_window": weapon_parry_window,
-			"weapon_crit_chance": weapon_crit_chance,
-			"weapon_crit_multiplier": weapon_crit_multiplier 
+			"item_type": item_data.get("item_type", ""),
+			"item_level": item_data.get("item_level", 1),
+			"item_quality": item_data.get("item_quality", 1),
+			"item_subtype": item_data.get("item_subtype", ""),
+			"weapon_damage": item_data.get("weapon_damage", 0),
+			"armor_defense": item_data.get("armor_defense", 0),
+			"weapon_hand": item_data.get("weapon_hand", 0),
+			"weapon_range": item_data.get("weapon_range", 2.0),
+			"weapon_speed": item_data.get("weapon_speed", 1.0),
+			"weapon_block_window": item_data.get("weapon_block_window", 0.0),
+			"weapon_parry_window": item_data.get("weapon_parry_window", 0.0),
+			"weapon_crit_chance": item_data.get("weapon_crit_chance", 0.0),
+			"weapon_crit_multiplier": item_data.get("weapon_crit_multiplier", 1.0)
 		}
 		
 		amount -= stack_size
@@ -208,6 +235,14 @@ func drop_item_at_slot(slot_index: int):
 							item_instance.weapon_range = item.weapon_range
 						if item.has("weapon_speed"):
 							item_instance.weapon_speed = item.weapon_speed
+						if item.has("weapon_block_window"):
+							item_instance.weapon_block_window = item.weapon_block_window
+						if item.has("weapon_parry_window"):
+							item_instance.weapon_parry_window = item.weapon_parry_window
+						if item.has("weapon_crit_chance"):
+							item_instance.weapon_crit_chance = item.weapon_crit_chance
+						if item.has("weapon_crit_multiplier"):
+							item_instance.weapon_crit_multiplier = item.weapon_crit_multiplier
 						
 						# Set stack count if item is stackable
 						if item.get("stackable", false) and item.get("stack_count", 1) > 1:
