@@ -41,10 +41,9 @@ func _ready():
 	# Add to item group for FOV system (but mark as just spawned)
 	add_to_group("item")
 	
-	# Create background sprite
+	# Create background sprite (size will be adjusted dynamically)
 	var background = Sprite3D.new()
 	background.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	background.texture = create_rounded_rect_texture()
 	background.modulate = Color(0, 0, 0, 0.75)
 	background.pixel_size = 0.012
 	background.position = Vector3(0, 1.5, -0.5)
@@ -64,6 +63,9 @@ func _ready():
 	
 	# Store background reference
 	set_meta("background", background)
+	
+	# Update background size based on text
+	_update_background_size()
 	
 	# Find collision body
 	collision_body = find_collision_body(self)
@@ -147,14 +149,16 @@ func find_collision_body(node):
 			return result
 	return null
 
-func create_rounded_rect_texture() -> ImageTexture:
-	var img = Image.create(256, 64, false, Image.FORMAT_RGBA8)
+func create_rounded_rect_texture_dynamic(width: int, height: int) -> ImageTexture:
+	"""Create a rounded rectangle texture with dynamic width"""
+	var img = Image.create(width, height, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	
+	var corner_radius = 16
+	
 	# Draw rounded rectangle
-	for y in range(64):
-		for x in range(256):
-			var corner_radius = 16
+	for y in range(height):
+		for x in range(width):
 			var in_corner = false
 			
 			# Top-left corner
@@ -165,23 +169,23 @@ func create_rounded_rect_texture() -> ImageTexture:
 					in_corner = true
 			
 			# Top-right corner
-			if x > 256 - corner_radius and y < corner_radius:
-				var dx = x - (256 - corner_radius)
+			if x > width - corner_radius and y < corner_radius:
+				var dx = x - (width - corner_radius)
 				var dy = corner_radius - y
 				if dx * dx + dy * dy > corner_radius * corner_radius:
 					in_corner = true
 			
 			# Bottom-left corner
-			if x < corner_radius and y > 64 - corner_radius:
+			if x < corner_radius and y > height - corner_radius:
 				var dx = corner_radius - x
-				var dy = y - (64 - corner_radius)
+				var dy = y - (height - corner_radius)
 				if dx * dx + dy * dy > corner_radius * corner_radius:
 					in_corner = true
 			
 			# Bottom-right corner
-			if x > 256 - corner_radius and y > 64 - corner_radius:
-				var dx = x - (256 - corner_radius)
-				var dy = y - (64 - corner_radius)
+			if x > width - corner_radius and y > height - corner_radius:
+				var dx = x - (width - corner_radius)
+				var dy = y - (height - corner_radius)
 				if dx * dx + dy * dy > corner_radius * corner_radius:
 					in_corner = true
 			
@@ -202,6 +206,27 @@ func update_label_text():
 		
 		# Set color based on item quality
 		label_3d.modulate = ItemQuality.get_quality_color(item_quality)
+		
+		# Update background size when text changes
+		_update_background_size()
+
+func _update_background_size():
+	"""Dynamically size the background based on text length"""
+	if not label_3d or not has_meta("background"):
+		return
+	
+	var background = get_meta("background")
+	if not background:
+		return
+	
+	# Calculate required width based on text length
+	# Approximate: each character is ~20 pixels, with padding
+	var text_length = label_3d.text.length()
+	var width = max(text_length * 20 + 40, 128)  # Minimum 128px
+	var height = 64  # Fixed height for single-line text
+	
+	# Create texture with dynamic width
+	background.texture = create_rounded_rect_texture_dynamic(width, height)
 
 # NEW: Method called by loot system to set item properties
 func set_item_properties(level: int, quality: int, final_value: int):
