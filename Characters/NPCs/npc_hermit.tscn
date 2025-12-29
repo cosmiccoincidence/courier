@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://7jg1i280uwcy"]
 
-[ext_resource type="Script" uid="uid://55enjj10ko1b" path="res://Characters/NPCs/npc_hermit.gd" id="1_544wk"]
+[ext_resource type="Script" uid="uid://behqr03yn08av" path="res://Characters/NPCs/npc_hermit.gd" id="1_544wk"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_onrkg"]
 
@@ -17,7 +17,6 @@ albedo_color = Color(0, 0, 0, 1)
 [node name="NPC_Hermit" type="CharacterBody3D" groups=["npc"]]
 transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 0, 0)
 script = ExtResource("1_544wk")
-display_name = "Hermit"
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.812268, 0, 0, 0, 1, 0, 1.3003498, 0)

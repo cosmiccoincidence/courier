@@ -1,5 +1,5 @@
 extends BaseNPC
-class_name NPCHermit
+class_name NPCTrader
 
 @export var shop_inventory: Array[LootItem] = []
 @export var interaction_range: float = 3.0
@@ -8,7 +8,7 @@ var player_in_range: bool = false
 
 func _ready():
 	super._ready()  # Call parent _ready
-	display_name = "Hermit"
+	display_name = "Trader"
 	# Additional setup
 
 func _physics_process(delta):
