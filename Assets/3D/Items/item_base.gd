@@ -22,6 +22,8 @@ var armor_defense: int = 0  # Only for armor
 var weapon_hand: int = 0  # Weapon hand restriction (0=ANY, 1=PRIMARY, 2=OFFHAND, 3=TWOHAND)
 var weapon_range: float = 2.0  # Attack range in meters (default 2.0)
 var weapon_speed: float = 1.0  # Attack speed multiplier (default 1.0 = normal speed)
+var weapon_block_window: float = 0.0  # Time window to successfully block (seconds)
+var weapon_parry_window: float = 0.0  # Time window to successfully parry (seconds)
 
 # Internal state
 var is_hovered: bool = false
@@ -268,6 +270,13 @@ func pickup():
 	# Pass the scene reference AND all item properties including level and quality
 	var item_scene = load(scene_file_path) if scene_file_path else null
 	
+	print("=== PICKUP DEBUG ===")
+	print("Item: ", item_name)
+	print("Type: ", item_type)
+	if item_type.to_lower() == "weapon":
+		print("Weapon Block Window: ", weapon_block_window)
+		print("Weapon Parry Window: ", weapon_parry_window)
+	
 	if Inventory.add_item(
 		item_name, 
 		item_icon, 
@@ -285,7 +294,9 @@ func pickup():
 		armor_defense,  # Pass armor defense
 		weapon_hand,  # Pass weapon hand restriction
 		weapon_range,  # Pass weapon range
-		weapon_speed  # Pass weapon speed
+		weapon_speed,  # Pass weapon speed
+		weapon_block_window,  # Pass weapon block window
+		weapon_parry_window  # Pass weapon parry window
 	):
 		queue_free()
 	else:

@@ -50,7 +50,7 @@ func _update_mass_signals():
 	mass_changed.emit(current_mass, soft_max_mass)
 	encumbered_status_changed.emit(is_encumbered())
 
-func add_item(item_name: String, icon: Texture2D = null, item_scene: PackedScene = null, item_mass: float = 1.0, item_value: int = 10, is_stackable: bool = false, max_stack: int = 99, amount: int = 1, item_type: String = "", item_level: int = 1, item_quality: int = 1, item_subtype: String = "", weapon_damage: int = 0, armor_defense: int = 0, weapon_hand: int = 0, weapon_range: float = 2.0, weapon_speed: float = 1.0) -> bool:
+func add_item(item_name: String, icon: Texture2D = null, item_scene: PackedScene = null, item_mass: float = 1.0, item_value: int = 10, is_stackable: bool = false, max_stack: int = 99, amount: int = 1, item_type: String = "", item_level: int = 1, item_quality: int = 1, item_subtype: String = "", weapon_damage: int = 0, armor_defense: int = 0, weapon_hand: int = 0, weapon_range: float = 2.0, weapon_speed: float = 1.0, weapon_block_window: float = 0.0, weapon_parry_window: float = 0.0) -> bool:
 	# Special handling for gold - add directly to gold counter
 	if item_name.to_lower() == "gold" or item_name.to_lower() == "coin":
 		add_gold(amount)
@@ -116,7 +116,9 @@ func add_item(item_name: String, icon: Texture2D = null, item_scene: PackedScene
 			"armor_defense": armor_defense,   # Store armor defense
 			"weapon_hand": weapon_hand,  # Store weapon hand restriction
 			"weapon_range": weapon_range,  # Store weapon range
-			"weapon_speed": weapon_speed  # Store weapon speed
+			"weapon_speed": weapon_speed,  # Store weapon speed
+			"weapon_block_window": weapon_block_window,
+			"weapon_parry_window": weapon_parry_window 
 		}
 		
 		amount -= stack_size

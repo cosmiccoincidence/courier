@@ -2,7 +2,7 @@ extends Control
 class_name InventorySlotTooltip
 
 ## Tooltip that appears when hovering over inventory slots
-## Shows item name, level, quality, value, type, subtype, and mass
+## Shows item name, traits, & stats
 
 var tooltip_panel: PanelContainer = null
 var item_label: RichTextLabel = null
@@ -109,6 +109,17 @@ func show_tooltip(slot: Control, item_data: Dictionary):
 		
 	current_slot = slot
 	
+	# DEBUG: Print what's in item_data
+	print("=== TOOLTIP DEBUG ===")
+	print("Item: ", item_data.get("name", "Unknown"))
+	print("Has weapon_damage: ", item_data.has("weapon_damage"))
+	print("Has weapon_block_window: ", item_data.has("weapon_block_window"))
+	print("Has weapon_parry_window: ", item_data.has("weapon_parry_window"))
+	if item_data.has("weapon_block_window"):
+		print("Block window value: ", item_data.weapon_block_window)
+	if item_data.has("weapon_parry_window"):
+		print("Parry window value: ", item_data.weapon_parry_window)
+	
 	# Build tooltip text with BBCode formatting
 	var lines = []
 	
@@ -154,6 +165,14 @@ func show_tooltip(slot: Control, item_data: Dictionary):
 		elif speed < 1.0:
 			speed_text = "Slow (%.1fx)" % speed
 		lines.append("[center][color=#ffff77]Speed: %s[/color][/center]" % speed_text)
+	
+	# Weapon block window - cyan color (only for weapons with block window)
+	if item_data.has("weapon_block_window") and item_data.get("weapon_damage", 0) > 0 and item_data.weapon_block_window > 0.0:
+		lines.append("[center][color=#77ffff]Block Window: %.1fs[/color][/center]" % item_data.weapon_block_window)
+	
+	# Weapon parry window - light green color (only for weapons with parry window)
+	if item_data.has("weapon_parry_window") and item_data.get("weapon_damage", 0) > 0 and item_data.weapon_parry_window > 0.0:
+		lines.append("[center][color=#77ff77]Parry Window: %.1fs[/color][/center]" % item_data.weapon_parry_window)
 	
 	# Armor defense - blue color (only for armor)
 	if item_data.has("armor_defense") and item_data.armor_defense > 0:

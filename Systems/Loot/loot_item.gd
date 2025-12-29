@@ -25,6 +25,8 @@ extends Resource
 @export var max_weapon_damage: int = 0  # Maximum base damage
 @export var weapon_range: float = 2.0  # Attack range in meters
 @export var weapon_speed: float = 1.0  # Attack speed multiplier (1.0 = normal, 2.0 = twice as fast)
+@export var weapon_block_window: float = 0.0  # Time window to successfully block (seconds)
+@export var weapon_parry_window: float = 0.0  # Time window to successfully parry (seconds)
 
 # Weapon hand restrictions
 enum WeaponHand {

@@ -38,12 +38,14 @@ const ENCUMBERED_ROTATION_MULT: float = 0.75  # 75% rotation speed
 
 # ===== COMBAT STATS =====
 @export_group("Combat")
-@export var base_damage := 5  # Base weapon damage
 @export var base_armor := 5  # Base armor/defense
+@export var base_damage := 5  # Base attack damage
 @export var base_attack_range := 1.5  # Base attack range in tiles
 @export var base_attack_speed := 1.0  # Base attack speed multiplier (1.0 = normal)
 @export var base_crit_chance := 0.1  # 10% base crit chance
 @export var base_crit_multiplier: float = 1.0  # 1x damage on crit
+@export var base_block_window := 1.0  # Base block window length
+@export var base_parry_window := 1.0  # Base parry window length
 
 # Calculated combat stats (modified by gear/buffs/god mode)
 var damage: int = 5
