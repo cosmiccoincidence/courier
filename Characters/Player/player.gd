@@ -191,14 +191,14 @@ func _update_combat_stats():
 		# TODO: Add buff bonuses
 	
 	# Debug output
-	print("=== STATS UPDATED ===")
-	print("  Damage: %d (base: %d + weapon: %d)" % [damage, base_damage, equip_stats.weapon_damage])
-	print("  Armor: %d (base: %d + armor: %d)" % [armor, base_armor, equip_stats.armor_defense])
-	print("  Range: %.1f" % attack_range)
-	print("  Speed: %.1fx" % attack_speed)
-	print("  Block Window: %.1fs" % block_window)
-	print("  Parry Window: %.1fs" % parry_window)
-	print("  Crit: %.0f%% (x%.1f)" % [crit_chance * 100, crit_multiplier])
+	# print("=== STATS UPDATED ===")
+	# print("  Damage: %d (base: %d + weapon: %d)" % [damage, base_damage, equip_stats.weapon_damage])
+	# print("  Armor: %d (base: %d + armor: %d)" % [armor, base_armor, equip_stats.armor_defense])
+	# print("  Range: %.1f" % attack_range)
+	# print("  Speed: %.1fx" % attack_speed)
+	# print("  Block Window: %.1fs" % block_window)
+	# print("  Parry Window: %.1fs" % parry_window)
+	# print("  Crit: %.0f%% (x%.1f)" % [crit_chance * 100, crit_multiplier])
 
 func get_total_luck() -> float:
 	"""Get total luck including equipment and buffs"""
@@ -553,7 +553,6 @@ func _try_pickup_item():
 func _on_equipment_changed():
 	"""Called when equipment changes - recalculate stats"""
 	_update_combat_stats()
-	print("Equipment changed - stats updated")
 
 # ===== AUDIO =====
 
