@@ -2,7 +2,7 @@ extends Node
 # inventory.gd
 
 var items: Array = []
-var max_slots: int = 32  # Match the UI grid (8 columns × 5 rows)
+var max_slots: int = 32  # Match the UI grid (4 columns × 8 rows)
 var player_ref: Node3D = null  # Reference to player for drop position
 
 # Mass system
@@ -103,18 +103,18 @@ func add_item(item_name: String, icon: Texture2D = null, item_scene: PackedScene
 			"name": item_name,
 			"icon": icon,
 			"scene": item_scene,
-			"mass": item_mass,
+			"mass": item_mass,  # Changed from 'weight' to 'mass'
 			"value": item_value,
 			"stackable": is_stackable,
 			"max_stack_size": max_stack,
 			"stack_count": stack_size,
 			"item_type": item_type,
-			"item_level": item_level,
-			"item_quality": item_quality,
-			"item_subtype": item_subtype,
-			"weapon_damage": weapon_damage,
-			"armor_defense": armor_defense,
-			"weapon_hand": weapon_hand  
+			"item_level": item_level,  # Store item level
+			"item_quality": item_quality,  # Store item quality
+			"item_subtype": item_subtype,  # Store item subtype
+			"weapon_damage": weapon_damage,  # Store weapon damage
+			"armor_defense": armor_defense,   # Store armor defense
+			"weapon_hand": weapon_hand  # Store weapon hand restriction
 		}
 		
 		amount -= stack_size
@@ -167,23 +167,37 @@ func drop_item_at_slot(slot_index: int):
 					
 					# Restore item properties from inventory data
 					if item_instance is BaseItem:
+						# Restore basic properties
+						if item.has("name"):
+							item_instance.item_name = item.name
+						if item.has("icon"):
+							item_instance.item_icon = item.icon
+						if item.has("item_type"):
+							item_instance.item_type = item.item_type
+						if item.has("item_subtype"):
+							item_instance.item_subtype = item.item_subtype
+						if item.has("mass"):
+							item_instance.mass = item.mass
+						if item.has("value"):
+							item_instance.value = item.value
+						if item.has("stackable"):
+							item_instance.stackable = item.stackable
+						if item.has("max_stack_size"):
+							item_instance.max_stack_size = item.max_stack_size
+						
 						# Restore level and quality
 						if item.has("item_level"):
 							item_instance.item_level = item.item_level
 						if item.has("item_quality"):
 							item_instance.item_quality = item.item_quality
-						if item.has("value"):
-							item_instance.value = item.value
 						
-						# NEW: Restore item subtype
-						if item.has("item_subtype"):
-							item_instance.item_subtype = item.item_subtype
-							# NEW: Restore weapon/armor stats
-							if item.has("weapon_damage"):
-								item_instance.weapon_damage = item.weapon_damage
-							if item.has("armor_defense"):
-								item_instance.armor_defense = item.armor_defense
-
+						# Restore weapon/armor stats
+						if item.has("weapon_damage"):
+							item_instance.weapon_damage = item.weapon_damage
+						if item.has("armor_defense"):
+							item_instance.armor_defense = item.armor_defense
+						if item.has("weapon_hand"):
+							item_instance.weapon_hand = item.weapon_hand
 						
 						# Set stack count if item is stackable
 						if item.get("stackable", false) and item.get("stack_count", 1) > 1:
