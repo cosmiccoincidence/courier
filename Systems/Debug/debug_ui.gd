@@ -64,18 +64,19 @@ func _create_enabled_indicator():
 func _create_keybind_panel():
 	"""Create the keybind reference panel"""
 	keybind_panel = PanelContainer.new()
-	keybind_panel.custom_minimum_size = Vector2(350, 480)
 	keybind_panel.visible = false
 	
-	# Position in top right, below god mode indicator (which can appear)
+	# Anchor to BOTTOM right corner and grow upward and leftward
 	keybind_panel.anchor_left = 1.0
 	keybind_panel.anchor_right = 1.0
-	keybind_panel.anchor_top = 0.0
-	keybind_panel.anchor_bottom = 0.0
-	keybind_panel.offset_left = -370
-	keybind_panel.offset_right = -10
-	keybind_panel.offset_top = 400  # Below god mode display
-	keybind_panel.offset_bottom = 700
+	keybind_panel.anchor_top = 1.0
+	keybind_panel.anchor_bottom = 1.0
+	keybind_panel.offset_left = 0  # Will be set by content width
+	keybind_panel.offset_right = -10  # 10px margin from right
+	keybind_panel.offset_top = 0  # Will be set by content height
+	keybind_panel.offset_bottom = -10  # 10px margin from bottom
+	keybind_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN  # Grow upward
+	keybind_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN  # Grow leftward
 	
 	# Style the panel
 	var style = StyleBoxFlat.new()
