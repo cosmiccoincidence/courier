@@ -26,7 +26,7 @@ const ENCUMBERED_ROTATION_MULT: float = 0.75  # 75% rotation speed
 @export var dexterity := 5
 @export var luck: float = 0.0  # Affects item quality rolls
 
-# ===== HEALTH & STAMINA =====
+# ===== ENERGY & RESISTENCES =====
 @export_group("Health & Stamina")
 @export var max_health := 10
 @export var health_regen: float = 1.0  # HP per interval
@@ -35,6 +35,11 @@ const ENCUMBERED_ROTATION_MULT: float = 0.75  # 75% rotation speed
 @export var max_stamina := 10
 @export var stamina_regen: float = 1.0  # Stamina per interval
 @export var stamina_regen_interval: float = 0.5  # Seconds between regen
+
+@export var heat_resistence := 10
+@export var cold_resistence := 10
+@export var static_resistence := 10
+@export var poison_resistence := 10
 
 # ===== COMBAT STATS =====
 @export_group("Combat")
@@ -154,7 +159,7 @@ func _update_combat_stats():
 		
 		# Equipment still applies in god mode
 		damage = base_damage + equip_stats.weapon_damage
-		armor = base_armor + equip_stats.armor_defense
+		armor = base_armor + equip_stats.base_armor_rating
 		
 		# Use weapon stats if weapon equipped, otherwise use base
 		if equip_stats.has_weapon:
@@ -170,7 +175,7 @@ func _update_combat_stats():
 	else:
 		# Normal mode - apply equipment bonuses
 		damage = base_damage + equip_stats.weapon_damage
-		armor = base_armor + equip_stats.armor_defense
+		armor = base_armor + equip_stats.base_armor_rating
 		
 		# Use weapon stats if weapon equipped, otherwise use base
 		if equip_stats.has_weapon:
@@ -193,7 +198,7 @@ func _update_combat_stats():
 	# Debug output
 	# print("=== STATS UPDATED ===")
 	# print("  Damage: %d (base: %d + weapon: %d)" % [damage, base_damage, equip_stats.weapon_damage])
-	# print("  Armor: %d (base: %d + armor: %d)" % [armor, base_armor, equip_stats.armor_defense])
+	# print("  Armor: %d (base: %d + armor: %d)" % [armor, base_armor, equip_stats.base_armor_rating])
 	# print("  Range: %.1f" % attack_range)
 	# print("  Speed: %.1fx" % attack_speed)
 	# print("  Block Window: %.1fs" % block_window)

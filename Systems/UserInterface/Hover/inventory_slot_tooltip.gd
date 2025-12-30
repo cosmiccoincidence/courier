@@ -172,9 +172,9 @@ func show_tooltip(slot: Control, item_data: Dictionary):
 	if item_data.has("weapon_crit_multiplier") and item_data.get("weapon_damage", 0) > 0 and item_data.weapon_crit_multiplier > 1.0:
 		lines.append("[center][color=#ff55ff]Crit Multiplier: %.1fx[/color][/center]" % item_data.weapon_crit_multiplier)
 	
-	# Armor defense - blue color (only for armor)
-	if item_data.has("armor_defense") and item_data.armor_defense > 0:
-		lines.append("[center][color=#6bb6ff]Defense: %d[/color][/center]" % item_data.armor_defense)
+	# Armor rating - blue color (only for armor)
+	if item_data.has("base_armor_rating") and item_data.base_armor_rating > 0:
+		lines.append("[center][color=#6bb6ff]Armor: %d[/color][/center]" % item_data.base_armor_rating)
 	
 	# Value - gold color
 	var value = item_data.get("value", 0)

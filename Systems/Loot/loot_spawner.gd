@@ -86,15 +86,15 @@ static func spawn_loot_item(item_data: Dictionary, spawn_position: Vector3, pare
 	var is_armor = item.item_type.to_lower() == "armor"
 	var is_shield = item.item_type.to_lower() == "weapon" and item.item_subtype.to_lower() == "shield"
 	
-	if (is_armor or is_shield) and item.base_armor_defense > 0:
-		var armor_defense = ArmorStatRoller.roll_armor_defense(
-			item.base_armor_defense,
+	if (is_armor or is_shield) and item.base_base_armor_rating > 0:
+		var base_armor_rating = ArmorStatRoller.roll_base_armor_rating(
+			item.base_base_armor_rating,
 			item_level,
 			item_quality
 		)
-		if "armor_defense" in loot_instance:
-			loot_instance.armor_defense = armor_defense
-		print("  Rolled armor defense: ", armor_defense, " (base: ", item.base_armor_defense, ")")
+		if "base_armor_rating" in loot_instance:
+			loot_instance.base_armor_rating = base_armor_rating
+		print("  Rolled armor defense: ", base_armor_rating, " (base: ", item.base_base_armor_rating, ")")
 
 
 static func _find_valid_spawn_position(origin: Vector3, parent_node: Node) -> Vector3:

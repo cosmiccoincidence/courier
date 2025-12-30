@@ -68,7 +68,7 @@ func add_item(item_data: Dictionary) -> bool:
 	
 	Optional weapon/armor keys:
 	- item_type, item_level, item_quality, item_subtype
-	- weapon_damage, armor_defense, weapon_hand
+	- weapon_damage, base_armor_rating, weapon_hand
 	- weapon_range, weapon_speed
 	- weapon_block_window, weapon_parry_window
 	- weapon_crit_chance, weapon_crit_multiplier
@@ -140,7 +140,7 @@ func add_item(item_data: Dictionary) -> bool:
 			"item_quality": item_data.get("item_quality", 1),
 			"item_subtype": item_data.get("item_subtype", ""),
 			"weapon_damage": item_data.get("weapon_damage", 0),
-			"armor_defense": item_data.get("armor_defense", 0),
+			"base_armor_rating": item_data.get("base_armor_rating", 0),
 			"weapon_hand": item_data.get("weapon_hand", 0),
 			"weapon_range": item_data.get("weapon_range", 2.0),
 			"weapon_speed": item_data.get("weapon_speed", 1.0),
@@ -227,8 +227,8 @@ func drop_item_at_slot(slot_index: int):
 						# Restore weapon/armor stats
 						if item.has("weapon_damage"):
 							item_instance.weapon_damage = item.weapon_damage
-						if item.has("armor_defense"):
-							item_instance.armor_defense = item.armor_defense
+						if item.has("base_armor_rating"):
+							item_instance.base_armor_rating = item.base_armor_rating
 						if item.has("weapon_hand"):
 							item_instance.weapon_hand = item.weapon_hand
 						if item.has("weapon_range"):

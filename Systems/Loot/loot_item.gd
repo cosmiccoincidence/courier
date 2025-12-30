@@ -41,7 +41,7 @@ enum WeaponHand {
 
 # Armor stats (only for armor)
 @export_group("Armor Stats")
-@export var base_armor_defense: int = 0  # Base defense value
+@export var base_base_armor_rating: int = 0  # Base defense value
 
 # Stackable item settings
 @export var min_drop_amount: int = 1  # Minimum stack size when dropped

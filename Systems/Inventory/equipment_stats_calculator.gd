@@ -10,7 +10,7 @@ static func calculate_total_stats(equipped_items: Array) -> Dictionary:
 	"""
 	var stats = {
 		"weapon_damage": 0,
-		"armor_defense": 0,
+		"base_armor_rating": 0,
 		"weapon_range": 0.0,
 		"weapon_speed": 0.0,
 		"weapon_block_window": 0.0,
@@ -35,8 +35,8 @@ static func calculate_total_stats(equipped_items: Array) -> Dictionary:
 	# Sum armor defense from all armor pieces
 	for item in equipped_items:
 		if item and not _is_twohand_placeholder(item):
-			if item.has("armor_defense") and item.armor_defense > 0:
-				stats.armor_defense += item.armor_defense
+			if item.has("base_armor_rating") and item.base_armor_rating > 0:
+				stats.base_armor_rating += item.base_armor_rating
 	
 	# Weapon stats - use primary weapon (first equipped weapon found)
 	if equipped_weapons.size() > 0:

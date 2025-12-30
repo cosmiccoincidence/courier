@@ -3,7 +3,7 @@
 class_name ArmorStatRoller
 extends RefCounted
 
-static func roll_armor_defense(base_defense: int, item_level: int, item_quality: int) -> int:
+static func roll_base_armor_rating(base_defense: int, item_level: int, item_quality: int) -> int:
 	"""Roll armor defense based on item's base defense, level, and quality"""
 	
 	# Validate base defense
