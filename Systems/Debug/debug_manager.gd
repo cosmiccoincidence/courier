@@ -1,4 +1,4 @@
-# res://systems/debug_manager.gd
+# res://Systems/Debug/debug_manager.gd
 extends Node
 
 # Debug panel visibility
