@@ -92,7 +92,7 @@ script = ExtResource("12_70uel")
 
 [node name="FOV" type="Node3D" parent="."]
 
-[node name="FogOfWar" type="Node3D" parent="FOV" node_paths=PackedStringArray("player", "map_container")]
+[node name="FogOfWar" type="Node3D" parent="FOV" node_paths=PackedStringArray("player", "map_container") groups=["fog_of_war"]]
 script = ExtResource("15_hiqwa")
 player = NodePath("../../Player")
 map_container = NodePath("../../MapContainer")

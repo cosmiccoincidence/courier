@@ -64,7 +64,7 @@ func _create_enabled_indicator():
 func _create_keybind_panel():
 	"""Create the keybind reference panel"""
 	keybind_panel = PanelContainer.new()
-	keybind_panel.custom_minimum_size = Vector2(350, 400)
+	keybind_panel.custom_minimum_size = Vector2(350, 480)
 	keybind_panel.visible = false
 	
 	# Position in top right, below enabled indicator
@@ -75,7 +75,7 @@ func _create_keybind_panel():
 	keybind_panel.offset_left = -370
 	keybind_panel.offset_right = -10
 	keybind_panel.offset_top = 50
-	keybind_panel.offset_bottom = 420
+	keybind_panel.offset_bottom = 550
 	
 	# Style the panel
 	var style = StyleBoxFlat.new()
@@ -137,6 +137,12 @@ func _create_keybind_panel():
 	_add_section_header("TIME", Color(0.7, 0.7, 1.0))
 	_add_keybind(",", "Advance Time 3h", Color(0.7, 0.9, 1.0))
 	_add_keybind(".", "Freeze/Unfreeze Time", Color(0.9, 0.7, 1.0))
+	
+	# FOV System keybinds
+	_add_section_header("FOG OF WAR", Color(0.6, 0.6, 0.6))
+	_add_keybind("M", "Toggle FOV System", Color(0.7, 0.7, 0.7))
+	_add_keybind("N", "Reset Explored Map", Color(0.8, 0.6, 0.6))
+	_add_keybind("B", "Reveal Entire Map", Color(0.6, 0.8, 0.6))
 
 func _add_section_header(section_name: String, color: Color):
 	"""Add a section header to the keybind list"""

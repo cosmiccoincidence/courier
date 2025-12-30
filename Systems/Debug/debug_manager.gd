@@ -55,6 +55,17 @@ func _setup_subsystems():
 			add_child(debug_time)
 		else:
 			push_warning("Could not load debug_time.gd")
+	
+	# Create DebugFOV
+	if not has_node("DebugFOV"):
+		var debug_fov_script = load("res://Systems/Debug/debug_fov.gd")
+		if debug_fov_script:
+			var debug_fov = Node.new()
+			debug_fov.name = "DebugFOV"
+			debug_fov.set_script(debug_fov_script)
+			add_child(debug_fov)
+		else:
+			push_warning("Could not load debug_fov.gd")
 
 func _input(event):
 	if not event is InputEventKey or not event.pressed:
@@ -112,6 +123,30 @@ func _input(event):
 					debug_time.freeze_time()
 				else:
 					print("⚠️  DebugTime subsystem not found")
+		KEY_M:
+			if debug_enabled:
+				# Delegate to debug_fov subsystem
+				var debug_fov = get_node_or_null("DebugFOV")
+				if debug_fov and debug_fov.has_method("toggle_fov_system"):
+					debug_fov.toggle_fov_system()
+				else:
+					print("⚠️  DebugFOV subsystem not found")
+		KEY_N:
+			if debug_enabled:
+				# Delegate to debug_fov subsystem
+				var debug_fov = get_node_or_null("DebugFOV")
+				if debug_fov and debug_fov.has_method("reset_explored_map"):
+					debug_fov.reset_explored_map()
+				else:
+					print("⚠️  DebugFOV subsystem not found")
+		KEY_B:
+			if debug_enabled:
+				# Delegate to debug_fov subsystem
+				var debug_fov = get_node_or_null("DebugFOV")
+				if debug_fov and debug_fov.has_method("reveal_entire_map"):
+					debug_fov.reveal_entire_map()
+				else:
+					print("⚠️  DebugFOV subsystem not found")
 
 func toggle_debug_system():
 	"""Toggle the entire debug system on/off"""

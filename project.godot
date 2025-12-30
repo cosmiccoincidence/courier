@@ -38,6 +38,7 @@ player=""
 tooltip_manager=""
 npc=""
 map_generator=""
+fog_of_war=""
 
 [input]
 

@@ -20,7 +20,6 @@ var fog_parent: Node3D
 var last_map_instance_id: int = -1  # Track which map we created fog for
 var is_passive_mode: bool = false  # Set when on passive maps
 var debug_disabled: bool = false  # Debug: disable system
-var debug_key_pressed: Dictionary = {}  # Debounce debug keys
 
 func _ready():
 	if not player or not map_container:
@@ -199,30 +198,6 @@ func create_tile_quad() -> Mesh:
 func _process(delta):
 	if not player:
 		return
-	
-	# Debug input handling with debounce
-	if Input.is_physical_key_pressed(KEY_COMMA):
-		if not debug_key_pressed.get("comma", false):
-			debug_key_pressed["comma"] = true
-			reveal_all()
-	else:
-		debug_key_pressed["comma"] = false
-	
-	if Input.is_physical_key_pressed(KEY_PERIOD):
-		if not debug_key_pressed.get("period", false):
-			debug_key_pressed["period"] = true
-			# Only allow reset if system is enabled
-			if not debug_disabled:
-				debug_reset_fog()
-	else:
-		debug_key_pressed["period"] = false
-	
-	if Input.is_physical_key_pressed(KEY_SLASH):
-		if not debug_key_pressed.get("slash", false):
-			debug_key_pressed["slash"] = true
-			debug_toggle_system()
-	else:
-		debug_key_pressed["slash"] = false
 	
 	# If system disabled, skip updates
 	if debug_disabled:
