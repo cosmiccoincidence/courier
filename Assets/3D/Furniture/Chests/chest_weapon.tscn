@@ -1,7 +1,7 @@
 [gd_scene load_steps=9 format=4 uid="uid://ccpa5j7ittgs0"]
 
 [ext_resource type="Script" uid="uid://cjdokt8pp5v4k" path="res://Assets/3D/Furniture/Chests/chest.gd" id="1_y8cpj"]
-[ext_resource type="Resource" uid="uid://dpn54dnfcqyau" path="res://Systems/Loot/Containers/chest_weapons.tres" id="2_y8cpj"]
+[ext_resource type="Resource" uid="uid://dpn54dnfcqyau" path="res://Systems/Loot/Containers/chest_weapon.tres" id="2_y8cpj"]
 [ext_resource type="AudioStream" uid="uid://j3x1tu5ppy0l" path="res://Assets/Audio/Furniture/Chest.wav" id="3_la16j"]
 [ext_resource type="Material" uid="uid://c3commbsrsfhp" path="res://World/Materials/material_road_dirt.tres" id="4_v28ew"]
 
