@@ -4,7 +4,6 @@ extends Node
 
 # Reference to main debug manager
 var debug_manager: Node
-var time_frozen: bool = false
 
 func _ready():
 	debug_manager = get_node_or_null("/root/DebugManager")
@@ -17,12 +16,13 @@ func _ready():
 func _on_debug_toggled(enabled: bool):
 	"""Called when debug mode is toggled"""
 	if not enabled:
-		# Unfreeze time when debug is disabled
-		if time_frozen:
-			unfreeze_time()
+		# Unfreeze time if frozen
+		var time_manager = get_node_or_null("/root/TimeManager")
+		if time_manager and time_manager.get("daylight_lock"):
+			time_manager.daylight_lock = false
 
-func advance_time(hours: int = 3):
-	"""Advance time by specified hours"""
+func advance_time():
+	"""Advance time by 3 hours"""
 	if not debug_manager or not debug_manager.debug_enabled:
 		return
 	
@@ -32,20 +32,35 @@ func advance_time(hours: int = 3):
 		print("   Add it as autoload: Project → Project Settings → Autoload")
 		return
 	
-	if not time_manager.has_method("advance_time"):
-		print("❌ TimeManager missing advance_time() method!")
+	if time_manager.get("daylight_lock") and time_manager.daylight_lock:
+		print("⏰ Cannot advance time - Time is frozen")
 		return
 	
-	var old_time = time_manager.get_time_string() if time_manager.has_method("get_time_string") else "Unknown"
+	print("\n" + "=".repeat(50))
+	print("⏰ ADVANCING TIME BY 3 HOURS")
+	print("=".repeat(50))
 	
-	time_manager.advance_time(hours)
+	var old_time = time_manager.get_time_string() if time_manager.has_method("get_time_string") else "Unknown"
+	var old_day = time_manager.current_day
+	
+	# Call advance_time with NO arguments (TimeManager handles the hours internally)
+	if time_manager.has_method("advance_time"):
+		time_manager.advance_time()
+	else:
+		print("❌ TimeManager missing advance_time() method!")
+		print("=".repeat(50) + "\n")
+		return
 	
 	var new_time = time_manager.get_time_string() if time_manager.has_method("get_time_string") else "Unknown"
+	var new_day = time_manager.current_day
 	
-	print("⏰ Time advanced by %d hours: %s → %s" % [hours, old_time, new_time])
+	print("Time: %s → %s" % [old_time, new_time])
+	if new_day != old_day:
+		print("Day: %d → %d (New day!)" % [old_day, new_day])
+	print("=".repeat(50) + "\n")
 
 func freeze_time():
-	"""Freeze time at current time"""
+	"""Freeze/unfreeze time at current time"""
 	if not debug_manager or not debug_manager.debug_enabled:
 		return
 	
@@ -54,32 +69,23 @@ func freeze_time():
 		print("❌ TimeManager not found!")
 		return
 	
-	if not "time_paused" in time_manager:
-		print("❌ TimeManager missing time_paused variable!")
+	if not "daylight_lock" in time_manager:
+		print("❌ TimeManager missing daylight_lock variable!")
 		return
 	
-	if time_frozen:
-		# Unfreeze
-		unfreeze_time()
+	# Toggle freeze
+	time_manager.daylight_lock = !time_manager.daylight_lock
+	
+	if time_manager.daylight_lock:
+		print("\n" + "=".repeat(50))
+		print("⏸️  TIME FROZEN")
+		print("=".repeat(50))
+		print("Current time: %s" % time_manager.get_time_string())
+		print("Day: %d" % time_manager.current_day)
+		print("Time of day: %s" % time_manager.get_time_of_day())
+		print("=".repeat(50) + "\n")
 	else:
-		# Freeze at current time
-		time_manager.time_paused = true
-		time_frozen = true
-		
-		var current_time = time_manager.get_time_string() if time_manager.has_method("get_time_string") else "Unknown"
-		print("⏸️  Time frozen at %s" % current_time)
-
-func unfreeze_time():
-	"""Unfreeze time"""
-	var time_manager = get_node_or_null("/root/TimeManager")
-	if not time_manager:
-		return
-	
-	if "time_paused" in time_manager:
-		time_manager.time_paused = false
-	
-	time_frozen = false
-	print("▶️  Time unfrozen")
+		print("\n▶️  TIME UNFROZEN - Time will advance normally\n")
 
 func show_time_info():
 	"""Display current time information"""
@@ -96,19 +102,24 @@ func show_time_info():
 		print("=".repeat(50) + "\n")
 		return
 	
-	# Get time info
-	var current_time = time_manager.get_time_string() if time_manager.has_method("get_time_string") else "Unknown"
-	var is_paused = time_manager.get("time_paused")
-	var time_scale = time_manager.get("time_scale") if "time_scale" in time_manager else 1.0
+	print("Full Time: %s" % time_manager.get_full_time_string())
+	print("Time: %s" % time_manager.get_time_string())
+	print("Day: %d" % time_manager.current_day)
+	print("Time of Day: %s" % time_manager.get_time_of_day())
+	print("Day/Night: %s" % ("Day" if time_manager.is_day_time() else "Night"))
+	print("Frozen: %s" % ("YES" if time_manager.get("daylight_lock") else "No"))
+	print("Hours per level: %d" % time_manager.hours_per_level)
 	
-	print("Current Time: %s" % current_time)
-	print("Status: %s" % ("FROZEN" if is_paused else "Running"))
-	print("Time Scale: %.1fx" % time_scale)
-	
-	if "day" in time_manager:
-		print("Day: %d" % time_manager.day)
-	
-	if "hour" in time_manager and "minute" in time_manager:
-		print("Raw: %02d:%02d" % [time_manager.hour, time_manager.minute])
+	# Sun/Moon info
+	if time_manager.sun_moon_origin:
+		print("\nSun/Moon Origin: Found")
+		var sun = time_manager.sun_moon_origin.get_node_or_null("Sun")
+		var moon = time_manager.sun_moon_origin.get_node_or_null("Moon")
+		if sun:
+			print("  Sun visible: %s" % sun.visible)
+		if moon:
+			print("  Moon visible: %s" % moon.visible)
+	else:
+		print("\nSun/Moon Origin: Not set")
 	
 	print("=".repeat(50) + "\n")

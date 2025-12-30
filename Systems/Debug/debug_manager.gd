@@ -17,6 +17,44 @@ func _ready():
 	
 	# Create debug UI
 	_setup_debug_ui()
+	
+	# Auto-create debug subsystems
+	_setup_subsystems()
+
+func _setup_subsystems():
+	"""Automatically create debug subsystem nodes"""
+	# Create DebugLoot
+	if not has_node("DebugLoot"):
+		var debug_loot_script = load("res://Systems/Debug/debug_loot.gd")
+		if debug_loot_script:
+			var debug_loot = Node.new()
+			debug_loot.name = "DebugLoot"
+			debug_loot.set_script(debug_loot_script)
+			add_child(debug_loot)
+		else:
+			push_warning("Could not load debug_loot.gd")
+	
+	# Create DebugCombat
+	if not has_node("DebugCombat"):
+		var debug_combat_script = load("res://Systems/Debug/debug_combat.gd")
+		if debug_combat_script:
+			var debug_combat = Node.new()
+			debug_combat.name = "DebugCombat"
+			debug_combat.set_script(debug_combat_script)
+			add_child(debug_combat)
+		else:
+			push_warning("Could not load debug_combat.gd")
+	
+	# Create DebugTime
+	if not has_node("DebugTime"):
+		var debug_time_script = load("res://Systems/Debug/debug_time.gd")
+		if debug_time_script:
+			var debug_time = Node.new()
+			debug_time.name = "DebugTime"
+			debug_time.set_script(debug_time_script)
+			add_child(debug_time)
+		else:
+			push_warning("Could not load debug_time.gd")
 
 func _input(event):
 	if not event is InputEventKey or not event.pressed:
