@@ -128,7 +128,7 @@ func _create_keybind_panel():
 	
 	# Core keybinds (no section header)
 	_add_keybind("F1", "Toggle Debug Mode", Color.YELLOW)
-	_add_keybind("F2", "Show/Hide This Panel", Color.WHITE)
+	_add_keybind("F2", "Debug Controls", Color.WHITE)
 	_add_keybind("F3", "Toggle God Mode", Color(1.0, 0.8, 0.2))
 	_add_keybind("F4", "Skip Level", Color(0.8, 0.8, 1.0))
 	

@@ -89,6 +89,7 @@ func _create_controls_panel():
 	# General controls (no section header)
 	_add_control("E", "Interact", Color(1.0, 1.0, 0.8))
 	_add_control("Hover", "Entity Info Tooltip", Color(0.9, 0.9, 0.7))
+	_add_control("F5", "Game Controls", Color(0.8, 1.0, 0.8))
 	
 	# MOVEMENT section
 	_add_section_header("MOVEMENT", Color(0.6, 0.8, 1.0))
