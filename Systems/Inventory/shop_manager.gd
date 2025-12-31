@@ -32,22 +32,28 @@ func is_shop_open() -> bool:
 	"""Check if a shop is currently open"""
 	return current_shop != null
 
-func buy_item(item: LootItem, player_inventory: Node) -> bool:
+func buy_item_by_key(item_key: String, player_inventory: Node) -> bool:
 	"""
-	Player buys an item from the shop.
+	Player buys an item from the shop using item key.
 	Returns true if transaction succeeded.
 	"""
 	if not current_shop:
 		print("[ShopManager] No shop open")
 		return false
 	
+	# Get the item
+	var item = current_shop.get_item(item_key)
+	if not item:
+		print("[ShopManager] Item not found")
+		return false
+	
 	# Check stock
-	if not current_shop.has_stock(item):
+	if not current_shop.has_stock(item_key):
 		print("[ShopManager] Item out of stock")
 		return false
 	
 	# Calculate price
-	var price = current_shop.get_buy_price(item)
+	var price = current_shop.get_buy_price(item_key)
 	
 	# Check if player has enough gold
 	if player_inventory.get_gold() < price:
@@ -67,7 +73,7 @@ func buy_item(item: LootItem, player_inventory: Node) -> bool:
 	# Perform transaction
 	player_inventory.remove_gold(price)
 	current_shop.shop_gold += price
-	current_shop.remove_stock(item, 1)
+	current_shop.remove_stock(item_key, 1)
 	
 	# Add item to player inventory
 	var success = player_inventory.add_item(item_data)
@@ -81,7 +87,7 @@ func buy_item(item: LootItem, player_inventory: Node) -> bool:
 		# Refund if add failed
 		player_inventory.add_gold(price)
 		current_shop.shop_gold -= price
-		current_shop.add_stock(item, 1)
+		current_shop.add_stock(item_key, 1)
 		print("[ShopManager] Failed to add item to inventory")
 		return false
 

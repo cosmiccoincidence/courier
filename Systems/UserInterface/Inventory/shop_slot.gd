@@ -114,8 +114,8 @@ func set_item(data: Dictionary):
 	if data.has("name"):
 		var display_name = data.name
 		
-		# Show stock count
-		if data.has("stock") and data.stock > 1:
+		# Only show stock count if item is stackable
+		if data.get("stackable", false) and data.get("stock", 0) > 1:
 			display_name = "%s (x%d)" % [display_name, data.stock]
 		
 		label.text = display_name
@@ -143,6 +143,10 @@ func clear_item():
 func set_tooltip_manager(manager: Control):
 	"""Set the tooltip manager"""
 	tooltip_manager = manager
+	if manager:
+		print("[ShopSlot %d] Tooltip manager set successfully" % slot_index)
+	else:
+		print("[ShopSlot %d] WARNING: Tooltip manager is null!" % slot_index)
 
 func _input(event):
 	"""Handle buying with click"""

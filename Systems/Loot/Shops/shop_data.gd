@@ -56,27 +56,63 @@ func initialize():
 
 func _initialize_stock():
 	"""Set initial stock for all items in the shop"""
-	var items_to_stock: Array[LootItem] = []
+	# Clear existing stock
+	item_stock.clear()
 	
-	# Determine which items to stock
+	print("[ShopData] Initializing stock for shop: %s" % shop_name)
+	
+	# Determine source pool
+	var source_pool: Array[LootItem] = []
+	
 	if not item_pool.is_empty():
-		# Use specific item pool
-		items_to_stock = item_pool
+		print("[ShopData] Using item_pool with %d item types" % item_pool.size())
+		source_pool = item_pool
 	else:
 		# Use all items from LootManager, filtered by type
 		if LootManager and "all_items" in LootManager:
-			items_to_stock = _filter_items_by_type(LootManager.all_items)
+			source_pool = _filter_items_by_type(LootManager.all_items)
+			print("[ShopData] Using filtered LootManager items: %d types" % source_pool.size())
 		else:
 			push_warning("ShopData: LootManager not found or has no all_items")
+			return
 	
-	# Set stock for each item
-	for item in items_to_stock:
-		if not item_stock.has(item):
-			# Check if this item has infinite stock
-			if item.item_name in infinite_stock_items:
-				item_stock[item] = 999  # Large number to represent "infinite"
-			else:
-				item_stock[item] = randi_range(default_stock_min, default_stock_max)
+	if source_pool.is_empty():
+		push_warning("ShopData: No items available for shop!")
+		return
+	
+	# Roll random number of items to stock (like LootSpawner does)
+	var num_items_to_stock = randi_range(default_stock_min, default_stock_max)
+	print("[ShopData] Rolling %d items from pool..." % num_items_to_stock)
+	
+	# Randomly select items from pool (can select same item multiple times)
+	var item_index = 0
+	for i in range(num_items_to_stock):
+		# Randomly pick an item from source pool
+		var random_item = source_pool[randi() % source_pool.size()]
+		
+		# Create unique key for this item instance
+		var item_key = "%s_%d" % [random_item.resource_path, item_index]
+		
+		# Determine stock count for this specific item
+		var stock_amount = 1  # Each slot has 1 item
+		
+		# For stackable items, the stock represents quantity in that slot
+		if random_item.stackable:
+			# Stackable items can have multiple in one slot
+			stock_amount = randi_range(1, 5)  # 1-5 per slot
+		
+		# Add to item_stock
+		item_stock[item_key] = {
+			"item": random_item,
+			"count": stock_amount,
+			"index": item_index
+		}
+		
+		print("[ShopData]   Slot %d: %s (stock: %d, stackable: %s)" % [item_index, random_item.item_name, stock_amount, random_item.stackable])
+		
+		item_index += 1
+	
+	print("[ShopData] Shop initialized with %d item slots" % item_stock.size())
 
 func _filter_items_by_type(all_items: Array) -> Array[LootItem]:
 	"""Filter items by allowed/excluded types"""
@@ -104,32 +140,30 @@ func _filter_items_by_type(all_items: Array) -> Array[LootItem]:
 
 func _apply_price_variations():
 	"""Randomly mark up or mark down some items"""
-	var items_to_vary: Array[LootItem] = []
-	
-	# Get items to apply variations to
-	if not item_pool.is_empty():
-		items_to_vary = item_pool
-	elif item_stock.size() > 0:
-		items_to_vary.assign(item_stock.keys())
-	
-	for item in items_to_vary:
+	for item_key in item_stock.keys():
 		if randf() < price_variation_chance:
+			var item = item_stock[item_key].item
+			
 			# Randomly choose markup or markdown
 			if randf() < 0.5:
 				# Markup
-				special_prices[item] = randf_range(markup_range.x, markup_range.y)
+				special_prices[item_key] = randf_range(markup_range.x, markup_range.y)
 			else:
 				# Markdown
-				special_prices[item] = randf_range(markdown_range.x, markdown_range.y)
+				special_prices[item_key] = randf_range(markdown_range.x, markdown_range.y)
 
-func get_buy_price(item: LootItem) -> int:
+func get_buy_price(item_key: String) -> int:
 	"""Get the price the player pays to buy this item"""
+	if not item_stock.has(item_key):
+		return 0
+	
+	var item = item_stock[item_key].item
 	var base_price = item.base_value
 	var multiplier = buy_price_multiplier
 	
-	# Check for special pricing
-	if special_prices.has(item):
-		multiplier = special_prices[item]
+	# Check for special pricing using item_key
+	if special_prices.has(item_key):
+		multiplier = special_prices[item_key]
 	
 	return int(base_price * multiplier)
 
@@ -137,35 +171,52 @@ func get_sell_price(item_value: int) -> int:
 	"""Get the price the shop pays when player sells an item"""
 	return int(item_value * sell_price_multiplier)
 
-func has_stock(item: LootItem) -> bool:
+func has_stock(item_key: String) -> bool:
 	"""Check if item is in stock"""
-	return item_stock.get(item, 0) > 0
+	if not item_stock.has(item_key):
+		return false
+	return item_stock[item_key].count > 0
 
-func get_stock(item: LootItem) -> int:
+func get_stock(item_key: String) -> int:
 	"""Get stock count for an item"""
-	return item_stock.get(item, 0)
+	if not item_stock.has(item_key):
+		return 0
+	return item_stock[item_key].count
 
-func remove_stock(item: LootItem, amount: int = 1) -> bool:
+func get_item(item_key: String) -> LootItem:
+	"""Get the LootItem for a key"""
+	if not item_stock.has(item_key):
+		return null
+	return item_stock[item_key].item
+
+func remove_stock(item_key: String, amount: int = 1) -> bool:
 	"""Remove stock when player buys"""
+	if not item_stock.has(item_key):
+		return false
+	
+	var item = item_stock[item_key].item
+	
 	# Check for infinite stock
 	if item.item_name in infinite_stock_items:
 		return true  # Never runs out
 	
-	if has_stock(item):
-		item_stock[item] = max(0, item_stock[item] - amount)
+	if item_stock[item_key].count > 0:
+		item_stock[item_key].count = max(0, item_stock[item_key].count - amount)
 		return true
 	return false
 
-func add_stock(item: LootItem, amount: int = 1):
+func add_stock(item_key: String, amount: int = 1):
 	"""Add stock when player sells"""
+	if not item_stock.has(item_key):
+		return
+	
+	var item = item_stock[item_key].item
+	
 	# Don't add to infinite stock items
 	if item.item_name in infinite_stock_items:
 		return
 	
-	if item_stock.has(item):
-		item_stock[item] += amount
-	else:
-		item_stock[item] = amount
+	item_stock[item_key].count += amount
 
 func can_afford_to_buy_from_player(price: int) -> bool:
 	"""Check if shop has enough gold to buy from player"""
@@ -175,12 +226,13 @@ func is_item_level_valid(item_level: int) -> bool:
 	"""Check if item level is within shop's range"""
 	return item_level >= min_item_level and item_level <= max_item_level
 
-func get_all_items() -> Array[LootItem]:
-	"""Get all items this shop can sell (for display)"""
-	if not item_pool.is_empty():
-		return item_pool
-	else:
-		# Return items from stock
-		var items: Array[LootItem] = []
-		items.assign(item_stock.keys())
-		return items
+func get_all_shop_items() -> Array:
+	"""Get all item keys and their data for display"""
+	var items = []
+	for item_key in item_stock.keys():
+		items.append({
+			"key": item_key,
+			"item": item_stock[item_key].item,
+			"stock": item_stock[item_key].count
+		})
+	return items

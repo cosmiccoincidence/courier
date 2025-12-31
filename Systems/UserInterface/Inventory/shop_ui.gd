@@ -63,10 +63,12 @@ func set_tooltip_manager(tooltip: Control):
 	"""Set the tooltip manager from inventory UI"""
 	slot_tooltip = tooltip
 	
-	# Update all existing slots
-	for slot in shop_grid.get_children():
-		if slot.has_method("set_tooltip_manager"):
-			slot.set_tooltip_manager(slot_tooltip)
+	# Update all existing slots with the tooltip manager
+	if shop_grid:
+		for slot in shop_grid.get_children():
+			if slot.has_method("set_tooltip_manager"):
+				slot.set_tooltip_manager(slot_tooltip)
+				print("[ShopUI] Set tooltip manager for shop slot %d" % slot.slot_index)
 
 func _on_shop_opened(shop_data: ShopData):
 	"""Called when a shop is opened"""
@@ -108,33 +110,57 @@ func _populate_shop_inventory():
 		if slot.has_method("clear_item"):
 			slot.clear_item()
 	
-	# Get all items this shop sells
-	var shop_items = current_shop_data.get_all_items()
+	# Get all items this shop sells (now returns dictionaries with keys)
+	var shop_items = current_shop_data.get_all_shop_items()
 	
 	# Add shop items to slots
-	for item in shop_items:
+	for item_data in shop_items:
 		if slot_index >= slots.size():
 			break
 		
-		# Check stock
-		var stock = current_shop_data.get_stock(item)
-		if stock <= 0:
-			continue  # Skip out of stock items
+		var item_key = item_data.key
+		var item = item_data.item
+		var stock = item_data.stock
 		
-		# Create item data for display
-		var item_data = {
+		# Skip out of stock items
+		if stock <= 0:
+			continue
+		
+		# Create display data (match format expected by tooltip)
+		var display_data = {
 			"name": item.item_name,
 			"icon": item.icon,
 			"item_type": item.item_type,
 			"item_subtype": item.item_subtype,
+			"item_level": 1,
+			"item_quality": ItemQuality.Quality.NORMAL,
 			"value": item.base_value,
-			"buy_price": current_shop_data.get_buy_price(item),
+			"buy_price": current_shop_data.get_buy_price(item_key),
 			"stock": stock,
-			"loot_item": item  # Store reference for purchasing
+			"stackable": item.stackable,
+			"stack_count": stock if item.stackable else 1,
+			"is_shop_item": true,
+			"item_key": item_key,  # Store key for purchasing
+			# Add other stats for tooltip
+			"mass": item.mass,
+			"durability": item.durability,
+			"required_strength": item.required_strength,
+			"required_dexterity": item.required_dexterity,
+			"weapon_class": item.weapon_class,
+			"weapon_damage": 0,
+			"armor_class": item.armor_class,
+			"armor_rating": 0,
+			"weapon_hand": item.weapon_hand,
+			"weapon_range": item.weapon_range,
+			"weapon_speed": item.weapon_speed,
+			"weapon_block_rating": item.weapon_block_rating,
+			"weapon_parry_window": item.weapon_parry_window,
+			"weapon_crit_chance": item.weapon_crit_chance,
+			"weapon_crit_multiplier": item.weapon_crit_multiplier
 		}
 		
 		if slots[slot_index].has_method("set_item"):
-			slots[slot_index].set_item(item_data)
+			slots[slot_index].set_item(display_data)
 		
 		slot_index += 1
 
@@ -144,9 +170,9 @@ func _clear_shop_inventory():
 		if slot.has_method("clear_item"):
 			slot.clear_item()
 
-func _on_item_purchased(item: LootItem, slot_index: int):
+func _on_item_purchased(item_key: String, slot_index: int):
 	"""Called when player buys an item"""
-	var success = ShopManager.buy_item(item, Inventory)
+	var success = ShopManager.buy_item_by_key(item_key, Inventory)
 	
 	if success:
 		# Refresh shop inventory to update stock
