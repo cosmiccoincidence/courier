@@ -115,7 +115,7 @@ func _roll_single_item(enemy_level: int, profile: LootProfile, player_luck: floa
 	
 	# STEP 3d: Calculate item level (enemy_level ± variance)
 	var item_level = 1  # Default level for items that skip this step
-	if skip_level_quality:
+	if not skip_level_quality:  # FIXED: Roll level if NOT skipping
 		item_level = enemy_level
 		if profile.level_variance > 0:
 			item_level += randi_range(-profile.level_variance, profile.level_variance)
@@ -123,7 +123,7 @@ func _roll_single_item(enemy_level: int, profile: LootProfile, player_luck: floa
 	
 	# STEP 3e: Roll item quality based on player luck
 	var item_quality = ItemQuality.Quality.NORMAL  # Default quality for items that skip this step
-	if skip_level_quality:
+	if not skip_level_quality:  # FIXED: Roll quality if NOT skipping
 		item_quality = ItemQuality.roll_quality(player_luck)
 	
 	# STEP 3f: Calculate stack size if stackable
@@ -179,7 +179,7 @@ func _should_skip_level_quality(item_type: String) -> bool:
 	- Gold: Currency
 	- Gemstones: Crafting gems/materials
 	"""
-	var skip_types = ["Bag", "Food", "Potions", "Gold", "Gemstones"]
+	var skip_types = ["bag", "food", "potions", "gold", "gemstones"]
 	return item_type.to_lower() in skip_types
 
 
