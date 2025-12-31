@@ -17,11 +17,15 @@ extends Resource
 @export var mass: float = 1.0
 @export var durability: int = 100  # Item durability (100 = new, 0 = broken)
 @export var base_value: int = 10  # Base value before level/quality modifiers
-@export var stackable: bool = false
-@export var max_stack_size: int = 1
+
+# Stat requirements (0 = no requirement)
+@export_group("Stat Requirements")
+@export var required_strength: int = 0  # Minimum strength to equip
+@export var required_dexterity: int = 0  # Minimum dexterity to equip
 
 # Weapon stats (only for weapons)
 @export_group("Weapon Stats")
+@export var weapon_class: String = ""  # Damage type: physical, fire, ice, lightning, poison, etc.
 @export var min_weapon_damage: int = 0  # Minimum base damage
 @export var max_weapon_damage: int = 0  # Maximum base damage
 @export var weapon_range: float = 2.0  # Attack range in meters
@@ -42,14 +46,19 @@ enum WeaponHand {
 
 # Armor stats (only for armor)
 @export_group("Armor Stats")
+@export var armor_class: String = ""  # Resistance type: physical, fire, ice, lightning, poison, etc.
 @export var base_armor_rating: int = 0  # Base defense value
 
 # Stackable item settings
+@export_group("Stack Settings")
+@export var stackable: bool = false
+@export var max_stack_size: int = 1
 @export var min_drop_amount: int = 1  # Minimum stack size when dropped
 @export var max_drop_amount: int = 1  # Maximum stack size when dropped
 @export var scaled_quantity: bool = false  # Scale drop amount by enemy level
 
-# Loot table properties
+# Drop settings
+@export_group("Drop Settings")
 @export var item_drop_weight: float = 1.0  # How common this specific item is (higher = more common)
 @export var min_quantity: int = 1  # For stackable items
 @export var max_quantity: int = 1  # For stackable items

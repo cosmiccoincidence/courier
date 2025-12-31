@@ -12,13 +12,19 @@ var value: int = 10
 var stackable: bool = false
 var max_stack_size: int = 99
 
+# Stat requirements
+var required_strength: int = 0  # Minimum strength to equip
+var required_dexterity: int = 0  # Minimum dexterity to equip
+
 # Level-based system (set by loot system when spawned)
 var item_level: int = 1
 var item_quality: int = ItemQuality.Quality.NORMAL  # Damaged, Normal, or Fine
 var rolled_stats: Dictionary = {}  # Future: store randomized stats based on item_level
 
 # Weapon and Armor stats (rolled when spawned)
+var weapon_class: String = ""  # Damage type: physical, fire, ice, etc.
 var weapon_damage: int = 0  # Only for weapons
+var armor_class: String = ""  # Resistance type: physical, fire, ice, etc.
 var armor_rating: int = 0  # Only for armor
 var weapon_hand: int = 0  # Weapon hand restriction (0=ANY, 1=PRIMARY, 2=OFFHAND, 3=TWOHAND)
 var weapon_range: float = 2.0  # Attack range in meters (default 2.0)

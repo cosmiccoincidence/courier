@@ -7,7 +7,7 @@ var player_ref: Node3D = null  # Reference to player for drop position
 
 # Mass system
 var soft_max_mass: float = 10.0
-var hard_max_mass: float = 11.0  # Calculated below in _redy (currently +10%)
+var hard_max_mass: float = 11.0  # Will be calculated
 
 # Gold system
 var gold: int = 0
@@ -50,6 +50,7 @@ func _update_mass_signals():
 	mass_changed.emit(current_mass, soft_max_mass)
 	encumbered_status_changed.emit(is_encumbered())
 
+# NEW: Dictionary-based add_item
 func add_item(item_data: Dictionary) -> bool:
 	"""
 	Add item using a dictionary of properties.
@@ -80,7 +81,7 @@ func add_item(item_data: Dictionary) -> bool:
 	var max_stack = item_data.get("max_stack_size", 99)
 	
 	# Special handling for gold
-	if item_name.to_lower() == "gold":
+	if item_name.to_lower() == "gold" or item_name.to_lower() == "coin":
 		add_gold(amount)
 		return true
 	
@@ -140,7 +141,11 @@ func add_item(item_data: Dictionary) -> bool:
 			"item_level": item_data.get("item_level", 1),
 			"item_quality": item_data.get("item_quality", 1),
 			"item_subtype": item_data.get("item_subtype", ""),
+			"required_strength": item_data.get("required_strength", 0),
+			"required_dexterity": item_data.get("required_dexterity", 0),
+			"weapon_class": item_data.get("weapon_class", ""),
 			"weapon_damage": item_data.get("weapon_damage", 0),
+			"armor_class": item_data.get("armor_class", ""),
 			"armor_rating": item_data.get("armor_rating", 0),
 			"weapon_hand": item_data.get("weapon_hand", 0),
 			"weapon_range": item_data.get("weapon_range", 2.0),
@@ -227,9 +232,19 @@ func drop_item_at_slot(slot_index: int):
 						if item.has("item_quality"):
 							item_instance.item_quality = item.item_quality
 						
+						# Restore stat requirements
+						if item.has("required_strength"):
+							item_instance.required_strength = item.required_strength
+						if item.has("required_dexterity"):
+							item_instance.required_dexterity = item.required_dexterity
+						
 						# Restore weapon/armor stats
+						if item.has("weapon_class"):
+							item_instance.weapon_class = item.weapon_class
 						if item.has("weapon_damage"):
 							item_instance.weapon_damage = item.weapon_damage
+						if item.has("armor_class"):
+							item_instance.armor_class = item.armor_class
 						if item.has("armor_rating"):
 							item_instance.armor_rating = item.armor_rating
 						if item.has("weapon_hand"):

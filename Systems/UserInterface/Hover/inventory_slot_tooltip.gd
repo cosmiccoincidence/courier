@@ -137,6 +137,25 @@ func show_tooltip(slot: Control, item_data: Dictionary):
 	var item_level = item_data.get("item_level", 1)
 	lines.append("[center]Level: %d[/center]" % item_level)
 	
+	# Stat requirements - red if player doesn't meet them (only show if requirements exist)
+	var req_str = item_data.get("required_strength", 0)
+	var req_dex = item_data.get("required_dexterity", 0)
+	if req_str > 0 or req_dex > 0:
+		var req_parts = []
+		if req_str > 0:
+			req_parts.append("Str: %d" % req_str)
+		if req_dex > 0:
+			req_parts.append("Dex: %d" % req_dex)
+		lines.append("[center][color=#ff6b6b]Requires: %s[/color][/center]" % ", ".join(req_parts))
+	
+	# Weapon class - purple color (only for weapons)
+	if item_data.has("weapon_class") and item_data.weapon_class != "":
+		lines.append("[center][color=#bb88ff]Type: %s[/color][/center]" % item_data.weapon_class.capitalize())
+	
+	# Armor class - cyan color (only for armor)
+	if item_data.has("armor_class") and item_data.armor_class != "":
+		lines.append("[center][color=#88ddff]Resists: %s[/color][/center]" % item_data.armor_class.capitalize())
+	
 	# Weapon damage - red color (only for weapons)
 	if item_data.has("weapon_damage") and item_data.weapon_damage > 0:
 		lines.append("[center][color=#ff6b6b]Damage: %d[/color][/center]" % item_data.weapon_damage)

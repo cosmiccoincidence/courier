@@ -53,8 +53,13 @@ static func spawn_loot_item(item_data: Dictionary, spawn_position: Vector3, pare
 		loot_instance.stackable = item.stackable
 		loot_instance.max_stack_size = item.max_stack_size
 		
+		# Copy stat requirements
+		loot_instance.required_strength = item.required_strength
+		loot_instance.required_dexterity = item.required_dexterity
+		
 		# Copy weapon stats if weapon
 		if item.item_type.to_lower() == "weapon":
+			loot_instance.weapon_class = item.weapon_class
 			loot_instance.weapon_hand = item.weapon_hand
 			loot_instance.weapon_range = item.weapon_range
 			loot_instance.weapon_speed = item.weapon_speed
@@ -62,6 +67,10 @@ static func spawn_loot_item(item_data: Dictionary, spawn_position: Vector3, pare
 			loot_instance.weapon_parry_window = item.weapon_parry_window
 			loot_instance.weapon_crit_chance = item.weapon_crit_chance
 			loot_instance.weapon_crit_multiplier = item.weapon_crit_multiplier
+		
+		# Copy armor class if armor
+		if item.item_type.to_lower() == "armor":
+			loot_instance.armor_class = item.armor_class
 		
 		# Set rolled properties (level, quality, value)
 		loot_instance.item_level = item_level
