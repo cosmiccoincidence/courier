@@ -192,7 +192,7 @@ func drop_item_at_slot(slot_index: int):
 		if player_ref:
 			# Drop in front of player slightly above ground
 			var forward = -player_ref.global_transform.basis.z
-			var drop_position = player_ref.global_position + forward * 1 + Vector3(0, 0.3, 0)
+			var drop_position = player_ref.global_position + forward * 1 + Vector3(0, 0.35, 0)
 			
 			# Actually spawn the item in the world if we have a scene reference
 			if item.has("scene") and item.scene:

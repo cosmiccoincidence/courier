@@ -118,7 +118,7 @@ static func _find_valid_spawn_position(origin: Vector3, parent_node: Node) -> Ve
 	- At least 0.15 tiles from origin (source)
 	- At least 0.15 tiles from player
 	- At least 0.15 tiles from other items
-	- On the ground (Y = 0.5)
+	- On the ground (Y = 0.55)
 	"""
 	const MIN_SPACING = 0.15
 	const MAX_ATTEMPTS = 20
@@ -137,8 +137,8 @@ static func _find_valid_spawn_position(origin: Vector3, parent_node: Node) -> Ve
 		var radius = randf_range(MIN_SPACING, MAX_RADIUS)
 		var offset = Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
 		
-		# Use origin's X and Z, but set Y to ground level (0.5)
-		var candidate_pos = Vector3(origin.x + offset.x, 0.5, origin.z + offset.z)
+		# Use origin's X and Z, but set Y to ground level (0.55)
+		var candidate_pos = Vector3(origin.x + offset.x, 0.55, origin.z + offset.z)
 		
 		# Check spacing from origin (2D distance)
 		var dist_from_origin = Vector2(candidate_pos.x - origin.x, candidate_pos.z - origin.z).length()
