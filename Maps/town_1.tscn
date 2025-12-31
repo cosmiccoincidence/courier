@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://de1e8ihkli4jp"]
 
 [ext_resource type="MeshLibrary" uid="uid://dycv0mgmu6mlo" path="res://Assets/3D/Tiles/tiles_library.tres" id="1_uoi22"]
-[ext_resource type="PackedScene" uid="uid://cy5ymqs8uk24x" path="res://Characters/NPCs/npc_trader.tscn" id="2_1y4qr"]
+[ext_resource type="PackedScene" uid="uid://cy5ymqs8uk24x" path="res://Characters/NPCs/npc_merchant.tscn" id="2_1y4qr"]
 [ext_resource type="Script" uid="uid://dnkspti2ixjgu" path="res://Maps/town1_map.gd" id="2_uoi22"]
 [ext_resource type="Resource" uid="uid://cwn4875vg684d" path="res://Maps/MapGen/Connections/interior_wall_connector.tres" id="3_pd2th"]
 [ext_resource type="MeshLibrary" uid="uid://drskghn0p7pwn" path="res://Assets/3D/Tiles/Floors/floor_library.tres" id="4_pd2th"]

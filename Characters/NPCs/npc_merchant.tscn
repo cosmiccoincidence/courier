@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://cy5ymqs8uk24x"]
 
-[ext_resource type="Script" uid="uid://cs5um5cfp71oy" path="res://Characters/NPCs/npc_trader.gd" id="1_2w7gk"]
+[ext_resource type="Script" uid="uid://cs5um5cfp71oy" path="res://Characters/NPCs/npc_merchant.gd" id="1_kkp2b"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_onrkg"]
 
@@ -14,9 +14,10 @@ albedo_color = Color(0.09411765, 0.9490196, 0.42745098, 1)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hqtel"]
 
-[node name="NPC_Trader" type="CharacterBody3D" groups=["npc"]]
+[node name="NPC_Merchant" type="CharacterBody3D" groups=["npc"]]
 transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 0, 0)
-script = ExtResource("1_2w7gk")
+script = ExtResource("1_kkp2b")
+display_name = "Merchant"
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.812268, 0, 0, 0, 1, 0, 1.3003498, 0)
