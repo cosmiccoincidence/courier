@@ -2,8 +2,8 @@
 # Individual slot in the shop inventory grid
 extends Panel
 
-@onready var icon_rect: TextureRect = $TextureRect
-@onready var stock_label: Label = $Label
+@onready var icon: TextureRect = $TextureRect
+@onready var label: Label = $Label
 
 var item_data: Dictionary = {}
 var slot_index: int = 0
@@ -12,43 +12,92 @@ var tooltip_manager: Control = null
 signal item_purchased(item: LootItem, slot_index: int)
 
 func _ready():
-	# Setup
+	# Force mouse filters
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	
 	# Create UI elements if they don't exist
-	if not icon_rect:
+	if not icon:
 		_create_icon()
-	if not stock_label:
-		_create_stock_label()
+	if not label:
+		_create_label()
+	
+	# Configure icon
+	if icon:
+		icon.set_mouse_filter(MOUSE_FILTER_IGNORE)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.custom_minimum_size = Vector2(48, 48)
+		# Center the icon in the slot
+		icon.anchor_left = 0.5
+		icon.anchor_top = 0.5
+		icon.anchor_right = 0.5
+		icon.anchor_bottom = 0.5
+		icon.offset_left = -24
+		icon.offset_top = -24
+		icon.offset_right = 24
+		icon.offset_bottom = 24
+	
+	# Configure label
+	if label:
+		label.set_mouse_filter(MOUSE_FILTER_IGNORE)
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		# Position at bottom
+		label.anchor_left = 0
+		label.anchor_top = 1
+		label.anchor_right = 1
+		label.anchor_bottom = 1
+		label.offset_left = 2
+		label.offset_top = -16
+		label.offset_right = -2
+		label.offset_bottom = -2
+		# Smaller font
+		label.add_theme_font_size_override("font_size", 12)
+	
+	# Style - match inventory slot appearance
+	custom_minimum_size = Vector2(64, 64)
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.2, 0.2, 0.8)
+	style.border_color = Color(0.5, 0.5, 0.5, 1.0)
+	style.set_border_width_all(2)
+	add_theme_stylebox_override("panel", style)
 	
 	clear_item()
 
+func _process(_delta):
+	# Enforce mouse filter every frame
+	if mouse_filter != Control.MOUSE_FILTER_STOP:
+		mouse_filter = Control.MOUSE_FILTER_STOP
+	
+	# Manual tooltip handling (same as inventory_slot)
+	if visible and is_visible_in_tree():
+		var mouse_pos = get_local_mouse_position()
+		var rect = Rect2(Vector2.ZERO, size)
+		var mouse_over = rect.has_point(mouse_pos)
+		
+		if mouse_over and not item_data.is_empty() and tooltip_manager:
+			if not get_meta("tooltip_showing", false):
+				if tooltip_manager.has_method("show_tooltip"):
+					tooltip_manager.show_tooltip(self, item_data)
+					set_meta("tooltip_showing", true)
+		else:
+			if get_meta("tooltip_showing", false):
+				if tooltip_manager and tooltip_manager.has_method("hide_tooltip"):
+					tooltip_manager.hide_tooltip()
+				set_meta("tooltip_showing", false)
+
 func _create_icon():
 	"""Create icon texture rect"""
-	icon_rect = TextureRect.new()
-	icon_rect.name = "Icon"
-	icon_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	icon_rect.anchor_right = 1.0
-	icon_rect.anchor_bottom = 1.0
-	add_child(icon_rect)
+	icon = TextureRect.new()
+	icon.name = "TextureRect"
+	add_child(icon)
 
-func _create_stock_label():
-	"""Create stock count label"""
-	stock_label = Label.new()
-	stock_label.name = "StockLabel"
-	stock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	stock_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	stock_label.anchor_right = 1.0
-	stock_label.anchor_bottom = 1.0
-	stock_label.offset_left = -25
-	stock_label.offset_top = -20
-	stock_label.add_theme_font_size_override("font_size", 12)
-	stock_label.add_theme_color_override("font_color", Color.YELLOW)
-	stock_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	stock_label.add_theme_constant_override("outline_size", 2)
-	add_child(stock_label)
+func _create_label():
+	"""Create item name label"""
+	label = Label.new()
+	label.name = "Label"
+	add_child(label)
 
 func set_item(data: Dictionary):
 	"""Set item data and display it"""
@@ -56,59 +105,62 @@ func set_item(data: Dictionary):
 	
 	# Set icon
 	if data.has("icon") and data.icon:
-		icon_rect.texture = data.icon
-		icon_rect.visible = true
+		icon.texture = data.icon
+		icon.show()
 	else:
-		icon_rect.visible = false
+		icon.hide()
 	
-	# Set stock count
-	if data.has("stock"):
-		stock_label.text = "x%d" % data.stock
-		stock_label.visible = true
+	# Set label with item name
+	if data.has("name"):
+		var display_name = data.name
+		
+		# Show stock count
+		if data.has("stock") and data.stock > 1:
+			display_name = "%s (x%d)" % [display_name, data.stock]
+		
+		label.text = display_name
+		
+		# Set label color based on item quality (if available)
+		if data.has("item_quality"):
+			label.modulate = ItemQuality.get_quality_color(data.item_quality)
+		else:
+			label.modulate = Color.WHITE
+		
+		label.show()
 	else:
-		stock_label.visible = false
+		label.hide()
 
 func clear_item():
 	"""Clear the slot"""
 	item_data = {}
-	icon_rect.texture = null
-	icon_rect.visible = false
-	stock_label.visible = false
+	if icon:
+		icon.texture = null
+		icon.hide()
+	if label:
+		label.hide()
+		label.modulate = Color.WHITE
 
 func set_tooltip_manager(manager: Control):
 	"""Set the tooltip manager"""
 	tooltip_manager = manager
 
-func _on_mouse_entered():
-	"""Show tooltip when hovering"""
-	if tooltip_manager and not item_data.is_empty():
-		# Build tooltip data with buy price
-		var tooltip_data = item_data.duplicate()
-		tooltip_data["is_shop_item"] = true  # Flag for tooltip to show buy price
-		
-		if tooltip_manager.has_method("show_tooltip"):
-			tooltip_manager.show_tooltip(self, tooltip_data)
-
-func _on_mouse_exited():
-	"""Hide tooltip when not hovering"""
-	if tooltip_manager and tooltip_manager.has_method("hide_tooltip"):
-		tooltip_manager.hide_tooltip()
-
-func _gui_input(event):
-	"""Handle buying with click or CTRL+click"""
-	if item_data.is_empty():
+func _input(event):
+	"""Handle buying with click"""
+	if not visible or not is_visible_in_tree():
+		return
+	
+	# Check if mouse is over this slot
+	var local_pos = get_local_mouse_position()
+	var rect = Rect2(Vector2.ZERO, size)
+	var mouse_over = rect.has_point(local_pos)
+	
+	if not mouse_over or item_data.is_empty():
 		return
 	
 	# Left click to buy
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			# Check for CTRL modifier (optional for now)
-			var is_ctrl_held = event.ctrl_pressed
-			
 			# Attempt purchase
 			if item_data.has("loot_item"):
 				item_purchased.emit(item_data.loot_item, slot_index)
-
-
-func _on_gui_input(event: InputEvent) -> void:
-	pass # Replace with function body.
+				get_viewport().set_input_as_handled()

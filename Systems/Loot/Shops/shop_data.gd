@@ -95,9 +95,8 @@ func _filter_items_by_type(all_items: Array) -> Array[LootItem]:
 			if not item.item_type in allowed_item_types:
 				continue
 		
-		# Check level restrictions
-		if item.item_level < min_item_level or item.item_level > max_item_level:
-			continue
+		# Note: item_level filtering happens when items are generated, not here
+		# LootItem resources don't have item_level - it's assigned during generation
 		
 		filtered.append(item)
 	
