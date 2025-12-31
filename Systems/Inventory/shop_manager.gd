@@ -14,6 +14,10 @@ func open_shop(shop_data: ShopData, merchant: Node):
 	"""Open a shop for trading"""
 	current_shop = shop_data
 	current_merchant = merchant
+	
+	# Initialize shop stock and prices
+	shop_data.initialize()
+	
 	shop_opened.emit(shop_data)
 	print("[ShopManager] Opened shop: %s with %d gold" % [shop_data.shop_name, shop_data.shop_gold])
 

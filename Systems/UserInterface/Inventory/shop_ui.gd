@@ -34,7 +34,7 @@ func _ready():
 
 func _setup_shop_grid():
 	"""Create shop inventory slots"""
-	var slot_scene = load(SHOP_SLOT_SCENE_PATH)
+	var slot_scene: PackedScene = load(SHOP_SLOT_SCENE_PATH)
 	if not slot_scene:
 		push_error("Could not load shop slot scene from: ", SHOP_SLOT_SCENE_PATH)
 		return
@@ -108,8 +108,11 @@ func _populate_shop_inventory():
 		if slot.has_method("clear_item"):
 			slot.clear_item()
 	
+	# Get all items this shop sells
+	var shop_items = current_shop_data.get_all_items()
+	
 	# Add shop items to slots
-	for item in current_shop_data.shop_items:
+	for item in shop_items:
 		if slot_index >= slots.size():
 			break
 		
@@ -117,10 +120,6 @@ func _populate_shop_inventory():
 		var stock = current_shop_data.get_stock(item)
 		if stock <= 0:
 			continue  # Skip out of stock items
-		
-		# Check level restrictions
-		if not current_shop_data.is_item_level_valid(1):  # Shops sell level 1 items
-			continue
 		
 		# Create item data for display
 		var item_data = {

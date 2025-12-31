@@ -42,9 +42,21 @@ cell_size = Vector3(1, 1, 1)
 
 [node name="NPC_Trader1" parent="." instance=ExtResource("2_1y4qr")]
 transform = Transform3D(-0.0036023369, 0, -0.7999919, 0, 0.8, 0, 0.7999919, 0, -0.0036023369, -5.054, 0.5, 6.017)
+shop_inventory = null
+interaction_range = null
+rotation_speed = null
+rotation_change_interval = null
 
 [node name="NPC_Trader2" parent="." instance=ExtResource("2_1y4qr")]
 transform = Transform3D(-3.4969112e-08, 0, -0.8, 0, 0.8, 0, 0.8, 0, -3.4969112e-08, -5.08, 0.5, 1.524)
+shop_inventory = null
+interaction_range = null
+rotation_speed = null
+rotation_change_interval = null
 
 [node name="NPC_Trader3" parent="." instance=ExtResource("2_1y4qr")]
 transform = Transform3D(-0.0036023369, 0, -0.7999919, 0, 0.8, 0, 0.7999919, 0, -0.0036023369, -5.054, 0.5, -3.022)
+shop_inventory = null
+interaction_range = null
+rotation_speed = null
+rotation_change_interval = null
