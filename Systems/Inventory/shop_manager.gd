@@ -39,13 +39,10 @@ func buy_item_by_key(item_key: String, player_inventory: Node) -> bool:
 	if not current_shop:
 		return false
 	
-	# Get the item (can be LootItem or Dictionary for sold items)
+	# Get the item (always a Dictionary now)
 	var item = current_shop.get_item(item_key)
 	if not item:
 		return false
-	
-	# Check if this is a sold item (Dictionary) or LootItem template
-	var is_sold_item = item is Dictionary
 	
 	# Check stock
 	if not current_shop.has_stock(item_key):
@@ -58,14 +55,8 @@ func buy_item_by_key(item_key: String, player_inventory: Node) -> bool:
 	if player_inventory.get_gold() < price:
 		return false
 	
-	# Get item data for inventory
-	var item_data: Dictionary
-	if is_sold_item:
-		# Already a dictionary, use it directly
-		item_data = item.duplicate()
-	else:
-		# LootItem template, convert it
-		item_data = _loot_item_to_dictionary(item)
+	# Item is already a full dictionary
+	var item_data = item.duplicate()
 	
 	# Check mass limit
 	var current_mass = player_inventory.get_total_mass()

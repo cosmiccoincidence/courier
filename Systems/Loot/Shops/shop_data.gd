@@ -79,7 +79,7 @@ func _initialize_stock():
 	# Roll random number of items to stock
 	var num_items_to_stock = randi_range(default_stock_min, default_stock_max)
 	
-	# Randomly select items from pool (can select same item multiple times)
+	# Use LootManager to roll items with proper stats
 	var item_index = 0
 	for i in range(num_items_to_stock):
 		# Randomly pick an item from source pool
@@ -88,18 +88,20 @@ func _initialize_stock():
 		# Create unique key for this item instance
 		var item_key = "%s_%d" % [random_item.resource_path, item_index]
 		
-		# Determine stock count for this specific item
-		var stock_amount = 1
+		# Roll item using LootManager logic (generates stats like weapon damage, armor rating, etc.)
+		var rolled_item_data = _roll_shop_item(random_item)
 		
-		# For stackable items, the stock represents quantity in that slot
+		# Determine stock count
+		var stock_amount = 1
 		if random_item.stackable:
 			stock_amount = randi_range(1, 5)
 		
 		# Add to item_stock
 		item_stock[item_key] = {
-			"item": random_item,
+			"item": rolled_item_data,  # Store the full rolled item data
 			"count": stock_amount,
-			"index": item_index
+			"index": item_index,
+			"is_sold_item": false  # This is a shop-generated item
 		}
 		
 		item_index += 1
@@ -148,16 +150,8 @@ func get_buy_price(item_key: String) -> int:
 		return 0
 	
 	var item = item_stock[item_key].item
-	var is_sold_item = item_stock[item_key].get("is_sold_item", false)
-	var base_price = 0
-	
-	# Handle both LootItem templates and sold item dictionaries
-	if is_sold_item:
-		# Sold item is a dictionary
-		base_price = item.get("value", 0)
-	else:
-		# LootItem template
-		base_price = item.base_value
+	# All items are now dictionaries (both shop-rolled and player-sold)
+	var base_price = item.get("value", 0)
 	
 	var multiplier = buy_price_multiplier
 	
@@ -195,13 +189,7 @@ func remove_stock(item_key: String, amount: int = 1) -> bool:
 		return false
 	
 	var item = item_stock[item_key].item
-	
-	# Get item name (handle both LootItem and Dictionary)
-	var item_name = ""
-	if item is Dictionary:
-		item_name = item.get("name", "")
-	else:
-		item_name = item.item_name
+	var item_name = item.get("name", "")
 	
 	# Check for infinite stock
 	if item_name in infinite_stock_items:
@@ -218,13 +206,7 @@ func add_stock(item_key: String, amount: int = 1):
 		return
 	
 	var item = item_stock[item_key].item
-	
-	# Get item name (handle both LootItem and Dictionary)
-	var item_name = ""
-	if item is Dictionary:
-		item_name = item.get("name", "")
-	else:
-		item_name = item.item_name
+	var item_name = item.get("name", "")
 	
 	# Don't add to infinite stock items
 	if item_name in infinite_stock_items:
@@ -267,3 +249,62 @@ func get_all_shop_items() -> Array:
 			"is_sold_item": item_stock[item_key].get("is_sold_item", false)
 		})
 	return items
+
+func _roll_shop_item(item: LootItem) -> Dictionary:
+	"""Roll stats for a shop item (similar to how loot spawner works)"""
+	# Preload stat rollers
+	const WeaponStatRoller = preload("res://Systems/Loot/StatRollers/weapon_stat_roller.gd")
+	const ArmorStatRoller = preload("res://Systems/Loot/StatRollers/armor_stat_roller.gd")
+	
+	# Base item data
+	var item_data = {
+		"name": item.item_name,
+		"icon": item.icon,
+		"item_type": item.item_type,
+		"item_subtype": item.item_subtype,
+		"item_level": 1,
+		"item_quality": ItemQuality.Quality.NORMAL,
+		"value": item.base_value,
+		"mass": item.mass,
+		"durability": item.durability,
+		"stackable": item.stackable,
+		"required_strength": item.required_strength,
+		"required_dexterity": item.required_dexterity,
+		"weapon_class": item.weapon_class,
+		"armor_class": item.armor_class,
+		"weapon_hand": item.weapon_hand,
+		"weapon_range": item.weapon_range,
+		"weapon_speed": item.weapon_speed,
+		"weapon_block_rating": item.weapon_block_rating,
+		"weapon_parry_window": item.weapon_parry_window,
+		"weapon_crit_chance": item.weapon_crit_chance,
+		"weapon_crit_multiplier": item.weapon_crit_multiplier
+	}
+	
+	# Roll weapon damage if applicable
+	if item.item_type.to_lower() == "weapon" and item.min_weapon_damage > 0:
+		var weapon_damage = WeaponStatRoller.roll_weapon_damage(
+			item.min_weapon_damage,
+			item.max_weapon_damage,
+			item_data.item_level,
+			item_data.item_quality
+		)
+		item_data["weapon_damage"] = weapon_damage
+	else:
+		item_data["weapon_damage"] = 0
+	
+	# Roll armor rating if applicable
+	var is_armor = item.item_type.to_lower() == "armor"
+	var is_shield = item.item_subtype.to_lower().contains("shield")
+	
+	if (is_armor or is_shield) and item.base_armor_rating > 0:
+		var armor_rating = ArmorStatRoller.roll_base_armor_rating(
+			item.base_armor_rating,
+			item_data.item_level,
+			item_data.item_quality
+		)
+		item_data["armor_rating"] = armor_rating
+	else:
+		item_data["armor_rating"] = 0
+	
+	return item_data
