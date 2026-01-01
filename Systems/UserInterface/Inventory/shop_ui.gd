@@ -126,20 +126,27 @@ func _on_shop_opened(shop_data: ShopData):
 	# Show shop UI
 	show()
 	
-	# Show mouse cursor for shopping
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	# Don't change mouse mode - let inventory handle it
 
 func _on_shop_closed():
 	"""Called when shop is closed"""
+	print("[ShopUI] Shop closing - mouse mode BEFORE: %d" % Input.mouse_mode)
+	
 	current_shop_data = null
 	_clear_shop_inventory()
 	hide()
 	
-	# Close inventory UI when shop closes
+	# Close inventory UI when shop closes - but keep cursor visible
 	var inv_ui = get_tree().get_first_node_in_group("inventory_ui")
 	if inv_ui:
-		inv_ui.hide()
-		print("[ShopUI] Closed inventory UI")
+		if inv_ui.has_method("close_without_hiding_cursor"):
+			inv_ui.close_without_hiding_cursor()
+		else:
+			inv_ui.hide()
+		print("[ShopUI] Closed inventory UI (cursor stays visible)")
+	
+	print("[ShopUI] Shop closed - mouse mode AFTER: %d" % Input.mouse_mode)
+	print("[ShopUI] Mouse mode 0=VISIBLE, 2=CAPTURED, 3=CONFINED, 4=HIDDEN")
 
 func _on_shop_gold_changed(new_amount: int):
 	"""Update shop gold display"""
@@ -235,10 +242,7 @@ func _input(event):
 	
 	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("toggle_inventory"):
 		ShopManager.close_shop()
-		
-		# Hide mouse if inventory is also closing
-		if not get_tree().get_first_node_in_group("inventory_ui").visible:
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		# Don't hide mouse - let inventory UI handle that
 
 func _process(_delta):
 	"""Check distance from merchant while shop is open"""
@@ -255,4 +259,4 @@ func _process(_delta):
 	if distance > 5.0:
 		print("[ShopUI] Player moved too far from merchant (%.1f units) - closing shop" % distance)
 		ShopManager.close_shop()
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		# Cursor stays visible - don't capture it
