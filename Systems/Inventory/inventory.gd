@@ -6,8 +6,8 @@ var max_slots: int = 32  # Match the UI grid (4 columns × 8 rows)
 var player_ref: Node3D = null  # Reference to player for drop position
 
 # Mass system
-var soft_max_mass: float = 10.0
-var hard_max_mass: float = 11.0  # Will be calculated
+var soft_max_mass: float = 20.0
+var hard_max_mass: float = 1.0  # Will be calculated
 
 # Gold system
 var gold: int = 0
