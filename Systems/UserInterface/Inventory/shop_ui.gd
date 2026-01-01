@@ -108,6 +108,12 @@ func _on_shop_opened(shop_data: ShopData):
 			if slot.has_method("set_tooltip_manager"):
 				slot.set_tooltip_manager(slot_tooltip)
 		print("[ShopUI] Tooltip set on %d slots" % shop_grid.get_child_count())
+		
+		# Set tooltip z-index to be in front of shop UI
+		if slot_tooltip.get_parent():
+			slot_tooltip.get_parent().move_child(slot_tooltip, -1)  # Move to end (front)
+		slot_tooltip.z_index = 100  # High z-index to be in front
+		print("[ShopUI] Set tooltip z_index to 100")
 	else:
 		print("[ShopUI] ERROR: slot_tooltip is STILL null!")
 	
@@ -233,3 +239,20 @@ func _input(event):
 		# Hide mouse if inventory is also closing
 		if not get_tree().get_first_node_in_group("inventory_ui").visible:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+func _process(_delta):
+	"""Check distance from merchant while shop is open"""
+	if not visible or not ShopManager.current_merchant:
+		return
+	
+	# Get player
+	var player = get_tree().get_first_node_in_group("player")
+	if not player:
+		return
+	
+	# Check distance (5 tiles = 5 units in Godot, assuming 1 tile = 1 unit)
+	var distance = player.global_position.distance_to(ShopManager.current_merchant.global_position)
+	if distance > 5.0:
+		print("[ShopUI] Player moved too far from merchant (%.1f units) - closing shop" % distance)
+		ShopManager.close_shop()
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
