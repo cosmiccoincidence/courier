@@ -88,6 +88,10 @@ func _initialize_stock():
 	# Roll random number of items to stock
 	var num_items_to_stock = randi_range(default_stock_min, default_stock_max)
 	
+	# Cap at 85% of max slots to leave room for player-sold items
+	var max_initial_items = int(max_slots * 0.85)
+	num_items_to_stock = min(num_items_to_stock, max_initial_items)
+	
 	# Use LootManager to roll items with proper stats
 	var item_index = 0
 	for i in range(num_items_to_stock):
