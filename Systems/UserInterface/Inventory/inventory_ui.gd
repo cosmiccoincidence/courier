@@ -33,6 +33,15 @@ func _ready():
 	# Setup tooltip manager
 	_setup_tooltip_manager()
 	
+	# Find and share tooltip with ShopUI
+	var shop = get_node_or_null("../ShopUI")  # Adjust path
+	if not shop:
+		shop = get_tree().get_first_node_in_group("shop_ui")  # If you add shop to group
+	
+	if shop and shop.has_method("set_tooltip_manager"):
+		shop.set_tooltip_manager(slot_tooltip)
+		print("[InventoryUI] Shared tooltip manager with ShopUI")
+	
 	# Pass tooltip to equipment UI
 	if equipment_ui and equipment_ui.has_method("set_tooltip_manager"):
 		equipment_ui.set_tooltip_manager(slot_tooltip)

@@ -9,7 +9,7 @@ var item_data: Dictionary = {}
 var slot_index: int = 0
 var tooltip_manager: Control = null
 
-signal item_purchased(item: LootItem, slot_index: int)
+signal item_purchased(item_key: String, slot_index: int)
 
 func _ready():
 	# Force mouse filters
@@ -76,14 +76,21 @@ func _process(_delta):
 		var rect = Rect2(Vector2.ZERO, size)
 		var mouse_over = rect.has_point(mouse_pos)
 		
-		if mouse_over and not item_data.is_empty() and tooltip_manager:
+		if mouse_over and not item_data.is_empty():
 			if not get_meta("tooltip_showing", false):
-				if tooltip_manager.has_method("show_tooltip"):
-					tooltip_manager.show_tooltip(self, item_data)
-					set_meta("tooltip_showing", true)
+				if tooltip_manager:
+					if tooltip_manager.has_method("show_tooltip"):
+						print("[ShopSlot %d] Showing tooltip for %s" % [slot_index, item_data.get("name", "Unknown")])
+						tooltip_manager.show_tooltip(self, item_data)
+						set_meta("tooltip_showing", true)
+					else:
+						print("[ShopSlot %d] ERROR: tooltip_manager has no show_tooltip method!" % slot_index)
+				else:
+					print("[ShopSlot %d] ERROR: tooltip_manager is null!" % slot_index)
 		else:
 			if get_meta("tooltip_showing", false):
 				if tooltip_manager and tooltip_manager.has_method("hide_tooltip"):
+					print("[ShopSlot %d] Hiding tooltip" % slot_index)
 					tooltip_manager.hide_tooltip()
 				set_meta("tooltip_showing", false)
 
@@ -165,6 +172,6 @@ func _input(event):
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			# Attempt purchase
-			if item_data.has("loot_item"):
-				item_purchased.emit(item_data.loot_item, slot_index)
+			if item_data.has("item_key"):
+				item_purchased.emit(item_data.item_key, slot_index)
 				get_viewport().set_input_as_handled()

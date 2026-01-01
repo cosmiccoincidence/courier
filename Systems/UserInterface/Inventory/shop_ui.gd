@@ -21,6 +21,9 @@ var rows: int = 6  # 24 slots for shop inventory
 var current_shop_data: ShopData = null
 
 func _ready():
+	# Add to group for easy access
+	add_to_group("shop_ui")
+	
 	# Start hidden
 	hide()
 	
@@ -63,12 +66,19 @@ func set_tooltip_manager(tooltip: Control):
 	"""Set the tooltip manager from inventory UI"""
 	slot_tooltip = tooltip
 	
+	print("[ShopUI] set_tooltip_manager called with: %s" % tooltip)
+	print("[ShopUI] shop_grid exists: %s" % (shop_grid != null))
+	
 	# Update all existing slots with the tooltip manager
 	if shop_grid:
+		var slot_count = 0
 		for slot in shop_grid.get_children():
 			if slot.has_method("set_tooltip_manager"):
 				slot.set_tooltip_manager(slot_tooltip)
-				print("[ShopUI] Set tooltip manager for shop slot %d" % slot.slot_index)
+				slot_count += 1
+		print("[ShopUI] Set tooltip manager for %d shop slots" % slot_count)
+	else:
+		print("[ShopUI] ERROR: shop_grid is null!")
 
 func _on_shop_opened(shop_data: ShopData):
 	"""Called when a shop is opened"""
@@ -81,6 +91,32 @@ func _on_shop_opened(shop_data: ShopData):
 	# Populate shop inventory
 	_populate_shop_inventory()
 	
+	# CRITICAL: Get tooltip from InventoryUI if we don't have it
+	if not slot_tooltip:
+		print("[ShopUI] slot_tooltip is null, fetching from InventoryUI...")
+		var inv_ui = get_tree().get_first_node_in_group("inventory_ui")
+		if inv_ui and "slot_tooltip" in inv_ui:
+			slot_tooltip = inv_ui.slot_tooltip
+			print("[ShopUI] Successfully got tooltip from InventoryUI: %s" % slot_tooltip)
+		else:
+			print("[ShopUI] ERROR: Could not find InventoryUI or slot_tooltip!")
+	
+	# Set tooltip manager on all slots NOW (after they're created)
+	if slot_tooltip:
+		print("[ShopUI] Setting tooltip on slots after shop opened")
+		for slot in shop_grid.get_children():
+			if slot.has_method("set_tooltip_manager"):
+				slot.set_tooltip_manager(slot_tooltip)
+		print("[ShopUI] Tooltip set on %d slots" % shop_grid.get_child_count())
+	else:
+		print("[ShopUI] ERROR: slot_tooltip is STILL null!")
+	
+	# Open inventory UI when shop opens
+	var inv_ui = get_tree().get_first_node_in_group("inventory_ui")
+	if inv_ui:
+		inv_ui.show()
+		print("[ShopUI] Opened inventory UI")
+	
 	# Show shop UI
 	show()
 	
@@ -92,6 +128,12 @@ func _on_shop_closed():
 	current_shop_data = null
 	_clear_shop_inventory()
 	hide()
+	
+	# Close inventory UI when shop closes
+	var inv_ui = get_tree().get_first_node_in_group("inventory_ui")
+	if inv_ui:
+		inv_ui.hide()
+		print("[ShopUI] Closed inventory UI")
 
 func _on_shop_gold_changed(new_amount: int):
 	"""Update shop gold display"""
