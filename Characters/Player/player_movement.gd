@@ -10,7 +10,6 @@ var camera: Camera3D
 @export var base_movement_speed: float = 5.0  # Base movement speed (can be modified by buffs/items)
 @export var rotation_speed: float = 5.0
 @export var sprint_multiplier: float = 3.0
-@export var sprint_stamina_cost: float = 1.5
 
 # Calculated movement speed (base + modifiers)
 var movement_speed: float = 5.0

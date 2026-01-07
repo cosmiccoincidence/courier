@@ -207,8 +207,12 @@ func _update_luck_label_old():
 
 func _process(_delta):
 	"""Update stats every frame"""
-	if player_ref and visible:
-		_update_stats_display()
+	# Only update if we have a valid player reference
+	if player_ref and is_instance_valid(player_ref) and visible:
+		# Check if player is dying (might not exist on all player versions)
+		var is_dying = player_ref.get("is_dying")
+		if is_dying == null or not is_dying:
+			_update_stats_display()
 	
 	# Update hero name position to stay centered above panel
 	_update_hero_name_position()

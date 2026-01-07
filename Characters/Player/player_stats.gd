@@ -13,13 +13,14 @@ var player: CharacterBody3D
 
 # ===== HEALTH & STAMINA =====
 @export_group("Health & Stamina")
-@export var max_health := 10
+@export var max_health := 50
 @export var health_regen: float = 1.0  # HP per interval
 @export var health_regen_interval: float = 10.0  # Seconds between regen
 
-@export var max_stamina := 10
+@export var max_stamina := 50
 @export var stamina_regen: float = 1.0  # Stamina per interval
 @export var stamina_regen_interval: float = 0.5  # Seconds between regen
+@export var sprint_stamina_cost: float = 1.5  # Stamina per second while sprinting
 
 @export var heat_resistence := 10
 @export var cold_resistence := 10
@@ -121,7 +122,11 @@ func update_sprint_state(is_sprinting: bool, delta: float):
 	"""Called by player to update sprint-related stamina"""
 	if is_sprinting:
 		if not player.god_mode:
-			use_stamina(player.sprint_stamina_cost * delta)
+			# sprint_stamina_cost is defined in this script at line 23
+			if not "sprint_stamina_cost" in self:
+				push_error("ERROR: sprint_stamina_cost not found in player_stats! Using old version?")
+				return
+			use_stamina(sprint_stamina_cost * delta)
 		time_since_sprint_stopped = 0.0
 	else:
 		time_since_sprint_stopped += delta
