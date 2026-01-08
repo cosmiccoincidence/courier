@@ -9,10 +9,22 @@ var camera: Camera3D
 @export_group("Movement")
 @export var base_movement_speed: float = 5.0  # Base movement speed (can be modified by buffs/items)
 @export var rotation_speed: float = 5.0
-@export var sprint_multiplier: float = 3.0
+@export var sprint_multiplier: float = 2.0
+
+# Dodge roll
+@export var dodge_roll_speed: float = 15.0  # Speed during dodge roll
+@export var dodge_roll_duration: float = 0.3  # How long the roll lasts (seconds)
+@export var dodge_roll_cooldown: float = 1.0  # Cooldown between rolls (seconds)
+@export var dodge_roll_stamina_cost: float = 10.0  # Stamina cost per roll
 
 # Calculated movement speed (base + modifiers)
 var movement_speed: float = 5.0
+
+# Dodge roll state
+var is_dodge_rolling: bool = false
+var dodge_roll_timer: float = 0.0
+var dodge_roll_cooldown_timer: float = 0.0
+var dodge_roll_direction: Vector3 = Vector3.ZERO
 
 # Encumbered penalties (only applied when not in god mode)
 const ENCUMBERED_SPEED_MULT: float = 0.2  # 20% speed
@@ -51,15 +63,26 @@ func initialize(player_node: CharacterBody3D, cam: Camera3D):
 	cam_offset = camera.global_transform.origin - player.global_transform.origin
 
 func _process(delta: float):
-	"""Handle camera zoom smoothing"""
+	"""Handle camera zoom smoothing and dodge roll cooldown"""
 	zoom_current = lerp(zoom_current, zoom_target, 1.0 - exp(-zoom_smooth * delta))
 	_update_camera_global()
+	
+	# Update dodge roll cooldown
+	if dodge_roll_cooldown_timer > 0:
+		dodge_roll_cooldown_timer -= delta
 
 func handle_physics(delta: float, is_sprinting: bool, is_encumbered: bool, god_mode: bool):
 	"""Handle all movement physics"""
 	# Gravity
 	if not player.is_on_floor():
 		player.velocity.y -= gravity * delta
+	
+	# Handle dodge roll timer
+	if is_dodge_rolling:
+		dodge_roll_timer -= delta
+		if dodge_roll_timer <= 0:
+			is_dodge_rolling = false
+			dodge_roll_direction = Vector3.ZERO
 	
 	# Get input
 	var input_dir = Input.get_vector("left", "right", "up", "down")
@@ -68,12 +91,17 @@ func handle_physics(delta: float, is_sprinting: bool, is_encumbered: bool, god_m
 	# Calculate current speed
 	var current_speed = movement_speed
 	
-	# Apply sprint multiplier
-	if is_sprinting:
-		current_speed *= sprint_multiplier
-	
-	# Apply speed modifiers (god mode, encumbered)
-	current_speed *= _get_effective_speed_mult(is_encumbered, god_mode)
+	# Override with dodge roll if active
+	if is_dodge_rolling:
+		current_speed = dodge_roll_speed
+		direction = dodge_roll_direction
+	else:
+		# Apply sprint multiplier
+		if is_sprinting:
+			current_speed *= sprint_multiplier
+		
+		# Apply speed modifiers (god mode, encumbered)
+		current_speed *= _get_effective_speed_mult(is_encumbered, god_mode)
 	
 	# Apply movement
 	if direction:
@@ -83,9 +111,10 @@ func handle_physics(delta: float, is_sprinting: bool, is_encumbered: bool, god_m
 		player.velocity.x = move_toward(player.velocity.x, 0, current_speed)
 		player.velocity.z = move_toward(player.velocity.z, 0, current_speed)
 	
-	# Rotate toward mouse cursor
-	var encumbered_effects_active = is_encumbered and not god_mode
-	_rotate_toward_mouse(encumbered_effects_active, is_sprinting)
+	# Rotate toward mouse cursor (not during dodge roll)
+	if not is_dodge_rolling:
+		var encumbered_effects_active = is_encumbered and not god_mode
+		_rotate_toward_mouse(encumbered_effects_active, is_sprinting)
 	
 	# Move the body
 	player.move_and_slide()
@@ -181,3 +210,62 @@ func update_movement_speed():
 	movement_speed = base_movement_speed
 	# TODO: Add buff/debuff modifiers here
 	# TODO: Add equipment speed bonuses here
+
+func try_dodge_roll(stats_component: Node, god_mode: bool) -> bool:
+	"""
+	Attempt to perform a dodge roll.
+	Returns true if successful, false if on cooldown or not enough stamina.
+	"""
+	# Can't dodge while already dodging
+	if is_dodge_rolling:
+		return false
+	
+	# Check cooldown
+	if dodge_roll_cooldown_timer > 0:
+		return false
+	
+	# Check stamina (unless god mode)
+	if not god_mode:
+		if stats_component.current_stamina < dodge_roll_stamina_cost:
+			print("Not enough stamina to dodge roll!")
+			return false
+		# Consume stamina
+		stats_component.use_stamina(dodge_roll_stamina_cost)
+	
+	# Get current movement direction
+	var input_dir = Input.get_vector("left", "right", "up", "down")
+	
+	# If not moving, dodge backward (away from mouse)
+	if input_dir.length() < 0.1:
+		var mouse_pos = player.get_viewport().get_mouse_position()
+		var from = camera.project_ray_origin(mouse_pos)
+		var to = from + camera.project_ray_normal(mouse_pos) * 2000
+		var hit_pos = _intersect_ray_with_plane(from, to, player.global_position.y)
+		
+		if hit_pos != Vector3.ZERO:
+			var away_dir = (player.global_position - hit_pos).normalized()
+			dodge_roll_direction = Vector3(away_dir.x, 0, away_dir.z)
+		else:
+			# Fallback: dodge backward relative to camera
+			dodge_roll_direction = player.global_transform.basis.z
+	else:
+		# Dodge in movement direction
+		dodge_roll_direction = Vector3(input_dir.x, 0, input_dir.y).normalized()
+	
+	# Start dodge roll
+	is_dodge_rolling = true
+	dodge_roll_timer = dodge_roll_duration
+	dodge_roll_cooldown_timer = dodge_roll_cooldown
+	
+	print("Dodge roll!")
+	return true
+
+func is_dodge_roll_ready() -> bool:
+	"""Check if dodge roll is off cooldown"""
+	return dodge_roll_cooldown_timer <= 0 and not is_dodge_rolling
+
+func get_dodge_roll_cooldown_percent() -> float:
+	"""Get dodge roll cooldown as percentage (0.0 = ready, 1.0 = just used)"""
+	if dodge_roll_cooldown <= 0:
+		return 0.0
+	return clamp(dodge_roll_cooldown_timer / dodge_roll_cooldown, 0.0, 1.0)

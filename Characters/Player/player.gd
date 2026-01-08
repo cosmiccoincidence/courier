@@ -139,6 +139,11 @@ func _input(event):
 	if is_dying:
 		return
 	
+	# Dodge roll
+	if event.is_action_pressed("dodge_roll"):
+		if movement:
+			movement.try_dodge_roll(stats, god_mode)
+	
 	# Attack
 	if event.is_action_pressed("attack"):
 		combat.handle_attack_input()
