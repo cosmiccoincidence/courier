@@ -28,10 +28,10 @@ script = ExtResource("1_uygrk")
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 25.0
-offset_top = -89.0
-offset_right = 297.0
-offset_bottom = -25.0
+offset_left = 17.0
+offset_top = -116.0
+offset_right = 317.0
+offset_bottom = -15.0
 grow_vertical = 0
 theme_override_constants/separation = 10
 
@@ -93,14 +93,43 @@ offset_right = 301.0
 offset_bottom = 28.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_fsrcy")
 
+[node name="Mana" type="HBoxContainer" parent="StatBars"]
+layout_mode = 2
+
+[node name="ManaBar" type="ProgressBar" parent="StatBars/Mana"]
+modulate = Color(0, 0, 1, 1)
+custom_minimum_size = Vector2(300, 25)
+layout_mode = 2
+value = 100.0
+rounded = true
+
+[node name="ManaLabel" type="Label" parent="StatBars/Mana/ManaBar"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+
+[node name="ManaOutline" type="Panel" parent="StatBars/Mana/ManaBar"]
+show_behind_parent = true
+layout_mode = 0
+offset_left = -1.0
+offset_top = -1.0
+offset_right = 301.0
+offset_bottom = 28.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_fsrcy")
+
 [node name="TimeLabel" type="Label" parent="."]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -1895.0
-offset_top = 947.0
-offset_right = -1779.0
-offset_bottom = 977.0
+offset_left = -1903.0
+offset_top = 928.0
+offset_right = -1787.0
+offset_bottom = 958.0
 grow_horizontal = 0
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/line_spacing = 0
@@ -113,10 +142,10 @@ vertical_alignment = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -1712.0
-offset_top = 947.0
-offset_right = -1596.0
-offset_bottom = 977.0
+offset_left = -1716.0
+offset_top = 928.0
+offset_right = -1600.0
+offset_bottom = 958.0
 grow_horizontal = 0
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/line_spacing = 0
@@ -202,7 +231,7 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.3137255, 0.30980393, 1)
 theme_override_font_sizes/font_size = 16
-text = "HP: 10/10"
+text = "Level 1"
 horizontal_alignment = 1
 
 [node name="HPLabel" type="Label" parent="TooltipUI/TooltipPanel/VBoxContainer"]

@@ -49,6 +49,7 @@ func _ready():
 	# Connect component signals
 	stats.health_changed.connect(_on_health_changed)
 	stats.stamina_changed.connect(_on_stamina_changed)
+	stats.mana_changed.connect(_on_mana_changed)
 	stats.encumbered_changed.connect(_on_encumbered_changed)
 	
 	# Update HUD after everything is set up
@@ -56,6 +57,7 @@ func _ready():
 		await get_tree().process_frame
 		hud.update_health(stats.current_health, stats.max_health)
 		hud.update_stamina(stats.current_stamina, stats.max_stamina)
+		hud.update_mana(stats.current_mana, stats.max_mana)
 
 # ===== COMPONENT SIGNAL HANDLERS =====
 
@@ -66,6 +68,10 @@ func _on_health_changed(current: int, max_value: int):
 func _on_stamina_changed(current: float, max_value: float):
 	if hud:
 		hud.update_stamina(current, max_value)
+
+func _on_mana_changed(current: float, max_value: float):
+	if hud:
+		hud.update_mana(current, max_value)
 
 func _on_encumbered_changed(is_encumbered: bool, effects_active: bool):
 	if hud and hud.has_method("update_encumbered_status"):

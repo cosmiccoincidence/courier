@@ -64,29 +64,36 @@ func _setup_stats_panel():
 	
 	# Core Stats Section
 	_create_section_label(stats_container, "Core Stats")
-	_create_stat_label(stats_container, "StrengthLabel", "Strength: 0", 16, Color.GRAY)
-	_create_stat_label(stats_container, "DexterityLabel", "Dexterity: 0", 16, Color.GRAY)
+	_create_stat_label(stats_container, "StrengthLabel", "Strength: 0", 16, Color.ORANGE_RED)
+	_create_stat_label(stats_container, "DexterityLabel", "Dexterity: 0", 16, Color.YELLOW)
+	_create_stat_label(stats_container, "FortitudeLabel", "Fortitude: 0", 16, Color.SLATE_GRAY)
+	_create_spacer(stats_container, 5)
+	_create_stat_label(stats_container, "VitalityLabel", "Vitality: 0", 16, Color.INDIAN_RED)
+	_create_stat_label(stats_container, "AgilityLabel", "Agility: 0", 16, Color.LIGHT_GREEN)
+	_create_stat_label(stats_container, "ArcaneLabel", "Arcane: 0", 16, Color.MEDIUM_PURPLE)
+	_create_spacer(stats_container, 5)
 	_create_stat_label(stats_container, "LuckLabel", "Luck: 0", 16, Color(0.5, 1.0, 0.5))
 	
 	_create_spacer(stats_container, 10)
 	
-	# Combat Stats Section
-	_create_section_label(stats_container, "Combat")
-	_create_stat_label(stats_container, "DamageLabel", "Damage: 0", 14)
-	_create_stat_label(stats_container, "ArmorLabel", "Armor: 0", 14)
-	_create_stat_label(stats_container, "AttackRangeLabel", "Attack Range: 0", 14)
-	_create_stat_label(stats_container, "AttackSpeedLabel", "Attack Speed: 0", 14)
-	_create_stat_label(stats_container, "CritChanceLabel", "Crit Chance: 0%", 14)
-	_create_stat_label(stats_container, "CritDamageLabel", "Crit Damage: 0x", 14)
+	# Resources Section
+	_create_section_label(stats_container, "Resources")
+	_create_stat_label(stats_container, "MaxHealthLabel", "Max Health: 0", 14)
+	_create_stat_label(stats_container, "HealthRegenLabel", "HP Regen: 0 / 0s", 14)
+	_create_stat_label(stats_container, "MaxStaminaLabel", "Max Stamina: 0", 14)
+	_create_stat_label(stats_container, "StaminaRegenLabel", "Stamina Regen: 0 / 0s", 14)
+	_create_stat_label(stats_container, "MaxManaLabel", "Max Mana: 0", 14)
+	_create_stat_label(stats_container, "ManaRegenLabel", "Mana Regen: 0 / 0s", 14)
 	
 	_create_spacer(stats_container, 10)
 	
-	# Health & Stamina Section
-	_create_section_label(stats_container, "Health & Stamina")
-	_create_stat_label(stats_container, "MaxHealthLabel", "Max Health: 0", 14)
-	_create_stat_label(stats_container, "HealthRegenLabel", "Health Regen: 0 / 0s", 14)
-	_create_stat_label(stats_container, "MaxStaminaLabel", "Max Stamina: 0", 14)
-	_create_stat_label(stats_container, "StaminaRegenLabel", "Stamina Regen: 0 / 0s", 14)
+	# Defense Section
+	_create_section_label(stats_container, "Defense")
+	_create_stat_label(stats_container, "ArmorLabel", "Armor: 0", 14)
+	_create_stat_label(stats_container, "FireResLabel", "Fire Resist: 0%", 14)
+	_create_stat_label(stats_container, "FrostResLabel", "Frost Resist: 0%", 14)
+	_create_stat_label(stats_container, "StaticResLabel", "Static Resist: 0%", 14)
+	_create_stat_label(stats_container, "PoisonResLabel", "Poison Resist: 0%", 14)
 
 func _create_section_label(parent: VBoxContainer, text: String):
 	"""Create a centered section header label"""
@@ -117,45 +124,43 @@ func _update_stats_display():
 	if not player_ref or not stats_container:
 		return
 	
-	# Get the stats component (check both new and old structure)
-	var stats_component = player_ref.get_node_or_null("PlayerStats")
+	# Get the stats component
+	var stats = player_ref.get_node_or_null("PlayerStats")
 	
-	# Fallback to old structure if component doesn't exist
-	if not stats_component:
-		# Old structure - stats directly on player
+	if not stats:
+		# Fallback - try to display what we can from old structure
 		_update_label("StrengthLabel", "Strength: %d" % player_ref.get("strength"))
 		_update_label("DexterityLabel", "Dexterity: %d" % player_ref.get("dexterity"))
-		_update_luck_label_old()
-		_update_label("DamageLabel", "Damage: %d" % player_ref.get("damage"))
-		_update_label("ArmorLabel", "Armor: %d" % player_ref.get("armor"))
-		_update_label("AttackRangeLabel", "Attack Range: %.1f" % player_ref.get("attack_range"))
-		_update_label("AttackSpeedLabel", "Attack Speed: %.1fx" % player_ref.get("attack_speed"))
-		_update_label("CritChanceLabel", "Crit Chance: %.1f%%" % (player_ref.get("crit_chance") * 100))
-		_update_label("CritDamageLabel", "Crit Damage: %.1fx" % player_ref.get("crit_multiplier"))
-		_update_label("MaxHealthLabel", "Max Health: %d" % player_ref.get("max_health"))
-		_update_label("HealthRegenLabel", "Health Regen: %.0f / %.0fs" % [player_ref.get("health_regen"), player_ref.get("health_regen_interval")])
-		_update_label("MaxStaminaLabel", "Max Stamina: %d" % int(player_ref.get("max_stamina")))
-		_update_label("StaminaRegenLabel", "Stamina Regen: %.1f / %.1fs" % [player_ref.get("stamina_regen"), player_ref.get("stamina_regen_interval")])
+		_update_label("FortitudeLabel", "Fortitude: N/A")
+		_update_label("VitalityLabel", "Vitality: N/A")
+		_update_label("AgilityLabel", "Agility: N/A")
+		_update_label("ArcaneLabel", "Arcane: N/A")
+		_update_luck_label_fallback()
 		return
 	
-	# New structure - stats in component
-	_update_label("StrengthLabel", "Strength: %d" % stats_component.strength)
-	_update_label("DexterityLabel", "Dexterity: %d" % stats_component.dexterity)
-	_update_luck_label(stats_component)
+	# Core Stats (6-stat system)
+	_update_label("StrengthLabel", "Strength: %d" % stats.strength)
+	_update_label("DexterityLabel", "Dexterity: %d" % stats.dexterity)
+	_update_label("FortitudeLabel", "Fortitude: %d" % stats.fortitude)
+	_update_label("VitalityLabel", "Vitality: %d" % stats.vitality)
+	_update_label("AgilityLabel", "Agility: %d" % stats.agility)
+	_update_label("ArcaneLabel", "Arcane: %d" % stats.arcane)
+	_update_luck_label(stats)
 	
-	# Combat Stats
-	_update_label("DamageLabel", "Damage: %d" % stats_component.damage)
-	_update_label("ArmorLabel", "Armor: %d" % stats_component.armor)
-	_update_label("AttackRangeLabel", "Attack Range: %.1f" % stats_component.attack_range)
-	_update_label("AttackSpeedLabel", "Attack Speed: %.1fx" % stats_component.attack_speed)
-	_update_label("CritChanceLabel", "Crit Chance: %.1f%%" % (stats_component.crit_chance * 100))
-	_update_label("CritDamageLabel", "Crit Damage: %.1fx" % stats_component.crit_multiplier)
+	# Resources
+	_update_label("MaxHealthLabel", "Max Health: %d" % stats.max_health)
+	_update_label("HealthRegenLabel", "HP Regen: %.1f / %.0fs" % [stats.health_regen_rate, stats.health_regen_interval])
+	_update_label("MaxStaminaLabel", "Max Stamina: %d" % int(stats.max_stamina))
+	_update_label("StaminaRegenLabel", "Stamina Regen: %.1f / %.1fs" % [stats.stamina_regen_rate, stats.stamina_regen_interval])
+	_update_label("MaxManaLabel", "Max Mana: %d" % int(stats.max_mana))
+	_update_label("ManaRegenLabel", "Mana Regen: %.1f / %.1fs" % [stats.mana_regen_rate, stats.mana_regen_interval])
 	
-	# Health & Stamina
-	_update_label("MaxHealthLabel", "Max Health: %d" % stats_component.max_health)
-	_update_label("HealthRegenLabel", "Health Regen: %.0f / %.0fs" % [stats_component.health_regen, stats_component.health_regen_interval])
-	_update_label("MaxStaminaLabel", "Max Stamina: %d" % int(stats_component.max_stamina))
-	_update_label("StaminaRegenLabel", "Stamina Regen: %.1f / %.1fs" % [stats_component.stamina_regen, stats_component.stamina_regen_interval])
+	# Defense
+	_update_label("ArmorLabel", "Armor: %d" % stats.armor)
+	_update_label("FireResLabel", "Fire Resist: %.0f%%" % (stats.fire_resistance * 100))
+	_update_label("FrostResLabel", "Frost Resist: %.0f%%" % (stats.frost_resistance * 100))
+	_update_label("StaticResLabel", "Static Resist: %.0f%%" % (stats.static_resistance * 100))
+	_update_label("PoisonResLabel", "Poison Resist: %.0f%%" % (stats.poison_resistance * 100))
 
 func _update_label(label_name: String, text: String):
 	"""Helper to update a label's text"""
@@ -165,15 +170,15 @@ func _update_label(label_name: String, text: String):
 	if label:
 		label.text = text
 
-func _update_luck_label(stats_component: Node):
-	"""Update luck label with color based on value (new structure)"""
+func _update_luck_label(stats: Node):
+	"""Update luck label with color based on value"""
 	if not stats_container:
 		return
 	var luck_label = stats_container.get_node_or_null("LuckLabel")
 	if not luck_label:
 		return
 	
-	var luck_value = stats_component.luck
+	var luck_value = stats.luck
 	
 	# Color based on positive/negative luck
 	if luck_value > 0:
@@ -185,23 +190,25 @@ func _update_luck_label(stats_component: Node):
 	
 	luck_label.text = "Luck: %.1f" % luck_value
 
-func _update_luck_label_old():
-	"""Update luck label with color based on value (old structure)"""
+func _update_luck_label_fallback():
+	"""Update luck label for old structure"""
 	if not stats_container:
 		return
 	var luck_label = stats_container.get_node_or_null("LuckLabel")
-	if not luck_label:
+	if not luck_label or not player_ref:
 		return
 	
 	var luck_value = player_ref.get("luck")
+	if luck_value == null:
+		luck_value = 0.0
 	
 	# Color based on positive/negative luck
 	if luck_value > 0:
-		luck_label.add_theme_color_override("font_color", Color(0.5, 1.0, 0.5))  # Green
+		luck_label.add_theme_color_override("font_color", Color(0.5, 1.0, 0.5))
 	elif luck_value < 0:
-		luck_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.5))  # Red
+		luck_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.5))
 	else:
-		luck_label.add_theme_color_override("font_color", Color.WHITE)  # White
+		luck_label.add_theme_color_override("font_color", Color.WHITE)
 	
 	luck_label.text = "Luck: %.1f" % luck_value
 

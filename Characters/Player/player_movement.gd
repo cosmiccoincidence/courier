@@ -10,21 +10,21 @@ var state_machine: Node  # Reference to state machine
 @export_group("Movement")
 @export var base_movement_speed: float = 5.0  # Base movement speed (can be modified by buffs/items)
 @export var rotation_speed: float = 5.0
-@export var sprint_multiplier: float = 2.0
-@export var sprint_stamina_cost: float = 1.5  # Stamina per second while sprinting
+@export var sprint_multiplier: float = 1.5  # Sprint speed multiplier (spec)
+@export var sprint_stamina_cost: float = 0.5  # Stamina per second while sprinting
 
 # Dodge roll
 @export var dodge_roll_speed: float = 15.0  # Speed during dodge roll
 @export var dodge_roll_duration: float = 0.25  # How long the roll lasts (seconds)
 @export var dodge_roll_cooldown: float = 1.0  # Cooldown between rolls (seconds)
-@export var dodge_roll_stamina_cost: float = 10.0  # Stamina cost per roll
+@export var dodge_roll_stamina_cost: float = 5.0  # Stamina cost per roll
 @export var dodge_roll_iframe_duration: float = 0.15  # Duration of invincibility frames (seconds)
 
 # Dash
-@export var dash_speed: float = 40.0  # Speed during dash (faster than roll)
+@export var dash_speed: float = 30.0  # Speed during dash (faster than roll)
 @export var dash_duration: float = 0.15  # How long the dash lasts (seconds, shorter than roll)
 @export var dash_cooldown: float = 2.0  # Cooldown between dashes (seconds, shorter than roll)
-@export var dash_stamina_cost: float = 15.0  # Stamina cost per dash (cheaper than roll)
+@export var dash_stamina_cost: float = 10.0  # Stamina cost per dash (cheaper than roll)
 
 # Calculated movement speed (base + modifiers)
 var movement_speed: float = 5.0
@@ -45,6 +45,7 @@ var dash_direction: Vector3 = Vector3.ZERO
 # Encumbered penalties (only applied when not in god mode)
 const ENCUMBERED_SPEED_MULT: float = 0.2  # 20% speed
 const ENCUMBERED_ROTATION_MULT: float = 0.75  # 75% rotation speed
+const SPRINT_ROTATION_MULT: float = 0.9  # 90% rotation while sprinting (spec - was 0.5)
 
 # ===== CAMERA =====
 @export_group("Camera")
@@ -218,9 +219,9 @@ func _rotate_toward_mouse(apply_encumbered_penalty: bool = false, is_sprinting: 
 	if apply_encumbered_penalty:
 		effective_rotation_speed *= ENCUMBERED_ROTATION_MULT
 	
-	# Apply sprint penalty (50% slower rotation while sprinting)
+	# Apply sprint penalty (10% slower rotation while sprinting - spec)
 	if is_sprinting:
-		effective_rotation_speed *= 0.5
+		effective_rotation_speed *= SPRINT_ROTATION_MULT  # 0.9
 	
 	var new_angle = lerp_angle(current_angle, target_angle, effective_rotation_speed * player.get_physics_process_delta_time())
 	player.rotation.y = new_angle
@@ -315,6 +316,7 @@ func try_dodge_roll(stats_component: Node, god_mode: bool) -> bool:
 	if state_machine:
 		state_machine.change_state(state_machine.State.DODGE_ROLLING)
 	
+	print("Dodge roll!")
 	return true
 
 func try_dash(stats_component: Node, god_mode: bool) -> bool:
