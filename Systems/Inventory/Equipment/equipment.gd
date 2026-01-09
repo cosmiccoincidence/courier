@@ -96,6 +96,12 @@ func is_weapon_slot_active(slot_index: int) -> bool:
 		return weapon_sets_manager.is_weapon_slot_active(slot_index)
 	return true
 
+func get_active_weapon_set() -> int:
+	"""Get the currently active weapon set number (0 or 1)"""
+	if weapon_sets_manager:
+		return weapon_sets_manager.get_active_set_number()
+	return 0
+
 # ===== STATS FUNCTIONS =====
 
 func get_equipment_stats() -> Dictionary:

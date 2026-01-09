@@ -83,11 +83,25 @@ static func calculate_total_stats(equipped_items: Array, active_weapon_set: int 
 			if item and not _is_twohand_placeholder(item):
 				equipped_weapons.append(item)
 	
+	# Define ALL weapon slots (both active and inactive)
+	var all_weapon_slots = [10, 11, 14, 15]
+	
+	print("=== CALCULATING STATS ===")
+	print("Active weapon set: %d (slots %s)" % [active_weapon_set, active_weapon_slots])
+	
 	# Process all equipped items
 	for i in range(equipped_items.size()):
 		var item = equipped_items[i]
 		if not item or _is_twohand_placeholder(item):
 			continue
+		
+		# Skip inactive weapon slots - they contribute NOTHING
+		if i in all_weapon_slots and i not in active_weapon_slots:
+			print("  Slot %d: SKIPPED (inactive weapon slot)" % i)
+			continue
+		
+		if i in all_weapon_slots:
+			print("  Slot %d: %s (active weapon slot)" % [i, item.get("name", "Unknown")])
 		
 		# ===== CORE STAT BONUSES =====
 		_add_stat_bonus(stats, item, "strength")
@@ -110,9 +124,11 @@ static func calculate_total_stats(equipped_items: Array, active_weapon_set: int 
 		# ===== ARMOR (all pieces contribute) =====
 		if item.has("armor") and item.armor > 0:
 			stats.armor += item.armor
+			print("    + %d armor from %s" % [item.armor, item.get("name", "Unknown")])
 		# Legacy support - check both old naming conventions
 		elif item.has("armor_rating") and item.armor_rating > 0:
 			stats.armor += item.armor_rating
+			print("    + %d armor from %s (legacy armor_rating)" % [item.armor_rating, item.get("name", "Unknown")])
 		elif item.has("base_armor_rating") and item.base_armor_rating > 0:
 			stats.armor += item.base_armor_rating
 		
@@ -190,6 +206,7 @@ static func calculate_total_stats(equipped_items: Array, active_weapon_set: int 
 		elif primary_weapon.has("parry_window"):  # Legacy
 			stats.weapon_parry_window = primary_weapon.parry_window
 	
+	print("=== TOTAL GEAR ARMOR: %d ===" % stats.armor)
 	return stats
 
 static func _add_stat_bonus(stats: Dictionary, item: Dictionary, stat_name: String):

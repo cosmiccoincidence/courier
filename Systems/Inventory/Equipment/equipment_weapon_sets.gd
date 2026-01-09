@@ -14,6 +14,7 @@ func initialize(equipment_node: Node):
 func swap_weapon_sets():
 	"""Toggle between weapon set 0 (slots 10-11) and set 1 (slots 14-15)"""
 	active_weapon_set = 1 if active_weapon_set == 0 else 0
+	print("Weapon set swapped to: %d (slots %s)" % [active_weapon_set, get_active_weapon_slots()])
 	weapon_set_changed.emit(active_weapon_set)
 	
 	# Notify equipment that something changed
