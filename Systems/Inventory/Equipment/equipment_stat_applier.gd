@@ -16,9 +16,7 @@ func initialize(stats_component: Node, equipment_component: Node):
 
 func _on_equipment_changed():
 	"""Called when equipment changes - recalculate player stats"""
-	print("Equipment changed - recalculating stats...")
 	apply_equipment_stats()
-	print("Stats recalculated!")
 
 func apply_equipment_stats():
 	"""Apply all equipment stats to player"""
@@ -51,7 +49,6 @@ func apply_equipment_stats():
 	
 	# ===== APPLY ARMOR =====
 	player_stats.gear_armor = gear_stats.armor
-	print("Applied armor from gear: %d (total armor will be base + this)" % gear_stats.armor)
 	
 	# ===== APPLY RESISTANCES =====
 	player_stats.gear_fire_resistance = gear_stats.fire_resistance
