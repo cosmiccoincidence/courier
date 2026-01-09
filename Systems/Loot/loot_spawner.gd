@@ -164,7 +164,7 @@ static func _apply_item_properties(instance: BaseItem, item_dict: Dictionary):
 	if "weapon_parry_window" in instance:
 		instance.weapon_parry_window = item_dict.get("weapon_parry_window", 0.0)
 	if "weapon_hand" in instance:
-		instance.weapon_hand = item_dict.get("hand", 0)  # enum value
+		instance.weapon_hand = item_dict.get("weapon_hand", 0)  # enum value
 	
 	# Armor/Defense
 	if "armor" in instance:

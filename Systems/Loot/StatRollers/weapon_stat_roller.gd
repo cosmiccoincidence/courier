@@ -99,6 +99,10 @@ static func roll_weapon_stats(loot_item: Resource, item_level: int, item_quality
 			if loot_item.weapon_parry_window > 0:
 				stats.weapon_parry_window = loot_item.weapon_parry_window
 			
+			# Weapon hand restriction (always add, even if ANY)
+			if "weapon_hand" in loot_item:
+				stats.weapon_hand = loot_item.weapon_hand
+			
 			stats.damage_type = "physical"  # Default
 			
 			# Add physical damage subtype
@@ -117,6 +121,10 @@ static func roll_weapon_stats(loot_item: Resource, item_level: int, item_quality
 				stats.weapon_block_rating = loot_item.weapon_block_rating
 			if loot_item.weapon_parry_window > 0:
 				stats.weapon_parry_window = loot_item.weapon_parry_window
+			
+			# Weapon hand restriction (shields are typically offhand)
+			if "weapon_hand" in loot_item:
+				stats.weapon_hand = loot_item.weapon_hand
 			
 			var armor_type = "leather"
 			if "armor_type" in loot_item:
@@ -177,6 +185,10 @@ static func roll_weapon_stats(loot_item: Resource, item_level: int, item_quality
 	stats.weapon_speed = base_stats.speed
 	stats.weapon_crit_chance = base_stats.crit_chance * quality_mult
 	stats.weapon_crit_multiplier = base_stats.crit_mult + (item_quality * 0.1)
+	
+	# Weapon hand restriction
+	if "weapon_hand" in loot_item:
+		stats.weapon_hand = loot_item.weapon_hand
 	
 	# === HYBRID WEAPON/ARMOR (Shields) ===
 	# If weapon has armor stats (shields), add them

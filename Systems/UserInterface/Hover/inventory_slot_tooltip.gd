@@ -276,6 +276,16 @@ func show_tooltip(slot: Control, item_data: Dictionary):
 	if item_data.has("weapon_crit_multiplier") and is_weapon and item_data.weapon_crit_multiplier > 1.0:
 		_add_label(vbox, "Crit Multiplier: %.2fx" % item_data.weapon_crit_multiplier, 14, Color("#ff55ff"), HORIZONTAL_ALIGNMENT_CENTER)
 	
+	# Weapon hand restriction
+	if item_data.has("weapon_hand") and is_weapon:
+		var hand_text = "Any Hand"
+		match item_data.weapon_hand:
+			1: hand_text = "Main Hand Only"
+			2: hand_text = "Off Hand Only"
+			3: hand_text = "Two-Handed"
+		if item_data.weapon_hand != 0:  # Only show if restricted
+			_add_label(vbox, hand_text, 14, Color("#ffdd88"), HORIZONTAL_ALIGNMENT_CENTER)
+	
 	# Armor/Defense (check both new and old property names)
 	if item_data.has("armor") and item_data.armor > 0:
 		_add_label(vbox, "Armor: %d" % item_data.armor, 14, Color("#6bb6ff"), HORIZONTAL_ALIGNMENT_CENTER)
