@@ -1,5 +1,5 @@
 # loot_item.gd
-# Resource definition for loot items - 6-stat system
+# Resource definition for loot items - Designer sets base values only
 class_name LootItem
 extends Resource
 
@@ -24,44 +24,22 @@ extends Resource
 @export_group("Stat Requirements")
 @export var required_strength: int = 0
 @export var required_dexterity: int = 0
-@export var required_fortitude: int = 0  # NEW!
+@export var required_fortitude: int = 0
 
-# ===== CORE STAT BONUSES =====
-@export_group("Core Stat Bonuses")
-@export var bonus_strength: int = 0
-@export var bonus_dexterity: int = 0
-@export var bonus_fortitude: int = 0
-@export var bonus_vitality: int = 0
-@export var bonus_agility: int = 0
-@export var bonus_arcane: int = 0
-
-# ===== RESOURCE BONUSES =====
-@export_group("Resource Bonuses")
-@export var bonus_max_health: int = 0
-@export var bonus_max_stamina: int = 0
-@export var bonus_max_mana: int = 0
-
-# ===== REGEN BONUSES =====
-@export_group("Regen Bonuses")
-@export var bonus_health_regen: float = 0.0
-@export var bonus_stamina_regen: float = 0.0
-@export var bonus_mana_regen: float = 0.0
-
-# ===== WEAPON STATS =====
+# ===== WEAPON STATS (Base values - scaled by level/quality) =====
 @export_group("Weapon Stats")
-@export var min_weapon_damage: int = 0
-@export var max_weapon_damage: int = 0
+@export var weapon_damage: int = 0  # Base damage (will be scaled)
 
 # Weapon damage type
 enum DamageType {
-	PHYSICAL,  # Slash/pierce/blunt - blocked by armor
-	MAGIC,     # Pure arcane damage - blocked by magic resist
-	FIRE,      # Fire damage - blocked by fire resist
-	FROST,     # Ice/cold damage - blocked by frost resist
-	STATIC,    # Lightning damage - blocked by static resist
-	POISON     # Poison damage - blocked by poison resist
+	PHYSICAL,  # Blocked by armor
+	MAGIC,     # Blocked by magic resist
+	FIRE,      # Blocked by fire resist
+	FROST,     # Blocked by frost resist
+	STATIC,    # Blocked by static resist
+	POISON     # Blocked by poison resist
 }
-@export var weapon_damage_type: DamageType = DamageType.PHYSICAL
+@export var damage_type: DamageType = DamageType.PHYSICAL
 
 @export var weapon_range: float = 1.5
 @export var weapon_speed: float = 1.0
@@ -79,10 +57,9 @@ enum WeaponHand {
 }
 @export var weapon_hand: WeaponHand = WeaponHand.ANY
 
-# ===== ARMOR/DEFENSE STATS =====
-@export_group("Defense Stats")
-@export var min_armor: int = 0  # Min armor rating to roll
-@export var max_armor: int = 0  # Max armor rating to roll
+# ===== ARMOR STATS (Base values - scaled by level/quality) =====
+@export_group("Armor Stats")
+@export var armor: int = 0  # Base armor rating (will be scaled)
 
 # Armor type affects resistance modifiers
 enum ArmorType {
@@ -93,44 +70,20 @@ enum ArmorType {
 }
 @export var armor_type: ArmorType = ArmorType.LEATHER
 
-# ===== RESISTANCE BONUSES =====
-@export_group("Resistance Bonuses")
-@export_range(-1.0, 1.0) var bonus_fire_resistance: float = 0.0
-@export_range(-1.0, 1.0) var bonus_frost_resistance: float = 0.0
-@export_range(-1.0, 1.0) var bonus_static_resistance: float = 0.0
-@export_range(-1.0, 1.0) var bonus_poison_resistance: float = 0.0
-
-# ===== DAMAGE REDUCTION BONUSES =====
-@export_group("Damage Reduction")
-@export_range(0.0, 1.0) var bonus_enemy_damage_reduction: float = 0.0  # vs elites/bosses
-@export_range(0.0, 1.0) var bonus_environment_damage_reduction: float = 0.0  # vs traps/hazards
-
-# ===== COMBAT BONUSES =====
-@export_group("Combat Bonuses")
-@export var bonus_attack_speed: float = 0.0
-@export_range(0.0, 1.0) var bonus_crit_chance: float = 0.0
-@export var bonus_crit_damage: float = 0.0
-
-# ===== MOVEMENT BONUSES =====
-@export_group("Movement Bonuses")
-@export var bonus_movement_speed: float = 0.0
-
-# ===== ABILITY COST MODIFIERS =====
-@export_group("Ability Costs")
-@export var bonus_sprint_stamina_cost: float = 0.0  # Negative = cheaper
-@export var bonus_dodge_roll_stamina_cost: float = 0.0
-@export var bonus_dash_stamina_cost: float = 0.0
-
 # ===== STACKABLE SETTINGS =====
 @export_group("Stackable Settings")
 @export var min_drop_amount: int = 1
 @export var max_drop_amount: int = 1
-@export var scaled_quantity: bool = false  # Scale by enemy level
+@export var scaled_quantity: bool = false  # Scale by source level
 
 # ===== LOOT TABLE PROPERTIES =====
 @export_group("Loot Table")
-@export var item_drop_weight: float = 1.0
-@export var min_quantity: int = 1
+@export var item_drop_weight: float = 1.0  # Relative drop chance
+@export var min_quantity: int = 1  # For loot table
 @export var max_quantity: int = 1
-@export var min_level: int = 1  # Minimum level for this item to drop
-@export var max_level: int = 100  # Maximum level
+@export var min_drop_level: int = 1  # Minimum source level for this item to drop
+@export var max_drop_level: int = 100  # Maximum source level
+
+# NOTE: Bonus stats (resistances, stat bonuses, regen, etc.) are NOT set here!
+# They are randomly rolled by the stat rollers based on item_quality and item_level
+# This keeps the designer interface simple and clean

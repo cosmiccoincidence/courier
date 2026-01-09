@@ -13,6 +13,5 @@ item_type = "Weapon"
 item_subtype = "Shield"
 weapon_block_rating = 0.2
 weapon_hand = 2
-min_armor = 5
-max_armor = 5
+armor = 10
 metadata/_custom_type_script = "uid://bm5i53gst3tyr"

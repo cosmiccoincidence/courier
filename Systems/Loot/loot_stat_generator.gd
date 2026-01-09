@@ -6,17 +6,19 @@ extends RefCounted
 
 static func generate_item_stats(loot_item: Resource, item_level: int = 1, item_quality: int = 0) -> Dictionary:
 	"""
-	Create a full item dictionary from a LootItem resource.
-	Rolls stats based on level and quality.
+	Generate item stats from a LootItem resource.
 	
-	item_level: 1-100, affects stat values
+	item_level: Level of the source (enemy/chest level, or map level)
 	item_quality: 0-5 (0=normal, 1=magic, 2=rare, 3=epic, 4=legendary, 5=mythic)
+	
+	Bonus stats (resistances, stat bonuses, etc.) are rolled by the stat rollers
+	based on quality, NOT set in the LootItem resource.
 	"""
 	
 	var item = {
 		# ===== BASIC INFO =====
 		"name": loot_item.item_name,
-		"icon": loot_item.icon,  # Add icon texture
+		"icon": loot_item.icon,
 		"type": loot_item.item_type,
 		"subtype": loot_item.item_subtype,
 		"level": item_level,
@@ -33,50 +35,10 @@ static func generate_item_stats(loot_item: Resource, item_level: int = 1, item_q
 		"required_strength": loot_item.required_strength,
 		"required_dexterity": loot_item.required_dexterity,
 		"required_fortitude": loot_item.required_fortitude,
-		
-		# ===== CORE STAT BONUSES =====
-		"strength": loot_item.bonus_strength,
-		"dexterity": loot_item.bonus_dexterity,
-		"fortitude": loot_item.bonus_fortitude,
-		"vitality": loot_item.bonus_vitality,
-		"agility": loot_item.bonus_agility,
-		"arcane": loot_item.bonus_arcane,
-		
-		# ===== RESOURCES =====
-		"max_health": loot_item.bonus_max_health,
-		"max_stamina": loot_item.bonus_max_stamina,
-		"max_mana": loot_item.bonus_max_mana,
-		
-		# ===== REGEN =====
-		"health_regen": loot_item.bonus_health_regen,
-		"stamina_regen": loot_item.bonus_stamina_regen,
-		"mana_regen": loot_item.bonus_mana_regen,
-		
-		# ===== RESISTANCES =====
-		"fire_resistance": loot_item.bonus_fire_resistance,
-		"frost_resistance": loot_item.bonus_frost_resistance,
-		"static_resistance": loot_item.bonus_static_resistance,
-		"poison_resistance": loot_item.bonus_poison_resistance,
-		
-		# ===== DAMAGE REDUCTION =====
-		"enemy_damage_reduction": loot_item.bonus_enemy_damage_reduction,
-		"environment_damage_reduction": loot_item.bonus_environment_damage_reduction,
-		
-		# ===== COMBAT =====
-		"attack_speed": loot_item.bonus_attack_speed,
-		"crit_chance": loot_item.bonus_crit_chance,
-		"crit_damage": loot_item.bonus_crit_damage,
-		
-		# ===== MOVEMENT =====
-		"movement_speed": loot_item.bonus_movement_speed,
-		
-		# ===== ABILITY COSTS =====
-		"sprint_stamina_cost": loot_item.bonus_sprint_stamina_cost,
-		"dodge_roll_stamina_cost": loot_item.bonus_dodge_roll_stamina_cost,
-		"dash_stamina_cost": loot_item.bonus_dash_stamina_cost,
 	}
 	
 	# Roll stats based on item type
+	# This is where bonus stats are added!
 	match loot_item.item_type.to_lower():
 		"weapon":
 			_add_weapon_stats(item, loot_item, item_level, item_quality)

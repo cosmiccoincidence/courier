@@ -32,11 +32,9 @@ func set_player_reference(player: CharacterBody3D):
 		if stats and stats.has_signal("stats_updated"):
 			if not stats.stats_updated.is_connected(_on_stats_updated):
 				stats.stats_updated.connect(_on_stats_updated)
-				print("Stats panel connected to stats_updated signal")
 
 func _on_stats_updated():
 	"""Called when player stats are recalculated"""
-	print("Stats panel: stats_updated signal received, refreshing display")
 	_update_stats_display()
 
 func _update_hero_name():
@@ -104,6 +102,19 @@ func _setup_stats_panel():
 	_create_stat_label(stats_container, "FrostResLabel", "Frost Resist: 0%", 14)
 	_create_stat_label(stats_container, "StaticResLabel", "Static Resist: 0%", 14)
 	_create_stat_label(stats_container, "PoisonResLabel", "Poison Resist: 0%", 14)
+	
+	_create_spacer(stats_container, 10)
+	
+	# Combat Stats Section (Weapon-based)
+	_create_section_label(stats_container, "Combat")
+	_create_stat_label(stats_container, "WeaponDamageLabel", "Damage: --", 14, Color("#ff6b6b"))
+	_create_stat_label(stats_container, "DamageTypeLabel", "Type: Physical", 14, Color("#ffaa55"))
+	_create_stat_label(stats_container, "AttackSpeedLabel", "Attack Speed: 1.0x", 14, Color("#77ff77"))
+	_create_stat_label(stats_container, "AttackRangeLabel", "Range: --", 14, Color("#77ffff"))
+	_create_stat_label(stats_container, "CritChanceLabel", "Crit Chance: 0%", 14, Color("#ff77ff"))
+	_create_stat_label(stats_container, "CritDamageLabel", "Crit Damage: 1.5x", 14, Color("#ff55ff"))
+	_create_stat_label(stats_container, "BlockRatingLabel", "Block Rating: 0%", 14, Color("#5599ff"))
+	_create_stat_label(stats_container, "ParryWindowLabel", "Parry Window: 0.0s", 14, Color("#5599ff"))
 
 func _create_section_label(parent: VBoxContainer, text: String):
 	"""Create a centered section header label"""
@@ -148,15 +159,6 @@ func _update_stats_display():
 		_update_luck_label_fallback()
 		return
 	
-	# Debug: Print current stats
-	print("Stats Panel Update:")
-	print("  Strength: %d (class: %d, gear: %d, buff: %d)" % [
-		stats.strength, stats.class_strength, stats.gear_strength, stats.buff_strength
-	])
-	print("  Armor: %d (base: %d, gear: %d)" % [
-		stats.armor, stats.base_armor, stats.gear_armor
-	])
-	
 	# Core Stats (6-stat system)
 	_update_label("StrengthLabel", "Strength: %d" % stats.strength)
 	_update_label("DexterityLabel", "Dexterity: %d" % stats.dexterity)
@@ -180,6 +182,9 @@ func _update_stats_display():
 	_update_label("FrostResLabel", "Frost Resist: %.0f%%" % (stats.frost_resistance * 100))
 	_update_label("StaticResLabel", "Static Resist: %.0f%%" % (stats.static_resistance * 100))
 	_update_label("PoisonResLabel", "Poison Resist: %.0f%%" % (stats.poison_resistance * 100))
+	
+	# Combat (from equipped weapon)
+	_update_combat_stats()
 
 func _update_label(label_name: String, text: String):
 	"""Helper to update a label's text"""
@@ -188,6 +193,78 @@ func _update_label(label_name: String, text: String):
 	var label = stats_container.get_node_or_null(label_name)
 	if label:
 		label.text = text
+
+func _update_combat_stats():
+	"""Update combat stats from equipped weapon"""
+	if not player_ref:
+		return
+	
+	# Get equipment stat applier from player
+	var stat_applier = player_ref.get_node_or_null("EquipmentStatApplier")
+	if not stat_applier:
+		_update_label("WeaponDamageLabel", "Damage: --")
+		_update_label("DamageTypeLabel", "Type: --")
+		_update_label("AttackSpeedLabel", "Attack Speed: --")
+		_update_label("AttackRangeLabel", "Range: --")
+		_update_label("CritChanceLabel", "Crit Chance: --")
+		_update_label("CritDamageLabel", "Crit Damage: --")
+		_update_label("BlockRatingLabel", "Block Rating: --")
+		_update_label("ParryWindowLabel", "Parry Window: --")
+		return
+	
+	# Get current weapon stats
+	var weapon_stats = stat_applier.get_current_weapon_stats()
+	
+	if not weapon_stats.has_weapon:
+		_update_label("WeaponDamageLabel", "Damage: No Weapon")
+		_update_label("DamageTypeLabel", "Type: --")
+		_update_label("AttackSpeedLabel", "Attack Speed: --")
+		_update_label("AttackRangeLabel", "Range: --")
+		_update_label("CritChanceLabel", "Crit Chance: --")
+		_update_label("CritDamageLabel", "Crit Damage: --")
+		_update_label("BlockRatingLabel", "Block Rating: --")
+		_update_label("ParryWindowLabel", "Parry Window: --")
+		return
+	
+	# Get player stats for bonuses
+	var stats = player_ref.get_node_or_null("PlayerStats")
+	
+	# Damage
+	_update_label("WeaponDamageLabel", "Damage: %d" % weapon_stats.damage)
+	
+	# Damage type with color
+	var damage_type = weapon_stats.damage_type.capitalize()
+	_update_label("DamageTypeLabel", "Type: %s" % damage_type)
+	
+	# Attack speed (weapon speed × speed bonuses)
+	_update_label("AttackSpeedLabel", "Attack Speed: %.2fx" % weapon_stats.speed)
+	
+	# Range
+	_update_label("AttackRangeLabel", "Range: %.1f" % weapon_stats.range)
+	
+	# Crit chance (weapon + dexterity + gear bonuses)
+	var total_crit = weapon_stats.crit_chance
+	if stats:
+		total_crit += stats.dexterity * 0.01  # 1% per dex
+	_update_label("CritChanceLabel", "Crit Chance: %.1f%%" % (total_crit * 100))
+	
+	# Crit damage (weapon multiplier + dexterity + gear bonuses)
+	var total_crit_mult = weapon_stats.crit_multiplier
+	if stats:
+		total_crit_mult += stats.dexterity * 0.02  # 2% per dex
+	_update_label("CritDamageLabel", "Crit Damage: %.2fx" % total_crit_mult)
+	
+	# Block rating
+	if weapon_stats.block_rating > 0:
+		_update_label("BlockRatingLabel", "Block Rating: %.0f%%" % (weapon_stats.block_rating * 100))
+	else:
+		_update_label("BlockRatingLabel", "Block Rating: --")
+	
+	# Parry window
+	if weapon_stats.parry_window > 0:
+		_update_label("ParryWindowLabel", "Parry Window: %.2fs" % weapon_stats.parry_window)
+	else:
+		_update_label("ParryWindowLabel", "Parry Window: --")
 
 func _update_luck_label(stats: Node):
 	"""Update luck label with color based on value"""

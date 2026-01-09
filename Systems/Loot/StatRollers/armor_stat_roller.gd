@@ -75,10 +75,10 @@ static func roll_armor_stats(loot_item: Resource, item_level: int, item_quality:
 	# Roll armor rating
 	var base_armor = base_stats.base_armor
 	
-	# Check for new properties first
-	if "min_armor" in loot_item and loot_item.min_armor > 0:
-		base_armor = randi_range(loot_item.min_armor, loot_item.max_armor)
-	# Fall back to old property
+	# Use armor from loot_item if set, otherwise use subtype default
+	if "armor" in loot_item and loot_item.armor > 0:
+		base_armor = loot_item.armor
+	# Fall back to old property name for backwards compatibility
 	elif "base_armor_rating" in loot_item and loot_item.base_armor_rating > 0:
 		base_armor = loot_item.base_armor_rating
 	
@@ -89,16 +89,6 @@ static func roll_armor_stats(loot_item: Resource, item_level: int, item_quality:
 	stats.frost_resistance = type_mods.frost_resist * (1.0 + item_quality * 0.15)
 	stats.static_resistance = type_mods.static_resist * (1.0 + item_quality * 0.15)
 	stats.poison_resistance = type_mods.poison_resist * (1.0 + item_quality * 0.15)
-	
-	# Add any base resistance bonuses from the loot item
-	if "bonus_fire_resistance" in loot_item and loot_item.bonus_fire_resistance != 0:
-		stats.fire_resistance += loot_item.bonus_fire_resistance
-	if "bonus_frost_resistance" in loot_item and loot_item.bonus_frost_resistance != 0:
-		stats.frost_resistance += loot_item.bonus_frost_resistance
-	if "bonus_static_resistance" in loot_item and loot_item.bonus_static_resistance != 0:
-		stats.static_resistance += loot_item.bonus_static_resistance
-	if "bonus_poison_resistance" in loot_item and loot_item.bonus_poison_resistance != 0:
-		stats.poison_resistance += loot_item.bonus_poison_resistance
 	
 	return stats
 

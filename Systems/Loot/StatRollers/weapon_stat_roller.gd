@@ -66,21 +66,34 @@ static func roll_weapon_stats(loot_item: Resource, item_level: int, item_quality
 	var stats = {}
 	
 	var subtype = loot_item.item_subtype.to_lower()
-	if not WEAPON_SUBTYPE_STATS.has(subtype):
-		push_warning("Unknown weapon subtype: %s" % subtype)
+	var base_stats = WEAPON_SUBTYPE_STATS.get(subtype, null)
+	
+	if not base_stats:
+		# Unknown subtype - use LootItem values if available
+		if loot_item.weapon_damage > 0:
+			# Calculate multipliers
+			var level_mult = 1.0 + (item_level - 1) * 0.1  # 10% per level
+			var quality_mult = 1.0 + (item_quality * 0.2)  # 20% per quality tier
+			
+			stats.weapon_damage = max(1, int(loot_item.weapon_damage * level_mult * quality_mult))
+			stats.weapon_range = loot_item.weapon_range if loot_item.weapon_range > 0 else 1.5
+			stats.weapon_speed = loot_item.weapon_speed if loot_item.weapon_speed > 0 else 1.0
+			stats.weapon_crit_chance = loot_item.weapon_crit_chance * quality_mult
+			stats.weapon_crit_multiplier = loot_item.weapon_crit_multiplier + (item_quality * 0.1)
+			stats.damage_type = "physical"  # Default
+		else:
+			push_warning("Unknown weapon subtype '%s' and no weapon_damage set in LootItem!" % subtype)
+		
 		return stats
 	
-	var base_stats = WEAPON_SUBTYPE_STATS[subtype]
-	
+	# Known subtype - proceed normally
 	# Calculate multipliers
 	var level_mult = 1.0 + (item_level - 1) * 0.1  # 10% per level
 	var quality_mult = 1.0 + (item_quality * 0.2)  # 20% per quality tier
 	
-	# Roll damage
-	var base_damage = randi_range(
-		loot_item.min_weapon_damage if loot_item.min_weapon_damage > 0 else base_stats.min_damage,
-		loot_item.max_weapon_damage if loot_item.max_weapon_damage > 0 else base_stats.max_damage
-	)
+	# Use weapon_damage from loot_item if set, otherwise use subtype defaults
+	var base_damage = loot_item.weapon_damage if loot_item.weapon_damage > 0 else randi_range(base_stats.min_damage, base_stats.max_damage)
+	
 	stats.weapon_damage = max(1, int(base_damage * level_mult * quality_mult))
 	
 	# Damage type

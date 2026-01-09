@@ -12,6 +12,5 @@ item_scene = ExtResource("2_vawei")
 item_type = "Armor"
 item_subtype = "Bodyarmor"
 base_value = 20
-min_armor = 5
-max_armor = 5
+armor = 10
 metadata/_custom_type_script = "uid://bm5i53gst3tyr"

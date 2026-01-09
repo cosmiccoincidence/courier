@@ -12,6 +12,5 @@ item_scene = ExtResource("2_5j3ki")
 item_type = "Armor"
 item_subtype = "Belt"
 base_value = 5
-min_armor = 5
-max_armor = 5
+armor = 10
 metadata/_custom_type_script = "uid://bm5i53gst3tyr"

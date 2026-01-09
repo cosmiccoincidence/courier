@@ -16,29 +16,18 @@ func initialize(stats_component: Node, equipment_component: Node):
 
 func _on_equipment_changed():
 	"""Called when equipment changes - recalculate player stats"""
-	print("EquipmentStatApplier: _on_equipment_changed() called!")
 	apply_equipment_stats()
 
 func apply_equipment_stats():
 	"""Apply all equipment stats to player"""
 	if not player_stats or not equipment:
-		print("ERROR: Missing player_stats or equipment!")
 		return
-	
-	print("=== Applying Equipment Stats ===")
-	print("  Equipped items count: %d" % equipment.equipped_items.size())
 	
 	# Get total stats from all equipped items
 	var gear_stats = EquipmentStatsCalculator.calculate_total_stats(
 		equipment.equipped_items,
 		equipment.get_active_weapon_set() if equipment.has_method("get_active_weapon_set") else 0
 	)
-	
-	print("  Calculated gear stats:")
-	print("    Strength: %d" % gear_stats.strength)
-	print("    Dexterity: %d" % gear_stats.dexterity)
-	print("    Armor: %d" % gear_stats.armor)
-	print("    Fire Resist: %.1f%%" % (gear_stats.fire_resistance * 100))
 	
 	# ===== APPLY CORE STAT BONUSES =====
 	player_stats.gear_strength = gear_stats.strength
@@ -73,11 +62,6 @@ func apply_equipment_stats():
 	
 	# ===== RECALCULATE ALL DERIVED STATS =====
 	player_stats.recalculate_all_stats()
-	
-	print("  Final player stats:")
-	print("    Total Strength: %d" % player_stats.strength)
-	print("    Total Armor: %d" % player_stats.armor)
-	print("=== Equipment Stats Applied ===")
 
 func get_current_weapon_stats() -> Dictionary:
 	"""Get stats from currently equipped weapon"""
