@@ -1,12 +1,13 @@
-[gd_scene load_steps=8 format=3 uid="uid://bsxhkntrbcu7d"]
+[gd_scene load_steps=9 format=3 uid="uid://bsxhkntrbcu7d"]
 
 [ext_resource type="MeshLibrary" uid="uid://dycv0mgmu6mlo" path="res://Assets/3D/Tiles/tiles_library.tres" id="1_d2ihw"]
 [ext_resource type="Script" uid="uid://cc27dhyj7b3f0" path="res://Maps/start_map.gd" id="2_d2ihw"]
 [ext_resource type="Resource" uid="uid://cwn4875vg684d" path="res://Maps/MapGen/Connections/interior_wall_connector.tres" id="3_qffn0"]
 [ext_resource type="MeshLibrary" uid="uid://drskghn0p7pwn" path="res://Assets/3D/Tiles/Floors/floor_library.tres" id="4_v8w7h"]
 [ext_resource type="PackedScene" uid="uid://7jg1i280uwcy" path="res://Characters/NPCs/npc_hermit.tscn" id="5_qffn0"]
-[ext_resource type="PackedScene" uid="uid://bx6chqk5r8wao" path="res://Assets/3D/Furniture/chest.tscn" id="6_l4ox0"]
+[ext_resource type="PackedScene" uid="uid://bx6chqk5r8wao" path="res://Assets/3D/Furniture/Chests/chest.tscn" id="6_l4ox0"]
 [ext_resource type="PackedScene" uid="uid://dm0j876b3mhs2" path="res://Assets/3D/Furniture/door.tscn" id="7_v8w7h"]
+[ext_resource type="PackedScene" uid="uid://ccpa5j7ittgs0" path="res://Assets/3D/Furniture/Chests/chest_weapon.tscn" id="8_l4ox0"]
 
 [node name="Start" type="Node3D"]
 
@@ -53,3 +54,27 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.0934763, 0.5079384, 0.1905
 
 [node name="Door" parent="." instance=ExtResource("7_v8w7h")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -3.5, 0.5, 1.5)
+
+[node name="Chest3" parent="." instance=ExtResource("6_l4ox0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.141066, 0.50805664, 5.8515244)
+
+[node name="ChestWeapon" parent="." instance=ExtResource("8_l4ox0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.298161, 0.50805664, 5.279276)
+
+[node name="ChestWeapon2" parent="." instance=ExtResource("8_l4ox0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.0895486, 0.50805664, 5.1051145)
+
+[node name="ChestWeapon3" parent="." instance=ExtResource("8_l4ox0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.17376, 0.50805664, 1.4228208)
+
+[node name="ChestWeapon4" parent="." instance=ExtResource("8_l4ox0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.990027, 0.50805664, 1.4477005)
+
+[node name="Chest4" parent="." instance=ExtResource("6_l4ox0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.529581, 0.50805664, 5.801764)
+
+[node name="ChestWeapon5" parent="." instance=ExtResource("8_l4ox0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9747167, 0.50805664, -2.4087553)
+
+[node name="ChestWeapon6" parent="." instance=ExtResource("8_l4ox0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.1393094, 0.50805664, -2.2594733)

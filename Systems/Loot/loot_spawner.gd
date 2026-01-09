@@ -5,10 +5,6 @@
 class_name LootSpawner
 extends RefCounted
 
-# Preload stat rollers
-const WeaponStatRoller = preload("res://Systems/Loot/StatRollers/weapon_stat_roller.gd")
-const ArmorStatRoller = preload("res://Systems/Loot/StatRollers/armor_stat_roller.gd")
-
 static func spawn_loot_item(item_data: Dictionary, spawn_position: Vector3, parent_node: Node) -> void:
 	"""
 	Spawn a single loot item in the world.
@@ -21,7 +17,6 @@ static func spawn_loot_item(item_data: Dictionary, spawn_position: Vector3, pare
 	var item: LootItem = item_data["item"]
 	var item_level: int = item_data["item_level"]
 	var item_quality: int = item_data["item_quality"]
-	var item_value: int = item_data["item_value"]
 	var stack_size: int = item_data.get("stack_size", 1)
 	
 	if not item or not item.item_scene:
@@ -43,74 +38,160 @@ static func spawn_loot_item(item_data: Dictionary, spawn_position: Vector3, pare
 	loot_instance.global_position = final_position
 	
 	if loot_instance is BaseItem:
-		# Copy base properties from LootItem resource
-		loot_instance.item_name = item.item_name
-		loot_instance.item_icon = item.icon
-		loot_instance.item_type = item.item_type
-		loot_instance.item_subtype = item.item_subtype
-		loot_instance.mass = item.mass
-		loot_instance.durability = item.durability
-		loot_instance.stackable = item.stackable
-		loot_instance.max_stack_size = item.max_stack_size
+		# Use LootStatGenerator to create full item with all stats rolled
+		var item_dict = LootStatGenerator.generate_item_stats(
+			item,
+			item_level,
+			item_quality
+		)
 		
-		# Copy stat requirements
-		loot_instance.required_strength = item.required_strength
-		loot_instance.required_dexterity = item.required_dexterity
+		# Override stack size if provided
+		if stack_size > 1:
+			item_dict["stack_count"] = stack_size
 		
-		# Copy weapon stats if weapon
-		if item.item_type.to_lower() == "weapon":
-			loot_instance.weapon_class = item.weapon_class
-			loot_instance.weapon_hand = item.weapon_hand
-			loot_instance.weapon_range = item.weapon_range
-			loot_instance.weapon_speed = item.weapon_speed
-			loot_instance.weapon_block_rating = item.weapon_block_rating
-			loot_instance.weapon_parry_window = item.weapon_parry_window
-			loot_instance.weapon_crit_chance = item.weapon_crit_chance
-			loot_instance.weapon_crit_multiplier = item.weapon_crit_multiplier
-		
-		# Copy armor class if armor
-		if item.item_type.to_lower() == "armor":
-			loot_instance.armor_class = item.armor_class
-		
-		# Set rolled properties (level, quality, value)
-		loot_instance.item_level = item_level
-		loot_instance.item_quality = item_quality
-		loot_instance.value = item_value
-		
-		# Set stack size if stackable
-		if item.stackable and stack_size > 1:
-			loot_instance.stack_count = stack_size
+		# Apply all properties to the instance
+		_apply_item_properties(loot_instance, item_dict)
 		
 		# Update label to reflect stack and quality
 		if loot_instance.has_method("update_label_text"):
 			loot_instance.update_label_text()
-	
-	# Roll weapon/armor stats if applicable
-	if item.item_type.to_lower() == "weapon" and item.min_weapon_damage > 0:
-		var weapon_damage = WeaponStatRoller.roll_weapon_damage(
-			item.min_weapon_damage,
-			item.max_weapon_damage,
-			item_level,
-			item_quality
-		)
-		if "weapon_damage" in loot_instance:
-			loot_instance.weapon_damage = weapon_damage
-		print("  Rolled weapon damage: ", weapon_damage, " (base: ", item.min_weapon_damage, "-", item.max_weapon_damage, ")")
-	
-	# Roll armor defense for armor OR shields (weapon type with shield subtype)
-	var is_armor = item.item_type.to_lower() == "armor"
-	var is_shield = item.item_type.to_lower() == "weapon" and item.item_subtype.to_lower() == "shield"
-	
-	if (is_armor or is_shield) and item.base_armor_rating > 0:
-		var armor_rating = ArmorStatRoller.roll_base_armor_rating(
-			item.base_armor_rating,
-			item_level,
-			item_quality
-		)
-		if "armor_rating" in loot_instance:
-			loot_instance.armor_rating = armor_rating
-		print("  Rolled armor defense: ", armor_rating, " (base: ", item.base_armor_rating, ")")
+		
+		# Debug output
+		print("Spawned: %s (Lv.%d, %s)" % [
+			item_dict.name,
+			item_dict.level,
+			LootStatGenerator.get_quality_name(item_dict.quality)
+		])
+		
+		if item_dict.has("weapon_damage"):
+			print("  Weapon: %d %s damage" % [
+				item_dict.weapon_damage,
+				item_dict.get("damage_type", "physical")
+			])
+		
+		if item_dict.has("armor"):
+			print("  Armor: %d" % item_dict.armor)
 
+static func _apply_item_properties(instance: BaseItem, item_dict: Dictionary):
+	"""Apply all properties from item dictionary to BaseItem instance"""
+	
+	# Basic properties
+	instance.item_name = item_dict.get("name", "Item")
+	instance.item_icon = item_dict.get("icon", null)  # Add icon
+	instance.item_type = item_dict.get("type", "misc")
+	instance.item_subtype = item_dict.get("subtype", "")
+	instance.item_level = item_dict.get("level", 1)
+	instance.item_quality = item_dict.get("quality", 0)
+	instance.mass = item_dict.get("mass", 1.0)
+	instance.value = item_dict.get("value", 10)
+	instance.durability = item_dict.get("durability", 100)
+	instance.stackable = item_dict.get("stackable", false)
+	instance.max_stack_size = item_dict.get("max_stack_size", 1)
+	
+	# Stack count
+	if item_dict.has("stack_count"):
+		instance.stack_count = item_dict.stack_count
+	
+	# Requirements
+	if "required_strength" in instance:
+		instance.required_strength = item_dict.get("required_strength", 0)
+	if "required_dexterity" in instance:
+		instance.required_dexterity = item_dict.get("required_dexterity", 0)
+	if "required_fortitude" in instance:
+		instance.required_fortitude = item_dict.get("required_fortitude", 0)
+	
+	# Core stat bonuses
+	if "strength" in instance:
+		instance.strength = item_dict.get("strength", 0)
+	if "dexterity" in instance:
+		instance.dexterity = item_dict.get("dexterity", 0)
+	if "fortitude" in instance:
+		instance.fortitude = item_dict.get("fortitude", 0)
+	if "vitality" in instance:
+		instance.vitality = item_dict.get("vitality", 0)
+	if "agility" in instance:
+		instance.agility = item_dict.get("agility", 0)
+	if "arcane" in instance:
+		instance.arcane = item_dict.get("arcane", 0)
+	
+	# Resource bonuses
+	if "max_health" in instance:
+		instance.max_health = item_dict.get("max_health", 0)
+	if "max_stamina" in instance:
+		instance.max_stamina = item_dict.get("max_stamina", 0)
+	if "max_mana" in instance:
+		instance.max_mana = item_dict.get("max_mana", 0)
+	
+	# Regen bonuses
+	if "health_regen" in instance:
+		instance.health_regen = item_dict.get("health_regen", 0.0)
+	if "stamina_regen" in instance:
+		instance.stamina_regen = item_dict.get("stamina_regen", 0.0)
+	if "mana_regen" in instance:
+		instance.mana_regen = item_dict.get("mana_regen", 0.0)
+	
+	# Weapon stats
+	if "weapon_damage" in instance:
+		instance.weapon_damage = item_dict.get("weapon_damage", 0)
+	if "damage_type" in instance:
+		instance.damage_type = item_dict.get("damage_type", "physical")
+	if "weapon_range" in instance:
+		instance.weapon_range = item_dict.get("weapon_range", 1.5)
+	if "weapon_speed" in instance:
+		instance.weapon_speed = item_dict.get("weapon_speed", 1.0)
+	if "weapon_crit_chance" in instance:
+		instance.weapon_crit_chance = item_dict.get("weapon_crit_chance", 0.0)
+	if "weapon_crit_multiplier" in instance:
+		instance.weapon_crit_multiplier = item_dict.get("weapon_crit_multiplier", 1.5)
+	if "weapon_block_rating" in instance:
+		instance.weapon_block_rating = item_dict.get("weapon_block_rating", 0.0)
+	if "weapon_parry_window" in instance:
+		instance.weapon_parry_window = item_dict.get("weapon_parry_window", 0.0)
+	if "weapon_hand" in instance:
+		instance.weapon_hand = item_dict.get("hand", 0)  # enum value
+	
+	# Armor/Defense
+	if "armor" in instance:
+		instance.armor = item_dict.get("armor", 0)
+	# Legacy support
+	elif "armor_rating" in instance:
+		instance.armor_rating = item_dict.get("armor", 0)
+	
+	# Resistances
+	if "fire_resistance" in instance:
+		instance.fire_resistance = item_dict.get("fire_resistance", 0.0)
+	if "frost_resistance" in instance:
+		instance.frost_resistance = item_dict.get("frost_resistance", 0.0)
+	if "static_resistance" in instance:
+		instance.static_resistance = item_dict.get("static_resistance", 0.0)
+	if "poison_resistance" in instance:
+		instance.poison_resistance = item_dict.get("poison_resistance", 0.0)
+	
+	# Damage reduction
+	if "enemy_damage_reduction" in instance:
+		instance.enemy_damage_reduction = item_dict.get("enemy_damage_reduction", 0.0)
+	if "environment_damage_reduction" in instance:
+		instance.environment_damage_reduction = item_dict.get("environment_damage_reduction", 0.0)
+	
+	# Combat bonuses
+	if "attack_speed" in instance:
+		instance.attack_speed = item_dict.get("attack_speed", 0.0)
+	if "crit_chance" in instance:
+		instance.crit_chance = item_dict.get("crit_chance", 0.0)
+	if "crit_damage" in instance:
+		instance.crit_damage = item_dict.get("crit_damage", 0.0)
+	
+	# Movement
+	if "movement_speed" in instance:
+		instance.movement_speed = item_dict.get("movement_speed", 0.0)
+	
+	# Ability costs
+	if "sprint_stamina_cost" in instance:
+		instance.sprint_stamina_cost = item_dict.get("sprint_stamina_cost", 0.0)
+	if "dodge_roll_stamina_cost" in instance:
+		instance.dodge_roll_stamina_cost = item_dict.get("dodge_roll_stamina_cost", 0.0)
+	if "dash_stamina_cost" in instance:
+		instance.dash_stamina_cost = item_dict.get("dash_stamina_cost", 0.0)
 
 static func _find_valid_spawn_position(origin: Vector3, parent_node: Node) -> Vector3:
 	"""
@@ -168,8 +249,7 @@ static func _find_valid_spawn_position(origin: Vector3, parent_node: Node) -> Ve
 	# Fallback: place at minimum spacing on ground level
 	var fallback_angle = randf() * TAU
 	var fallback_offset = Vector3(cos(fallback_angle) * MIN_SPACING, 0.0, sin(fallback_angle) * MIN_SPACING)
-	return Vector3(origin.x + fallback_offset.x, 0.5, origin.z + fallback_offset.z)
-
+	return Vector3(origin.x + fallback_offset.x, 0.55, origin.z + fallback_offset.z)
 
 static func spawn_all_loot(loot_profile: LootProfile, enemy_level: int, spawn_position: Vector3, parent_node: Node, player: Node = null) -> void:
 	"""
@@ -195,7 +275,11 @@ static func spawn_all_loot(loot_profile: LootProfile, enemy_level: int, spawn_po
 	# Get player luck stat
 	var player_luck = 0.0
 	if player:
-		if player.has_method("get_total_luck"):
+		# Try new stat system first
+		var stats = player.get_node_or_null("PlayerStats")
+		if stats and "luck" in stats:
+			player_luck = stats.luck
+		elif player.has_method("get_total_luck"):
 			player_luck = player.get_total_luck()
 		elif "luck" in player:
 			player_luck = player.luck
