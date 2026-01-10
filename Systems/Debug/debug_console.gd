@@ -3,8 +3,8 @@
 extends PanelContainer
 
 # ===== CONFIGURATION =====
-var max_history: int = 100
-var max_output_lines: int = 20
+var max_history: int = 200  # Command history cap
+var max_output_lines: int = 500  # Output line cap (increased from 20)
 
 # ===== STATE =====
 var command_history: Array[String] = []
@@ -39,7 +39,7 @@ func _ready():
 	anchor_bottom = 1.0
 	offset_left = 0
 	offset_right = 0
-	offset_top = -250  # 250 pixels tall
+	offset_top = -350  # 350 pixels tall (was 250)
 	offset_bottom = 0
 	
 	# Make sure console processes input even when game is paused
@@ -82,7 +82,7 @@ func _create_ui():
 	
 	# Output area (scrollable)
 	var scroll = ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, 140)
+	scroll.custom_minimum_size = Vector2(0, 240)  # Increased from 140 to 240
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -240,6 +240,11 @@ func print_line(text: String):
 func clear_output():
 	"""Clear the console output"""
 	output_label.text = ""
+
+func clear_history():
+	"""Clear command history"""
+	command_history.clear()
+	history_index = -1
 
 func _add_to_history(command: String):
 	"""Add command to history"""
