@@ -122,10 +122,8 @@ func toggle_console():
 	
 	if is_visible:
 		input_field.grab_focus()
-		print_line("[color=#4DAAFF]Console opened[/color]")
 	else:
 		input_field.release_focus()
-		print_line("[color=#4DAAFF]Console closed[/color]")
 
 func show_console():
 	"""Show the console"""

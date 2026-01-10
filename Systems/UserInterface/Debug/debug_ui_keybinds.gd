@@ -149,7 +149,19 @@ func show():
 		if controls_ui.is_controls_panel_visible():
 			controls_ui.hide_controls_panel()
 	
+	# Rebuild keybinds to show latest changes
+	rebuild_keybinds()
+	
 	keybind_panel.visible = true
+
+func rebuild_keybinds():
+	"""Rebuild the keybind list (useful for dynamic updates)"""
+	# Clear existing keybinds
+	for child in keybind_vbox.get_children():
+		child.queue_free()
+	
+	# Rebuild from scratch
+	_build_keybind_list()
 
 func hide():
 	"""Hide the keybind panel"""

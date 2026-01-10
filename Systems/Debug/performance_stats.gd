@@ -56,7 +56,6 @@ func toggle_visibility():
 	"""Toggle performance stats visibility (called by debug system)"""
 	is_visible = !is_visible
 	visible = is_visible
-	print("Performance stats: %s" % ("ON" if is_visible else "OFF"))
 
 func hide_stats():
 	"""Hide stats (called when debug mode is disabled)"""

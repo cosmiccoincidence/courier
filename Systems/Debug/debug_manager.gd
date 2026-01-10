@@ -141,21 +141,13 @@ func toggle_debug_system():
 	debug_enabled = !debug_enabled
 	
 	if debug_enabled:
-		print("\n" + "=".repeat(50))
 		print("🔧 DEBUG MODE ENABLED")
-		print("=".repeat(50))
-		print("F1: Toggle Debug Mode")
-		print("F2: Show/Hide Keybind Panel")
-		print("F3: Toggle Performance Stats")
-		print("INSERT: Toggle God Mode")
-		print("END: Skip Level")
-		print("=".repeat(50) + "\n")
 		
 		# Show enabled indicator
 		if debug_ui:
 			debug_ui.show_debug_enabled()
 	else:
-		print("\n🔧 DEBUG MODE DISABLED\n")
+		print("🔧 DEBUG MODE DISABLED")
 		
 		# Disable god mode if active (delegate to debug_player)
 		var debug_player = get_node_or_null("DebugPlayer")
