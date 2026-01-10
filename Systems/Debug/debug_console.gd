@@ -26,11 +26,14 @@ func _ready():
 	# Create UI
 	_create_ui()
 	
-	# Position at bottom of screen
+	# Position at bottom of screen with fixed size
 	anchor_left = 0.0
 	anchor_right = 1.0
+	anchor_top = 1.0
 	anchor_bottom = 1.0
-	offset_top = -200
+	offset_left = 0
+	offset_right = 0
+	offset_top = -250  # 250 pixels tall
 	offset_bottom = 0
 	
 	# Start hidden
@@ -53,6 +56,8 @@ func _create_ui():
 	"""Create the console UI elements"""
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 5)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(vbox)
 	
 	# Title
@@ -65,7 +70,9 @@ func _create_ui():
 	
 	# Output area (scrollable)
 	var scroll = ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, 120)
+	scroll.custom_minimum_size = Vector2(0, 140)
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	vbox.add_child(scroll)
@@ -74,6 +81,7 @@ func _create_ui():
 	output_label.bbcode_enabled = true
 	output_label.fit_content = true
 	output_label.scroll_active = false
+	output_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	output_label.add_theme_font_size_override("normal_font_size", 12)
 	output_label.add_theme_color_override("default_color", Color(0.9, 0.9, 0.9))
 	scroll.add_child(output_label)

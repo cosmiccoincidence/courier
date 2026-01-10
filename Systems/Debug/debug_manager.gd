@@ -120,13 +120,23 @@ func _setup_subsystems():
 			debug_commands.set_script(debug_commands_script)
 			add_child(debug_commands)
 			
-			# Create console UI
+			# Create console UI and add to viewport (not as child of this Node)
 			var console_script = load("res://Systems/Debug/debug_console.gd")
 			if console_script:
+				await get_tree().process_frame  # Wait for tree to be ready
+				
+				# Find or create a CanvasLayer for the console
+				var canvas_layer = get_tree().root.get_node_or_null("DebugConsoleLayer")
+				if not canvas_layer:
+					canvas_layer = CanvasLayer.new()
+					canvas_layer.name = "DebugConsoleLayer"
+					canvas_layer.layer = 100  # High layer to be on top
+					get_tree().root.add_child(canvas_layer)
+				
 				var console = PanelContainer.new()
 				console.name = "DebugConsole"
 				console.set_script(console_script)
-				add_child(console)
+				canvas_layer.add_child(console)
 				
 				# Link console and commands
 				console.set_command_processor(debug_commands)
@@ -169,6 +179,11 @@ func toggle_debug_system():
 		var debug_performance = get_node_or_null("DebugPerformance")
 		if debug_performance and debug_performance.has_method("hide_performance_stats"):
 			debug_performance.hide_performance_stats()
+		
+		# Hide console
+		var debug_commands = get_node_or_null("DebugCommands")
+		if debug_commands and debug_commands.console:
+			debug_commands.console.hide_console()
 		
 		# Hide all debug UI
 		keybind_panel_visible = false

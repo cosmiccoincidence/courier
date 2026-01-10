@@ -72,7 +72,7 @@ func _build_keybind_list():
 	_add_spacer(5)
 	
 	# Core keybinds
-	_add_keybind("F1", "Toggle Debug Mode", Color.YELLOW)
+	_add_keybind("F1", "Toggle Debug Mode", Color.WHITE)
 	_add_keybind("F2", "Debug Controls", Color.WHITE)
 	_add_keybind("F3", "Performance Stats", Color.WHITE)
 	_add_keybind("F4", "Command Line", Color.WHITE)
