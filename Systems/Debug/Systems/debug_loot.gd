@@ -56,7 +56,7 @@ func spawn_test_loot():
 	# Try to load a test loot profile
 	var profile_paths = [
 		"res://Systems/Loot/Enemies/enemy1.tres",
-		"res://Systems/Loot/Enemies/enemy1.tres",
+		"res://Systems/Loot/Enemies/enemy2.tres",
 		"res://Systems/Loot/Containers/chest.tres",
 		"res://Systems/Loot/Containers/chest_weapon.tres"
 	]
@@ -154,3 +154,76 @@ func show_loot_manager_info():
 			])
 	
 	print("=".repeat(50) + "\n")
+
+func spawn_specific_item(item_name: String, level: int = 1, quality: int = 0):
+	"""Spawn a specific item by name with level and quality"""
+	if not debug_manager or not debug_manager.debug_enabled:
+		return
+	
+	# Get player
+	var player = get_tree().get_first_node_in_group("player")
+	if not player:
+		print("❌ No player found in scene!")
+		return
+	
+	# Get LootManager
+	var loot_manager = get_node_or_null("/root/LootManager")
+	if not loot_manager:
+		print("❌ LootManager not found!")
+		return
+	
+	# Check if items exist
+	if loot_manager.all_items.is_empty():
+		print("❌ No items in LootManager!")
+		return
+	
+	# Find item by name (case-insensitive partial match)
+	var found_item: LootItem = null
+	var item_name_lower = item_name.to_lower()
+	
+	print("🔍 Searching for item: '%s'" % item_name)
+	
+	# First pass: exact name match
+	for item in loot_manager.all_items:
+		if item and item.item_name.to_lower() == item_name_lower:
+			found_item = item
+			print("✓ Found exact match: %s" % item.item_name)
+			break
+	
+	# Second pass: partial name match
+	if not found_item:
+		for item in loot_manager.all_items:
+			if item and item.item_name.to_lower().contains(item_name_lower):
+				found_item = item
+				print("✓ Found partial match: %s" % item.item_name)
+				break
+	
+	# If not found by name, try to match by type
+	if not found_item and item_name != "":
+		for item in loot_manager.all_items:
+			if item and item.item_type.to_lower() == item_name_lower:
+				found_item = item
+				print("✓ Found by type: %s" % item.item_name)
+				break
+	
+	# If still not found, use random item
+	if not found_item:
+		found_item = loot_manager.all_items[randi() % loot_manager.all_items.size()]
+		print("⚠️  Item '%s' not found, using random: %s" % [item_name, found_item.item_name if found_item else "none"])
+	
+	if not found_item or not found_item.item_scene:
+		print("❌ Item has no scene assigned!")
+		return
+	
+	# Create item data
+	var item_data = {
+		"item": found_item,
+		"item_level": level,
+		"item_quality": quality,
+		"item_value": found_item.base_value,
+		"stack_size": 1
+	}
+	
+	# Spawn at player position with slight offset
+	var spawn_pos = player.global_position + Vector3(0, 0.5, 2)
+	LootSpawner.spawn_loot_item(item_data, spawn_pos, get_tree().current_scene)

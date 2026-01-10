@@ -169,10 +169,10 @@ func _should_skip_level_quality(item_type: String) -> bool:
 	- Bag: Inventory expansion items
 	- Food: Consumable food items
 	- Potion: Healing/buff potions
-	- Gold: Currency
+	- Treasure: Gold and stuff
 	- Gemstone: Crafting gems/materials
 	"""
-	var skip_types = ["bag", "food", "potion", "gold", "gemstone"]
+	var skip_types = ["bag", "food", "potion", "treasure", "gemstone"]
 	return item_type.to_lower() in skip_types
 
 
