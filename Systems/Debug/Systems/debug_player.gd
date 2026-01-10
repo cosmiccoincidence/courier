@@ -57,23 +57,15 @@ func toggle_god_mode():
 			god_crit_chance = player.GOD_CRIT_CHANCE
 			god_crit_mult = player.GOD_CRIT_MULT
 		
-		print("\n" + "=".repeat(50))
 		print("⚡ GOD MODE ENABLED")
-		print("=".repeat(50))
-		print("  Speed: x%.1f" % god_speed_mult)
-		print("  Crit Chance: %.0f%%" % (god_crit_chance * 100))
-		print("  Crit Multiplier: x%.1f" % god_crit_mult)
-		print("  Max Zoom: %.0f" % player.get("god_zoom_max"))
-		print("  Encumbered penalties: DISABLED")
-		print("  Stamina cost: DISABLED")
-		print("  Damage taken: BLOCKED")
-		print("=".repeat(50) + "\n")
 	else:
-		print("\n⚡ GOD MODE DISABLED\n")
+		print("⚡ GOD MODE DISABLED")
 		
 		# Clamp zoom if it exceeds normal max
-		if player.get("zoom_target") > player.get("zoom_max"):
-			player.zoom_target = player.zoom_max
+		var zoom_target = player.get("zoom_target")
+		var zoom_max = player.get("zoom_max")
+		if zoom_target != null and zoom_max != null and zoom_target > zoom_max:
+			player.zoom_target = zoom_max
 	
 	# Refresh encumbered status UI
 	var is_encumbered = false
