@@ -64,7 +64,7 @@ func _cmd_help(output: Control):
 	output.print_line("  - Quality: common, uncommon, rare, epic, legendary, mythic")
 	output.print_line("  - Ex: spawn-item Sword 10 epic x5")
 	output.print_line("[color=#7FFF7F]give-gold [amount][/color] - Give gold (default: 1000)")
-	output.print_line("[color=#7FFF7F]tp <x> <y> <z>[/color] - Teleport player")
+	output.print_line("[color=#7FFF7F]tp <x> <z>[/color] - Teleport to grid coordinates")
 	output.print_line("[color=#7FFF7F]stat <name> <value>[/color] - Set player stat")
 	output.print_line("[color=#7FFF7F]heal [amount][/color] - Heal player")
 	output.print_line("[color=#7FFF7F]kill[/color] - Kill player")
@@ -271,18 +271,52 @@ func _cmd_spawn_item(args: Array, output: Control):
 
 func _cmd_teleport(args: Array, output: Control):
 	"""Teleport player to coordinates"""
-	if args.size() < 3:
-		output.print_line("[color=#FFFF4D]Usage: tp <x> <y> <z>[/color]")
+	if args.size() < 2:
+		output.print_line("[color=#FFFF4D]Usage: tp <x> <z>[/color]")
+		output.print_line("[color=#CCCCCC]Teleports to grid coordinates on the current map[/color]")
 		return
 	
 	var player = get_tree().get_first_node_in_group("player")
 	if not player:
-		output.print_line("[color=#FF4D4D]Error: No player found[/color]")
+		output.print_error("[color=#FF4D4D]Error: No player found[/color]")
 		return
 	
-	var pos = Vector3(float(args[0]), float(args[1]), float(args[2]))
-	player.global_position = pos
-	output.print_line("[color=#7FFF7F]Teleported to: (%.1f, %.1f, %.1f)[/color]" % [pos.x, pos.y, pos.z])
+	# Find MapManager in the scene
+	var map_manager = get_tree().get_first_node_in_group("map_manager")
+	if not map_manager:
+		output.print_error("[color=#FF4D4D]Error: MapManager not found in scene[/color]")
+		output.print_line("[color=#FFFF4D]Make sure MapManager node is in 'map_manager' group[/color]")
+		return
+	
+	# Parse coordinates
+	var x = int(args[0])
+	var z = int(args[1])
+	
+	# Look for PrimaryGridMap in the scene tree (recursive search from root)
+	var primary_grid = get_tree().root.find_child("PrimaryGridMap", true, false)
+	
+	if not primary_grid:
+		output.print_error("[color=#FF4D4D]Error: Could not find PrimaryGridMap in scene[/color]")
+		output.print_line("[color=#FFFF4D]Make sure a map scene is loaded[/color]")
+		return
+	
+	# Check if position is walkable
+	if not primary_grid.has_method("is_position_walkable"):
+		output.print_error("[color=#FF4D4D]Error: PrimaryGridMap has no is_position_walkable() method[/color]")
+		output.print_line("[color=#FFFF4D]Script may not extend CoreMapGen properly[/color]")
+		return
+	
+	if not primary_grid.is_position_walkable(x, z):
+		output.print_error("[color=#FF4D4D]Error: Position (%d, %d) is not walkable[/color]" % [x, z])
+		return
+	
+	# Convert grid to world position using map_to_local
+	var world_pos = primary_grid.map_to_local(Vector3i(x, 0, z))
+	world_pos.y = 0.5  # Set Y to player height
+	
+	# Teleport player
+	player.global_position = world_pos
+	output.print_line("[color=#7FFF7F]Teleported to grid: (%d, %d) → world: (%.1f, %.1f, %.1f)[/color]" % [x, z, world_pos.x, world_pos.y, world_pos.z])
 
 func _cmd_stat(args: Array, output: Control):
 	"""Set player stat"""
