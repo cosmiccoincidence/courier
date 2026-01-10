@@ -15,6 +15,9 @@ func _input(event):
 		return
 	
 	match event.keycode:
+		KEY_QUOTELEFT:  # Tilde/backtick key (~)
+			if debug_manager.debug_enabled:
+				_delegate_to_subsystem("DebugCommands", "toggle_console")
 		KEY_F1:
 			debug_manager.toggle_debug_system()
 		KEY_F2:

@@ -110,19 +110,52 @@ func _setup_subsystems():
 			add_child(debug_performance)
 		else:
 			push_warning("Could not load debug_performance.gd from Debug/Systems folder")
+	
+	# Create DebugCommands and console
+	if not has_node("DebugCommands"):
+		var debug_commands_script = load("res://Systems/Debug/debug_commands.gd")
+		if debug_commands_script:
+			var debug_commands = Node.new()
+			debug_commands.name = "DebugCommands"
+			debug_commands.set_script(debug_commands_script)
+			add_child(debug_commands)
+			
+			# Create console UI
+			var console_script = load("res://Systems/Debug/debug_console.gd")
+			if console_script:
+				var console = PanelContainer.new()
+				console.name = "DebugConsole"
+				console.set_script(console_script)
+				add_child(console)
+				
+				# Link console and commands
+				console.set_command_processor(debug_commands)
+				debug_commands.set_console(console)
+			else:
+				push_warning("Could not load debug_console.gd")
+		else:
+			push_warning("Could not load debug_commands.gd from Debug/Systems folder")
 
 func toggle_debug_system():
 	"""Toggle the entire debug system on/off"""
 	debug_enabled = !debug_enabled
 	
 	if debug_enabled:
+		print("\n" + "=".repeat(50))
 		print("🔧 DEBUG MODE ENABLED")
+		print("=".repeat(50))
+		print("F1: Toggle Debug Mode")
+		print("F2: Show/Hide Keybind Panel")
+		print("F3: Toggle Performance Stats")
+		print("INSERT: Toggle God Mode")
+		print("END: Skip Level")
+		print("=".repeat(50) + "\n")
 		
 		# Show enabled indicator
 		if debug_ui:
 			debug_ui.show_debug_enabled()
 	else:
-		print("🔧 DEBUG MODE DISABLED")
+		print("\n🔧 DEBUG MODE DISABLED\n")
 		
 		# Disable god mode if active (delegate to debug_player)
 		var debug_player = get_node_or_null("DebugPlayer")
