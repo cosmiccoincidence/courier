@@ -131,8 +131,7 @@ func _input(event):
 	if event is InputEventMouseButton:
 		return
 	
-	# Allow text input to reach the LineEdit
-	# Only handle specific navigation/control keys
+	# Handle keyboard input
 	if event is InputEventKey and event.pressed:
 		match event.keycode:
 			KEY_ENTER, KEY_KP_ENTER:
@@ -143,17 +142,19 @@ func _input(event):
 				# Allow F1 to toggle debug mode (will also close console)
 				# Don't handle this event so it reaches debug_inputs
 				pass
+			KEY_F4:
+				# Allow F4 to toggle console
+				toggle_console()
+				get_viewport().set_input_as_handled()
 			KEY_UP:
 				_history_up()
 				get_viewport().set_input_as_handled()
 			KEY_DOWN:
 				_history_down()
 				get_viewport().set_input_as_handled()
-			KEY_ESCAPE, KEY_F4:  # ESC or F4 to close
+			KEY_ESCAPE:
+				# ESC closes console
 				toggle_console()
-				get_viewport().set_input_as_handled()
-			KEY_TAB, KEY_CAPSLOCK, KEY_SHIFT, KEY_CTRL, KEY_ALT:
-				# Block modifier keys from game
 				get_viewport().set_input_as_handled()
 			_:
 				# Let all other keys (letters, numbers, etc.) reach the input field

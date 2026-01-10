@@ -14,6 +14,13 @@ func _input(event):
 	if not debug_manager:
 		return
 	
+	# Check if console is open - block all input except F1
+	const DebugConsole = preload("res://Systems/Debug/debug_console.gd")
+	if DebugConsole.is_console_open():
+		# Only allow F1 to pass through (to disable debug mode)
+		if event.keycode != KEY_F1:
+			return
+	
 	match event.keycode:
 		KEY_F1:
 			debug_manager.toggle_debug_system()
