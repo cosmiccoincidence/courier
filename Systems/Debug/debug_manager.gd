@@ -102,7 +102,7 @@ func _setup_subsystems():
 	
 	# Create DebugPerformance
 	if not has_node("DebugPerformance"):
-		var debug_performance_script = load("res://Systems/Debug/Systems/debug_performance.gd")
+		var debug_performance_script = load("res://Systems/Debug/debug_performance.gd")
 		if debug_performance_script:
 			var debug_performance = Node.new()
 			debug_performance.name = "DebugPerformance"
