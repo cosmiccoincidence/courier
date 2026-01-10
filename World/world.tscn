@@ -22,7 +22,7 @@
 [node name="World" type="Node3D" groups=["world"]]
 script = ExtResource("1_tlwt5")
 
-[node name="GameManager" type="Node" parent="."]
+[node name="MapManager" type="Node" parent="."]
 script = ExtResource("7_pkg7o")
 starting_map = ExtResource("6_2o6r5")
 level_1a = ExtResource("4_gbfbk")
