@@ -78,19 +78,35 @@ func cmd_stat(args: Array, output: Control):
 	else:
 		output.print_line("[color=#FF4D4D]Unknown stat: %s[/color]" % stat_name)
 
-func cmd_kill(output: Control):
+func cmd_die(output: Control):
 	"""Kill the player"""
 	var player = get_tree().get_first_node_in_group("player")
 	if not player:
 		output.print_line("[color=#FF4D4D]Error: No player found[/color]")
 		return
 	
+	# Get stats
 	var stats = player.get_node_or_null("PlayerStats")
-	if stats and "current_health" in stats:
+	if not stats:
+		output.print_line("[color=#FF4D4D]Error: PlayerStats not found[/color]")
+		return
+	
+	# Try to use take_damage with huge number to trigger death properly
+	if player.has_method("take_damage"):
+		player.take_damage(99999)
+	elif stats and "current_health" in stats:
+		# Directly set health to 0
 		stats.current_health = 0
-		output.print_line("[color=#FF4D4D]Player killed[/color]")
-	else:
-		output.print_line("[color=#FF4D4D]Error: Could not kill player[/color]")
+		
+		# Force emit signal if it exists
+		if stats.has_signal("health_changed"):
+			stats.health_changed.emit(0, stats.max_health if "max_health" in stats else 100)
+		
+		# Trigger death method if it exists
+		if player.has_method("die"):
+			player.die()
+	
+	output.print_line("[color=#FF4D4D]Player killed[/color]")
 
 func cmd_heal(args: Array, output: Control):
 	"""Heal the player"""
