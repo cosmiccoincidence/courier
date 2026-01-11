@@ -115,6 +115,7 @@ func _setup_stats_panel():
 	_create_stat_label(stats_container, "CritDamageLabel", "Crit Damage: 1.5x", 14, Color("#ff55ff"))
 	_create_stat_label(stats_container, "BlockRatingLabel", "Block Rating: 0%", 14, Color("#5599ff"))
 	_create_stat_label(stats_container, "ParryWindowLabel", "Parry Window: 0.0s", 14, Color("#5599ff"))
+	_create_stat_label(stats_container, "MovementSpeedLabel", "Movement Speed: 0.0", 14, Color("#ffdd55"))
 
 func _create_section_label(parent: VBoxContainer, text: String):
 	"""Create a centered section header label"""
@@ -185,6 +186,9 @@ func _update_stats_display():
 	
 	# Combat (from equipped weapon)
 	_update_combat_stats()
+	
+	# Movement speed (from player movement component)
+	_update_movement_speed()
 
 func _update_label(label_name: String, text: String):
 	"""Helper to update a label's text"""
@@ -273,6 +277,24 @@ func _update_combat_stats():
 		_update_label("ParryWindowLabel", "Parry Window: %.2fs" % weapon_stats.parry_window)
 	else:
 		_update_label("ParryWindowLabel", "Parry Window: --")
+
+func _update_movement_speed():
+	"""Update movement speed from player movement component"""
+	if not player_ref:
+		_update_label("MovementSpeedLabel", "Movement Speed: --")
+		return
+	
+	# Get player movement component
+	var player_movement = player_ref.get_node_or_null("PlayerMovement")
+	if not player_movement:
+		_update_label("MovementSpeedLabel", "Movement Speed: --")
+		return
+	
+	# Get movement speed
+	if "movement_speed" in player_movement:
+		_update_label("MovementSpeedLabel", "Movement Speed: %.1f" % player_movement.movement_speed)
+	else:
+		_update_label("MovementSpeedLabel", "Movement Speed: --")
 
 func _update_luck_label(stats: Node):
 	"""Update luck label with color based on value"""
