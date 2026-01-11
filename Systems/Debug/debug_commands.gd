@@ -13,14 +13,7 @@ var world_commands: Node
 
 func _ready():
 	# Create command handlers
-	print("[DebugCommands] Creating command handlers...")
 	_create_handlers()
-	print("[DebugCommands] Handlers created: console=%s, player=%s, inventory=%s, world=%s" % [
-		console_commands != null,
-		player_commands != null,
-		inventory_commands != null,
-		world_commands != null
-	])
 
 func _create_handlers():
 	"""Create all command handler nodes"""
@@ -59,7 +52,6 @@ func _create_handlers():
 func set_console(console_ref: Control):
 	"""Set console reference for all handlers"""
 	console = console_ref
-	print("[DebugCommands] Console set: %s" % (console != null))
 	
 	if console_commands:
 		console_commands.console = console
@@ -72,10 +64,6 @@ func set_console(console_ref: Control):
 
 func toggle_console():
 	"""Toggle the debug console visibility"""
-	print("[DebugCommands] toggle_console called, console=%s" % (console != null))
-	if console:
-		print("[DebugCommands] Console has toggle_console method: %s" % console.has_method("toggle_console"))
-	
 	if console and console.has_method("toggle_console"):
 		console.toggle_console()
 	else:
