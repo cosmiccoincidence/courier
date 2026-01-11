@@ -174,6 +174,9 @@ func _submit_command():
 	# Add to history
 	_add_to_history(command)
 	
+	# Reset history index to end of list
+	history_index = -1
+	
 	# Echo command
 	print_line("[color=#FFFF4D]> %s[/color]" % command)
 	
@@ -270,20 +273,24 @@ func _add_to_history(command: String):
 	# Limit history size
 	if command_history.size() > max_history:
 		command_history.pop_front()
-	
-	history_index = command_history.size()
 
 func _history_up():
-	"""Navigate up in command history"""
+	"""Navigate up in command history (to older commands)"""
 	if command_history.is_empty():
 		return
 	
-	history_index = max(0, history_index - 1)
+	# If at end of list (-1), go to most recent command
+	if history_index == -1:
+		history_index = command_history.size() - 1
+	else:
+		# Otherwise go to older command
+		history_index = max(0, history_index - 1)
+	
 	input_field.text = command_history[history_index]
 	input_field.caret_column = input_field.text.length()
 
 func _history_down():
-	"""Navigate down in command history"""
+	"""Navigate down in command history (to newer commands)"""
 	if command_history.is_empty():
 		return
 	
@@ -291,6 +298,7 @@ func _history_down():
 	
 	if history_index >= command_history.size():
 		input_field.text = ""
+		history_index = -1  # Back at the end
 	else:
 		input_field.text = command_history[history_index]
 	
