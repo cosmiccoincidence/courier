@@ -21,7 +21,7 @@ func cmd_help(output: Control, main_commands: Node):
 	output.print_line("[color=#7FFF7F]  hurt [amount][/color] - Damage player (default: 10)")
 	output.print_line("[color=#7FFF7F]  die[/color] - Kill player")
 	output.print_line("[color=#7FFF7F]  stat <name> <value>[/color] - Set player stat")
-	output.print_line("[color=#7FFF7F]  speed <multiplier>[/color] - Set movement speed")
+	output.print_line("[color=#7FFF7F]  speed <value>[/color] - Set movement speed")
 	
 	# Inventory commands
 	output.print_line("[color=#FFD700]INVENTORY:[/color]")

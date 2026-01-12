@@ -207,20 +207,32 @@ func cmd_god(output: Control):
 		output.print_line("[color=#FF4D4D]Error: DebugPlayer subsystem not available[/color]")
 
 func cmd_speed(args: Array, output: Control):
-	"""Set movement speed multiplier"""
+	"""Set movement speed"""
 	if args.is_empty():
-		output.print_line("[color=#FFFF4D]Usage: speed <multiplier>[/color]")
+		output.print_line("[color=#FFFF4D]Usage: speed <value>[/color]")
+		output.print_line("[color=#CCCCCC]Sets movement speed directly (default base: 5.0)[/color]")
 		return
 	
-	var multiplier = float(args[0])
+	var speed_value = float(args[0])
 	var player = get_tree().get_first_node_in_group("player")
 	if not player:
 		output.print_line("[color=#FF4D4D]Error: No player found[/color]")
 		return
 	
-	if "speed" in player:
-		var base_speed = player.get("base_speed") if "base_speed" in player else 5.0
-		player.speed = base_speed * multiplier
-		output.print_line("[color=#7FFF7F]Speed set to x%.1f[/color]" % multiplier)
+	# Get PlayerMovement component
+	var player_movement = player.get_node_or_null("PlayerMovement")
+	if not player_movement:
+		output.print_line("[color=#FF4D4D]Error: PlayerMovement component not found[/color]")
+		return
+	
+	# Set movement_speed directly
+	if "movement_speed" in player_movement:
+		player_movement.movement_speed = speed_value
+		output.print_line("[color=#7FFF7F]Speed set to %.1f[/color]" % speed_value)
+		
+		# Force stats panel update
+		var stats_panel = get_tree().root.find_child("StatsPanel", true, false)
+		if stats_panel and stats_panel.has_method("_update_stats_display"):
+			stats_panel._update_stats_display()
 	else:
-		output.print_line("[color=#FF4D4D]Error: Player has no speed property[/color]")
+		output.print_line("[color=#FF4D4D]Error: movement_speed property not found[/color]")
