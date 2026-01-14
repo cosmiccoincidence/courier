@@ -33,7 +33,7 @@ func cmd_help(output: Control, main_commands: Node):
 	
 	# World commands
 	output.print_line("[color=#FFD700]WORLD:[/color]")
-	output.print_line("[color=#7FFF7F]  time <hour>[/color] - Set time of day")
+	output.print_line("[color=#7FFF7F]  time [hour][/color] - Advance time 3hrs or set specific hour (0-23)")
 
 func cmd_clear(output: Control):
 	"""Clear console output"""

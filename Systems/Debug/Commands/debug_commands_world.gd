@@ -8,10 +8,28 @@ var debug_manager: Node:
 		return get_node_or_null("/root/DebugManager")
 
 func cmd_time(args: Array, output: Control):
-	"""Set time of day"""
+	"""Set time of day or advance time"""
+	# Get TimeManager autoload
+	var time_manager = get_node_or_null("/root/TimeManager")
+	
+	if not time_manager:
+		output.print_line("[color=#FF4D4D]Error: TimeManager not found[/color]")
+		output.print_line("[color=#CCCCCC]Make sure TimeManager is set up as an autoload[/color]")
+		return
+	
+	# If no args, advance time by 3 hours
 	if args.is_empty():
-		output.print_line("[color=#FFFF4D]Usage: time <hour>[/color]")
-		output.print_line("[color=#CCCCCC]Hour: 0-23 (0 = midnight, 12 = noon)[/color]")
+		if time_manager.has_method("advance_time"):
+			time_manager.advance_time()
+			var time_string = time_manager.get_time_string() if time_manager.has_method("get_time_string") else ""
+			var time_of_day = time_manager.get_time_of_day() if time_manager.has_method("get_time_of_day") else ""
+			
+			if time_string and time_of_day:
+				output.print_line("[color=#7FFF7F]Time advanced to %s (%s)[/color]" % [time_string, time_of_day])
+			else:
+				output.print_line("[color=#7FFF7F]Time advanced[/color]")
+		else:
+			output.print_line("[color=#FF4D4D]Error: advance_time() method not found[/color]")
 		return
 	
 	var hour = int(args[0])
@@ -19,14 +37,6 @@ func cmd_time(args: Array, output: Control):
 	# Validate hour range
 	if hour < 0 or hour > 23:
 		output.print_line("[color=#FF4D4D]Invalid hour: %d (must be 0-23)[/color]" % hour)
-		return
-	
-	# Get TimeManager autoload
-	var time_manager = get_node_or_null("/root/TimeManager")
-	
-	if not time_manager:
-		output.print_line("[color=#FF4D4D]Error: TimeManager not found[/color]")
-		output.print_line("[color=#CCCCCC]Make sure TimeManager is set up as an autoload[/color]")
 		return
 	
 	# Set the hour
