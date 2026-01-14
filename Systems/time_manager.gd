@@ -1,3 +1,4 @@
+# time_manager.gd
 extends Node
 
 # Time settings

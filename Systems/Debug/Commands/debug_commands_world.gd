@@ -15,9 +15,38 @@ func cmd_time(args: Array, output: Control):
 		return
 	
 	var hour = int(args[0])
-	var debug_time = debug_manager.get_node_or_null("DebugTime")
-	if debug_time and debug_time.has_method("set_time"):
-		debug_time.set_time(hour)
-		output.print_line("[color=#7FFF7F]Time set to %02d:00[/color]" % hour)
+	
+	# Validate hour range
+	if hour < 0 or hour > 23:
+		output.print_line("[color=#FF4D4D]Invalid hour: %d (must be 0-23)[/color]" % hour)
+		return
+	
+	# Get TimeManager autoload
+	var time_manager = get_node_or_null("/root/TimeManager")
+	
+	if not time_manager:
+		output.print_line("[color=#FF4D4D]Error: TimeManager not found[/color]")
+		output.print_line("[color=#CCCCCC]Make sure TimeManager is set up as an autoload[/color]")
+		return
+	
+	# Set the hour
+	if "current_hour" in time_manager:
+		time_manager.current_hour = hour
+		
+		# Update sun position if method exists
+		if time_manager.has_method("update_sun_position"):
+			time_manager.update_sun_position()
+		
+		# Emit time changed signal if it exists
+		if time_manager.has_signal("time_changed"):
+			time_manager.time_changed.emit(hour, time_manager.current_minute, time_manager.current_day)
+		
+		var time_string = time_manager.get_time_string() if time_manager.has_method("get_time_string") else "%02d:00" % hour
+		var time_of_day = time_manager.get_time_of_day() if time_manager.has_method("get_time_of_day") else ""
+		
+		if time_of_day:
+			output.print_line("[color=#7FFF7F]Time set to %s (%s)[/color]" % [time_string, time_of_day])
+		else:
+			output.print_line("[color=#7FFF7F]Time set to %s[/color]" % time_string)
 	else:
-		output.print_line("[color=#FF4D4D]Error: DebugTime subsystem not available[/color]")
+		output.print_line("[color=#FF4D4D]Error: current_hour property not found on TimeManager[/color]")
