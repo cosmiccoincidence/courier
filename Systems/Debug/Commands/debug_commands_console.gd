@@ -19,6 +19,8 @@ func cmd_help(output: Control, main_commands: Node):
 	output.print_line("[color=#7FFF7F]  god[/color] - Toggle god mode")
 	output.print_line("[color=#7FFF7F]  heal [amount][/color] - Heal player")
 	output.print_line("[color=#7FFF7F]  hurt [amount][/color] - Damage player (default: 10)")
+	output.print_line("[color=#7FFF7F]  kill[/color] - Kill closest enemy")
+	output.print_line("[color=#7FFF7F]  kill-all[/color] - Kill all enemies")
 	output.print_line("[color=#7FFF7F]  die[/color] - Kill player")
 	output.print_line("[color=#7FFF7F]  stat <name> <value>[/color] - Set player stat")
 	output.print_line("[color=#7FFF7F]  speed <value>[/color] - Set movement speed")

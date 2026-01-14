@@ -99,6 +99,12 @@ func process_command(command: String, output: Control):
 		"hurt":
 			if player_commands:
 				player_commands.cmd_hurt(args, output)
+		"kill":
+			if player_commands:
+				player_commands.cmd_kill(output)
+		"kill-all":
+			if player_commands:
+				player_commands.cmd_kill_all(output)
 		"die":
 			if player_commands:
 				player_commands.cmd_die(output)
