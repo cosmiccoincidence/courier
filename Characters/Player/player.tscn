@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://ca1cn4h542dlw"]
+[gd_scene load_steps=13 format=3 uid="uid://ca1cn4h542dlw"]
 
 [ext_resource type="Script" uid="uid://b4eat4m65wc6b" path="res://Characters/Player/player.gd" id="1_4flbx"]
 [ext_resource type="Script" uid="uid://bn0mmrwtek40t" path="res://Systems/UserInterface/Hover/hover_tooltip_manager.gd" id="3_cue0d"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://c71hoe61fu77f" path="res://Characters/Player/player_movement.gd" id="6_7vev3"]
 [ext_resource type="Script" uid="uid://chfai5a0xifgt" path="res://Characters/Player/player_combat.gd" id="6_klx3t"]
 [ext_resource type="Script" uid="uid://diemrwndj8s0" path="res://Characters/Player/player_state_machine.gd" id="6_r5ew0"]
+[ext_resource type="Script" uid="uid://bsyvqcgh112w2" path="res://Characters/Player/player_camera.gd" id="7_klx3t"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_onrkg"]
 
@@ -44,6 +45,9 @@ transform = Transform3D(1.25, 0, 0, 0, 0.4275252, 1.1746157, 0, -1.1746157, 0.42
 current = true
 fov = 20.0
 far = 800.0
+
+[node name="PlayerCamera" type="Node" parent="Camera3D"]
+script = ExtResource("7_klx3t")
 
 [node name="Camera3D-top" type="Camera3D" parent="."]
 transform = Transform3D(1.25, 0, 0, 0, 0.049421635, 1.2490226, 0, -1.2490226, 0.049421635, 0, 48.462124, 2.8362303)

@@ -11,12 +11,15 @@ const GOD_SPEED_MULT := 2.0
 @onready var cam: Camera3D = $Camera3D
 @onready var hud: CanvasLayer = get_node("/root/World/UI/HUD")
 
-# Component scripts
-@onready var stats: Node = $PlayerStats
-@onready var combat: Node = $PlayerCombat
+# Component scripts (attached to child nodes)
 @onready var inventory_handler: Node = $PlayerInventory
-@onready var movement: Node = $PlayerMovement
+@onready var stats: Node = $PlayerStats
 @onready var state_machine: Node = $PlayerStateMachine
+@onready var movement: Node = $PlayerMovement
+@onready var combat: Node = $PlayerCombat
+
+# Camera controller (attached to Camera3D node)
+@onready var camera_controller: Node = $Camera3D/PlayerCamera
 
 # Equipment stat applier (created dynamically)
 var equipment_stat_applier: Node
@@ -39,13 +42,23 @@ var vocal_sounds = {
 func _ready():
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	
+	# Initialize camera controller (should already be attached to Camera3D)
+	if camera_controller:
+		camera_controller.initialize(self)
+		print("Camera controller initialized")
+	else:
+		push_warning("Camera controller not found! Make sure player_camera.gd is attached to Camera3D node.")
+	
 	# Initialize component scripts
 	stats.initialize(self)
 	combat.initialize(self, stats, audio_combat)
 	inventory_handler.initialize(self, cam)
+	
 	# Movement and state machine - handle circular dependency
-	movement.initialize(self, cam)  # Third param is optional (defaults to null)
+	# Pass camera_controller to movement
+	movement.initialize(self, camera_controller)
 	state_machine.initialize(self, movement)
+	
 	# Link state machine to movement after both are initialized
 	movement.set("state_machine", state_machine)
 	
@@ -133,7 +146,7 @@ func die():
 # ===== PHYSICS & MOVEMENT =====
 
 func _process(delta):
-	# Delegate camera zoom to movement component
+	# Movement cooldowns are handled in movement._process
 	if movement:
 		movement._process(delta)
 
@@ -171,7 +184,7 @@ func _physics_process(delta):
 	# Update sprint state in stats component
 	stats.update_sprint_state(is_sprinting, delta)
 	
-	# Delegate all movement/rotation/camera to movement component
+	# Delegate all movement/rotation to movement component
 	if movement:
 		movement.handle_physics(delta, is_sprinting, stats.is_encumbered, god_mode, stats)
 
@@ -186,9 +199,9 @@ func _on_area_3d_body_exited(body: Node3D) -> void:
 # ===== INPUT HANDLING =====
 
 func _input(event):
-	# Camera zoom - delegate to movement component
-	if event is InputEventMouseButton and movement:
-		movement.handle_camera_zoom(event)
+	# Camera zoom - delegate to camera controller
+	if event is InputEventMouseButton and camera_controller:
+		camera_controller.handle_camera_zoom(event)
 	
 	# Block other inputs if dead
 	if is_dying:

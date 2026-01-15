@@ -1,9 +1,9 @@
 # player_movement.gd
-# Handles player movement, rotation, and camera controls
+# Handles player movement, rotation, and physics
 extends Node
 
 var player: CharacterBody3D
-var camera: Camera3D
+var camera_controller: Node  # Reference to player_camera script
 var state_machine: Node  # Reference to state machine
 
 # ===== MOVEMENT =====
@@ -14,8 +14,8 @@ var state_machine: Node  # Reference to state machine
 @export var sprint_stamina_cost: float = 0.5  # Stamina per second while sprinting
 
 # Dodge roll
-@export var dodge_roll_speed: float = 15.0  # Speed during dodge roll
-@export var dodge_roll_duration: float = 0.25  # How long the roll lasts (seconds)
+@export var dodge_roll_speed: float = 20.0  # Speed during dodge roll
+@export var dodge_roll_duration: float = 0.15  # How long the roll lasts (seconds)
 @export var dodge_roll_cooldown: float = 1.0  # Cooldown between rolls (seconds)
 @export var dodge_roll_stamina_cost: float = 5.0  # Stamina cost per roll
 @export var dodge_roll_iframe_duration: float = 0.15  # Duration of invincibility frames (seconds)
@@ -47,44 +47,22 @@ const ENCUMBERED_SPEED_MULT: float = 0.2  # 20% speed
 const ENCUMBERED_ROTATION_MULT: float = 0.75  # 75% rotation speed
 const SPRINT_ROTATION_MULT: float = 0.9  # 90% rotation while sprinting (spec - was 0.5)
 
-# ===== CAMERA =====
-@export_group("Camera")
-@export var zoom_min: int = 75
-@export var zoom_max: int = 100
-@export var zoom_speed: float = 15.0
-@export var zoom_smooth: float = 8.0
-
-var zoom_target: float = 75.0
-var zoom_current: float = 75.0
-var god_zoom_max: float = 500.0
-
-# Camera follow
-var cam_offset: Vector3
-var cam_fixed_basis: Basis
-
 # ===== STATE =====
 var gravity: float
 
-func initialize(player_node: CharacterBody3D, cam: Camera3D):
+func initialize(player_node: CharacterBody3D, cam_controller: Node):
 	"""Called by main player script to set references"""
 	player = player_node
-	camera = cam
+	camera_controller = cam_controller
 	# state_machine will be set after initialization via set()
 	
 	gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 	
 	# Initialize movement speed
 	movement_speed = base_movement_speed
-	
-	# Store camera's initial global rotation and offset
-	cam_fixed_basis = camera.global_transform.basis.orthonormalized()
-	cam_offset = camera.global_transform.origin - player.global_transform.origin
 
 func _process(delta: float):
-	"""Handle camera zoom smoothing and cooldowns"""
-	zoom_current = lerp(zoom_current, zoom_target, 1.0 - exp(-zoom_smooth * delta))
-	_update_camera_global()
-	
+	"""Handle cooldowns"""
 	# Update dodge roll cooldown
 	if dodge_roll_cooldown_timer > 0:
 		dodge_roll_cooldown_timer -= delta
@@ -163,27 +141,6 @@ func handle_physics(delta: float, is_sprinting: bool, is_encumbered: bool, god_m
 	
 	# Move the body
 	player.move_and_slide()
-	
-	# Update camera position
-	_update_camera_global()
-
-func handle_camera_zoom(event: InputEventMouseButton):
-	"""Handle mouse wheel camera zoom"""
-	if not event.pressed:
-		return
-	
-	# Don't zoom if debug console is open
-	var debug_console_script = load("res://Systems/Debug/debug_console.gd")
-	if debug_console_script and debug_console_script.is_console_open():
-		return
-	
-	if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-		zoom_target -= zoom_speed
-	elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-		zoom_target += zoom_speed
-	
-	var current_max = god_zoom_max if player.god_mode else zoom_max
-	zoom_target = clamp(zoom_target, zoom_min, current_max)
 
 func _get_effective_speed_mult(is_encumbered: bool, god_mode: bool) -> float:
 	"""Get current speed multiplier based on god mode and encumbered status"""
@@ -200,6 +157,13 @@ func _get_effective_speed_mult(is_encumbered: bool, god_mode: bool) -> float:
 
 func _rotate_toward_mouse(apply_encumbered_penalty: bool = false, is_sprinting: bool = false):
 	"""Rotate player toward mouse cursor"""
+	if not camera_controller:
+		return
+	
+	var camera = camera_controller.get_camera()
+	if not camera:
+		return
+	
 	var mouse_pos = player.get_viewport().get_mouse_position()
 	var from = camera.project_ray_origin(mouse_pos)
 	var to = from + camera.project_ray_normal(mouse_pos) * 2000
@@ -246,15 +210,6 @@ func _intersect_ray_with_plane(ray_origin: Vector3, ray_end: Vector3, plane_y: f
 	var intersection = ray_origin + ray_dir * t
 	return intersection
 
-func _update_camera_global():
-	"""Update camera position to follow player"""
-	var basis = cam_fixed_basis
-	var zoom_dir := cam_offset.normalized()
-	var zoomed_pos := zoom_dir * zoom_current
-	zoomed_pos.y += zoom_current * 0.4
-	var desired_origin = player.global_transform.origin + zoomed_pos
-	camera.global_transform = Transform3D(basis, desired_origin)
-
 func update_movement_speed():
 	"""Recalculate movement speed from base + modifiers"""
 	movement_speed = base_movement_speed
@@ -297,17 +252,7 @@ func try_dodge_roll(stats_component: Node, god_mode: bool) -> bool:
 	
 	# If not moving, dodge backward (away from mouse)
 	if input_dir.length() < 0.1:
-		var mouse_pos = player.get_viewport().get_mouse_position()
-		var from = camera.project_ray_origin(mouse_pos)
-		var to = from + camera.project_ray_normal(mouse_pos) * 2000
-		var hit_pos = _intersect_ray_with_plane(from, to, player.global_position.y)
-		
-		if hit_pos != Vector3.ZERO:
-			var away_dir = (player.global_position - hit_pos).normalized()
-			dodge_roll_direction = Vector3(away_dir.x, 0, away_dir.z)
-		else:
-			# Fallback: dodge backward relative to camera
-			dodge_roll_direction = player.global_transform.basis.z
+		dodge_roll_direction = _get_direction_away_from_mouse()
 	else:
 		# Dodge in movement direction
 		dodge_roll_direction = Vector3(input_dir.x, 0, input_dir.y).normalized()
@@ -365,17 +310,7 @@ func try_dash(stats_component: Node, god_mode: bool) -> bool:
 	
 	# If not moving, dash toward mouse cursor
 	if input_dir.length() < 0.1:
-		var mouse_pos = player.get_viewport().get_mouse_position()
-		var from = camera.project_ray_origin(mouse_pos)
-		var to = from + camera.project_ray_normal(mouse_pos) * 2000
-		var hit_pos = _intersect_ray_with_plane(from, to, player.global_position.y)
-		
-		if hit_pos != Vector3.ZERO:
-			var toward_dir = (hit_pos - player.global_position).normalized()
-			dash_direction = Vector3(toward_dir.x, 0, toward_dir.z)
-		else:
-			# Fallback: dash forward relative to player rotation
-			dash_direction = -player.global_transform.basis.z
+		dash_direction = _get_direction_toward_mouse()
 	else:
 		# Dash in movement direction
 		dash_direction = Vector3(input_dir.x, 0, input_dir.y).normalized()
@@ -391,6 +326,46 @@ func try_dash(stats_component: Node, god_mode: bool) -> bool:
 	
 	print("Dash!")
 	return true
+
+func _get_direction_toward_mouse() -> Vector3:
+	"""Get normalized direction vector toward mouse cursor"""
+	if not camera_controller:
+		return -player.global_transform.basis.z  # Fallback: forward
+	
+	var camera = camera_controller.get_camera()
+	if not camera:
+		return -player.global_transform.basis.z
+	
+	var mouse_pos = player.get_viewport().get_mouse_position()
+	var from = camera.project_ray_origin(mouse_pos)
+	var to = from + camera.project_ray_normal(mouse_pos) * 2000
+	var hit_pos = _intersect_ray_with_plane(from, to, player.global_position.y)
+	
+	if hit_pos != Vector3.ZERO:
+		var toward_dir = (hit_pos - player.global_position).normalized()
+		return Vector3(toward_dir.x, 0, toward_dir.z)
+	else:
+		return -player.global_transform.basis.z
+
+func _get_direction_away_from_mouse() -> Vector3:
+	"""Get normalized direction vector away from mouse cursor"""
+	if not camera_controller:
+		return player.global_transform.basis.z  # Fallback: backward
+	
+	var camera = camera_controller.get_camera()
+	if not camera:
+		return player.global_transform.basis.z
+	
+	var mouse_pos = player.get_viewport().get_mouse_position()
+	var from = camera.project_ray_origin(mouse_pos)
+	var to = from + camera.project_ray_normal(mouse_pos) * 2000
+	var hit_pos = _intersect_ray_with_plane(from, to, player.global_position.y)
+	
+	if hit_pos != Vector3.ZERO:
+		var away_dir = (player.global_position - hit_pos).normalized()
+		return Vector3(away_dir.x, 0, away_dir.z)
+	else:
+		return player.global_transform.basis.z
 
 func is_dash_ready() -> bool:
 	"""Check if dash is off cooldown"""
