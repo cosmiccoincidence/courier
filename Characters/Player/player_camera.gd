@@ -12,8 +12,8 @@ var camera: Camera3D
 @export var zoom_speed: float = 15.0
 @export var zoom_smooth: float = 8.0
 
-var zoom_target: float = 5.0
-var zoom_current: float = 5.0
+var zoom_target: float = 50.0
+var zoom_current: float = 50.0
 
 # ===== CAMERA FOLLOW =====
 @export_group("Camera Follow")
@@ -35,9 +35,12 @@ func initialize(player_node: CharacterBody3D):
 	cam_fixed_basis = camera.global_transform.basis.orthonormalized()
 	cam_offset = camera.global_transform.origin - player.global_transform.origin
 	
-	# Initialize zoom to current position
-	zoom_target = cam_offset.length()
-	zoom_current = zoom_target
+	# Initialize zoom to max_zoom for standard starting height
+	zoom_target = zoom_max
+	zoom_current = zoom_max
+	
+	# Apply initial position immediately
+	update_camera_position()
 
 func _process(delta: float):
 	"""Handle camera zoom smoothing and position updates"""
