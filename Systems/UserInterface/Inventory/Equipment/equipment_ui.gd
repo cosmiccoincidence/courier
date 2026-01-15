@@ -68,8 +68,12 @@ func _ready():
 	_update_inactive_weapon_slots()
 
 func _input(event):
-	"""Handle weapon set swapping with X key"""
-	if event.is_action_pressed("swap_weapon_sets"):  # You'll need to add this input action
+	# Don't swap if debug console is open
+	var debug_console_script = load("res://Systems/Debug/debug_console.gd")
+	if debug_console_script and debug_console_script.is_console_open():
+		return
+
+	if event.is_action_pressed("swap_weapon_sets"):
 		Equipment.swap_weapon_sets()
 
 func _on_weapon_set_changed(new_set: int):
