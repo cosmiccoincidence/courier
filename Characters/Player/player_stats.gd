@@ -301,9 +301,9 @@ func set_invincible(invincible: bool):
 	"""Set invincibility state (for i-frames)"""
 	is_invincible = invincible
 	if is_invincible:
-		print("I-frames: ACTIVE")
+		print("[PlayerStats] I-frames: Invincibility ACTIVE")
 	else:
-		print("I-frames: ended")
+		print("[PlayerStats] I-frames: Invincibility ENDED")
 
 # ===== ENCUMBRANCE =====
 
