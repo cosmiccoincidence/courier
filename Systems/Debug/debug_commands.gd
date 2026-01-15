@@ -11,6 +11,7 @@ var player_commands: Node
 var inventory_commands: Node
 var world_commands: Node
 var fov_commands: Node
+var enemy_commands: Node
 
 func _ready():
 	# Create command handlers
@@ -57,6 +58,14 @@ func _create_handlers():
 		fov_commands.name = "FOVCommands"
 		fov_commands.set_script(fov_script)
 		add_child(fov_commands)
+	
+	# Enemy commands
+	var enemy_script = load("res://Systems/Debug/Commands/debug_commands_enemy.gd")
+	if enemy_script:
+		enemy_commands = Node.new()
+		enemy_commands.name = "EnemyCommands"
+		enemy_commands.set_script(enemy_script)
+		add_child(enemy_commands)
 
 func set_console(console_ref: Control):
 	"""Set console reference for all handlers"""
@@ -72,6 +81,8 @@ func set_console(console_ref: Control):
 		world_commands.console = console
 	if fov_commands:
 		fov_commands.console = console
+	if enemy_commands:
+		enemy_commands.console = console
 
 func toggle_console():
 	"""Toggle the debug console visibility"""
@@ -110,15 +121,17 @@ func process_command(command: String, output: Control):
 		"hurt":
 			if player_commands:
 				player_commands.cmd_hurt(args, output)
-		"kill":
-			if player_commands:
-				player_commands.cmd_kill(output)
-		"kill-all":
-			if player_commands:
-				player_commands.cmd_kill_all(output)
 		"die":
 			if player_commands:
 				player_commands.cmd_die(output)
+		
+		# Enemy commands
+		"kill":
+			if enemy_commands:
+				enemy_commands.cmd_kill(output)
+		"kill-all":
+			if enemy_commands:
+				enemy_commands.cmd_kill_all(output)
 		"stat":
 			if player_commands:
 				player_commands.cmd_stat(args, output)
