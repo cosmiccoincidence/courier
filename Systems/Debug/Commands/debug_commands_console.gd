@@ -38,6 +38,11 @@ func cmd_help(output: Control, main_commands: Node):
 	output.print_line("[color=#7FFF7F]  time [hour][/color] - Advance time 3hrs or set specific hour (0-23)")
 	output.print_line("[color=#7FFF7F]  time-freeze[/color] - Toggle time freeze")
 	output.print_line("[color=#7FFF7F]  skip-level[/color] - Skip to next level")
+	
+	output.print_line("")
+	
+	# FOV commands
+	output.print_line("[color=#FFD700]FOV:[/color]")
 	output.print_line("[color=#7FFF7F]  fov[/color] - Toggle FOV system")
 	output.print_line("[color=#7FFF7F]  explore[/color] - Reveal entire fog of war")
 	output.print_line("[color=#7FFF7F]  unexplore[/color] - Reset fog of war")

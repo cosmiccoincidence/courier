@@ -10,6 +10,7 @@ var console_commands: Node
 var player_commands: Node
 var inventory_commands: Node
 var world_commands: Node
+var fov_commands: Node
 
 func _ready():
 	# Create command handlers
@@ -48,6 +49,14 @@ func _create_handlers():
 		world_commands.name = "WorldCommands"
 		world_commands.set_script(world_script)
 		add_child(world_commands)
+	
+	# FOV commands
+	var fov_script = load("res://Systems/Debug/Commands/debug_commands_fov.gd")
+	if fov_script:
+		fov_commands = Node.new()
+		fov_commands.name = "FOVCommands"
+		fov_commands.set_script(fov_script)
+		add_child(fov_commands)
 
 func set_console(console_ref: Control):
 	"""Set console reference for all handlers"""
@@ -61,6 +70,8 @@ func set_console(console_ref: Control):
 		inventory_commands.console = console
 	if world_commands:
 		world_commands.console = console
+	if fov_commands:
+		fov_commands.console = console
 
 func toggle_console():
 	"""Toggle the debug console visibility"""
@@ -136,15 +147,17 @@ func process_command(command: String, output: Control):
 		"skip-level":
 			if world_commands:
 				world_commands.cmd_skip_level(output)
+		
+		# FOV commands
 		"fov":
-			if world_commands:
-				world_commands.cmd_fov(output)
+			if fov_commands:
+				fov_commands.cmd_fov(output)
 		"explore":
-			if world_commands:
-				world_commands.cmd_explore(output)
+			if fov_commands:
+				fov_commands.cmd_explore(output)
 		"unexplore":
-			if world_commands:
-				world_commands.cmd_unexplore(output)
+			if fov_commands:
+				fov_commands.cmd_unexplore(output)
 		
 		_:
 			output.print_error("[color=#FF4D4D]Unknown command: '%s'. Type 'help' for available commands.[/color]" % cmd)
