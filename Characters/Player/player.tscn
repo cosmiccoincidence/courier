@@ -1,7 +1,6 @@
-[gd_scene load_steps=13 format=3 uid="uid://ca1cn4h542dlw"]
+[gd_scene load_steps=12 format=3 uid="uid://ca1cn4h542dlw"]
 
 [ext_resource type="Script" uid="uid://b4eat4m65wc6b" path="res://Characters/Player/player.gd" id="1_4flbx"]
-[ext_resource type="Script" uid="uid://bf4skbn13wfik" path="res://Systems/camera_zoom.gd" id="2_onrkg"]
 [ext_resource type="Script" uid="uid://bn0mmrwtek40t" path="res://Systems/UserInterface/Hover/hover_tooltip_manager.gd" id="3_cue0d"]
 [ext_resource type="Script" uid="uid://wbashbey3sr4" path="res://Characters/Player/player_inventory.gd" id="4_osktb"]
 [ext_resource type="Script" uid="uid://b71tbpgm3af3v" path="res://Characters/Player/player_stats.gd" id="5_7vev3"]
@@ -41,15 +40,14 @@ transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 1.3596594, 0)
 shape = SubResource("SphereShape3D_4flbx")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1.25, 0, 0, 0, 0.049421635, 1.2490226, 0, -1.2490226, 0.049421635, 0, 48.462124, 2.8362303)
+transform = Transform3D(1.25, 0, 0, 0, 0.4275252, 1.1746157, 0, -1.1746157, 0.4275252, 0, 121.0958, 72.72221)
 current = true
-fov = 10.0
-far = 800.0
-script = ExtResource("2_onrkg")
-
-[node name="Camera3D-angle" type="Camera3D" parent="."]
-transform = Transform3D(1.25, 0, 0, 0, 0.47048068, 1.1580794, 0, -1.1580794, 0.47048068, 0, 121.0958, 72.72221)
 fov = 20.0
+far = 800.0
+
+[node name="Camera3D-top" type="Camera3D" parent="."]
+transform = Transform3D(1.25, 0, 0, 0, 0.049421635, 1.2490226, 0, -1.2490226, 0.049421635, 0, 48.462124, 2.8362303)
+fov = 10.0
 far = 800.0
 
 [node name="AudioListener3D" type="AudioListener3D" parent="."]
@@ -61,7 +59,7 @@ current = true
 
 [node name="HoverTooltipManager" type="Node" parent="." node_paths=PackedStringArray("camera") groups=["tooltip_manager"]]
 script = ExtResource("3_cue0d")
-camera = NodePath("../Camera3D")
+camera = NodePath("../Camera3D-top")
 tooltip_delay = 0.0
 
 [node name="PlayerInventory" type="Node" parent="."]
