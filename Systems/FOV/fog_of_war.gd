@@ -21,6 +21,8 @@ var update_timer: float = 0.0
 var is_passive_mode: bool = false
 var last_map_instance_id: int = -1
 var box_mesh: ArrayMesh
+var last_player_position: Vector3 = Vector3.ZERO
+var movement_threshold: float = 0.5  # Only update fog when player moves this far
 
 func _ready():
 	if not player or not map_container:
@@ -204,6 +206,10 @@ func create_fog_tiles():
 	
 	last_map_instance_id = map_generator.get_instance_id()
 	
+	# Initialize last player position
+	if player:
+		last_player_position = player.global_position
+	
 	print("FogOfWar: Created ", tile_positions.size(), " fog tiles")
 	
 	# On passive maps: reveal all tiles that have actual map geometry
@@ -233,9 +239,13 @@ func _process(delta):
 	if is_passive_mode:
 		return
 	
+	# Check if player has moved enough to warrant an update
+	var player_moved_distance = player.global_position.distance_to(last_player_position)
+	
 	update_timer += delta
-	if update_timer >= update_interval:
+	if update_timer >= update_interval and player_moved_distance >= movement_threshold:
 		update_timer = 0.0
+		last_player_position = player.global_position
 		update_fog()
 
 func reset_fog():
@@ -256,26 +266,30 @@ func update_fog():
 	
 	var player_grid = map_generator.local_to_map(player.global_position)
 	var reveal_tiles = int(reveal_radius)
+	var radius_squared = reveal_radius * reveal_radius  # Avoid sqrt
+	var player_pos_2d = Vector2(player.global_position.x, player.global_position.z)
 	
 	for x_offset in range(-reveal_tiles, reveal_tiles + 1):
 		for z_offset in range(-reveal_tiles, reveal_tiles + 1):
 			var check_pos = Vector3i(player_grid.x + x_offset, 0, player_grid.z + z_offset)
 			var key = Vector2i(check_pos.x, check_pos.z)
 			
-			# Skip if not in our multimesh or already revealed
+			# Skip if not in our multimesh
 			if not tile_keys.has(key):
 				continue
+			
+			# Skip if already revealed (most common case - check first)
 			if revealed_tiles.get(key, false):
 				continue
 			
 			# Get world position of this tile
 			var tile_world = map_generator.map_to_local(check_pos)
+			var tile_pos_2d = Vector2(tile_world.x, tile_world.z)
 			
-			# Check distance
-			var dist = Vector2(tile_world.x - player.global_position.x, 
-							   tile_world.z - player.global_position.z).length()
+			# Check distance with squared distance (faster - no sqrt)
+			var dist_squared = player_pos_2d.distance_squared_to(tile_pos_2d)
 			
-			if dist > reveal_radius:
+			if dist_squared > radius_squared:
 				continue
 			
 			# Check if this is a door tile
@@ -297,7 +311,7 @@ func has_line_of_sight(from: Vector3, to: Vector3) -> bool:
 	var to_2d = Vector2(to.x, to.z)
 	var direction = (to_2d - from_2d).normalized()
 	var distance = from_2d.distance_to(to_2d)
-	var step_size = 0.5
+	var step_size = 0.75  # Larger steps = fewer checks, better performance
 	var current_dist = step_size
 	
 	while current_dist < distance - 0.5:
