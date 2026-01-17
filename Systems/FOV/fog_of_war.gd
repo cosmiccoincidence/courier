@@ -1,17 +1,16 @@
-# fog_of_war_multimesh.gd
+# fog_of_war_simple.gd
 extends Node3D
-class_name FogOfWarMultiMesh
+class_name FogOfWarSimple
 
-## High-performance fog of war using MultiMeshInstance3D
-## Same visual result as original, 10-50x faster
+## Simple fog of war - single mesh per tile, only exterior walls block LOS
 
 @export var player: CharacterBody3D
 @export var map_container: Node3D
 @export var fog_color: Color = Color(0, 0, 0, 1.0)
 @export var fog_height: float = 1.75
 @export var update_interval: float = 0.2
-@export var reveal_radius: float = 30.0
-@export var map_padding: int = 10  # Reduced from 30
+@export var reveal_radius: float = 50.0
+@export var map_padding: int = 50
 
 var map_generator: GridMap
 var multimesh_instance: MultiMeshInstance3D
@@ -21,8 +20,6 @@ var revealed_tiles: Dictionary = {}  # Vector2i -> bool
 var update_timer: float = 0.0
 var is_passive_mode: bool = false
 var last_map_instance_id: int = -1
-
-# Box mesh for fog tiles (created once, reused)
 var box_mesh: ArrayMesh
 
 func _ready():
@@ -30,7 +27,6 @@ func _ready():
 		push_error("FogOfWar: Missing player or map_container!")
 		return
 	
-	# Connect to detect when map is added
 	if not map_container.child_entered_tree.is_connected(_on_map_container_child_added):
 		map_container.child_entered_tree.connect(_on_map_container_child_added)
 	
@@ -61,12 +57,11 @@ func find_gridmap_recursive(node: Node) -> GridMap:
 	return null
 
 func create_box_mesh() -> ArrayMesh:
-	"""Create a 0.5x0.5 box mesh for fog quadrants"""
+	"""Create a 1x1 box mesh for fog tiles"""
 	var surface_tool = SurfaceTool.new()
 	surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	
-	# 0.5x0.5 tile = 0.25 half-size
-	var half_size = 0.25
+	var half_size = 0.5
 	
 	# Front face (+Z)
 	var v1 = Vector3(-half_size, 0, half_size)
@@ -161,7 +156,7 @@ func create_fog_tiles():
 	min_z -= map_padding
 	max_z += map_padding
 	
-	# Build list of tile positions
+	# Build list of tile positions - ONE per tile
 	tile_positions.clear()
 	tile_keys.clear()
 	revealed_tiles.clear()
@@ -169,22 +164,12 @@ func create_fog_tiles():
 	var index = 0
 	for x in range(int(min_x), int(max_x) + 1):
 		for z in range(int(min_z), int(max_z) + 1):
-			# Create 4 fog quadrants per tile (0.5x0.5 each)
-			# This gives us finer control, especially for thin building walls
-			for sub_x in range(2):
-				for sub_z in range(2):
-					var world_pos = map_generator.map_to_local(Vector3i(x, 0, z))
-					# Offset to create quadrants: -0.25, +0.25 from center
-					var offset_x = (sub_x - 0.5) * 0.5
-					var offset_z = (sub_z - 0.5) * 0.5
-					var sub_pos = Vector3(world_pos.x + offset_x, world_pos.y, world_pos.z + offset_z)
-					
-					tile_positions.append(sub_pos)
-					# Use sub-key to track quadrants: tile coords * 2 + quadrant
-					var sub_key = Vector2i(x * 2 + sub_x, z * 2 + sub_z)
-					tile_keys[sub_key] = index
-					revealed_tiles[sub_key] = false
-					index += 1
+			var world_pos = map_generator.map_to_local(Vector3i(x, 0, z))
+			tile_positions.append(world_pos)
+			var key = Vector2i(x, z)
+			tile_keys[key] = index
+			revealed_tiles[key] = false
+			index += 1
 	
 	# Create box mesh
 	box_mesh = create_box_mesh()
@@ -219,9 +204,7 @@ func create_fog_tiles():
 	
 	last_map_instance_id = map_generator.get_instance_id()
 	
-	print("FogOfWar: MultiMesh created successfully")
-	
-	last_map_instance_id = map_generator.get_instance_id()
+	print("FogOfWar: Created ", tile_positions.size(), " fog tiles")
 	
 	# On passive maps: reveal all tiles that have actual map geometry
 	if is_passive_mode:
@@ -273,101 +256,43 @@ func update_fog():
 	
 	var player_grid = map_generator.local_to_map(player.global_position)
 	var reveal_tiles = int(reveal_radius)
-	var tiles_revealed = 0
 	
 	for x_offset in range(-reveal_tiles, reveal_tiles + 1):
 		for z_offset in range(-reveal_tiles, reveal_tiles + 1):
 			var check_pos = Vector3i(player_grid.x + x_offset, 0, player_grid.z + z_offset)
-			var tile_id = map_generator.get_cell_item(check_pos)
+			var key = Vector2i(check_pos.x, check_pos.z)
 			
-			# Check if this is a non-walkable tile (wall)
-			var is_walkable = false
-			if tile_id == -1 and map_generator.has_method("is_position_walkable"):
-				is_walkable = map_generator.is_position_walkable(check_pos.x, check_pos.z)
+			# Skip if not in our multimesh or already revealed
+			if not tile_keys.has(key):
+				continue
+			if revealed_tiles.get(key, false):
+				continue
 			
-			var is_non_walkable_wall = (tile_id != -1 and not is_walkable)
+			# Get world position of this tile
+			var tile_world = map_generator.map_to_local(check_pos)
 			
-			# Check each quadrant of this tile individually
-			for sub_x in range(2):
-				for sub_z in range(2):
-					var sub_key = Vector2i(check_pos.x * 2 + sub_x, check_pos.z * 2 + sub_z)
-					
-					# Skip if already revealed or not in our multimesh
-					if not tile_keys.has(sub_key):
-						continue
-					if revealed_tiles.get(sub_key, false):
-						continue
-					
-					# Get world position of THIS QUADRANT (not tile center)
-					var tile_world = map_generator.map_to_local(check_pos)
-					var offset_x = (sub_x - 0.5) * 0.5
-					var offset_z = (sub_z - 0.5) * 0.5
-					var quadrant_world = Vector3(tile_world.x + offset_x, tile_world.y, tile_world.z + offset_z)
-					
-					# Check distance to THIS QUADRANT
-					var dist = Vector2(quadrant_world.x - player.global_position.x, 
-									   quadrant_world.z - player.global_position.z).length()
-					
-					if dist > reveal_radius:
-						continue
-					
-					# For non-walkable tiles only: only reveal quadrants on player-facing side
-					if is_non_walkable_wall:
-						# Get direction from tile center to player
-						var to_player = Vector2(player.global_position.x - tile_world.x, 
-												player.global_position.z - tile_world.z).normalized()
-						
-						# Get direction from tile center to this quadrant
-						var to_quadrant = Vector2(offset_x, offset_z).normalized()
-						
-						# Check if quadrant is on same side as player (dot product > 0)
-						var dot = to_player.dot(to_quadrant)
-						
-						# If dot product is negative or near zero, quadrant is on far side
-						if dot <= 0.1:
-							continue
-					
-					# Check line of sight to THIS QUADRANT
-					if not should_reveal_tile(check_pos, quadrant_world):
-						continue
-					
-					# Hide this quadrant
-					var instance_index = tile_keys[sub_key]
-					var current_transform = multimesh_instance.multimesh.get_instance_transform(instance_index)
-					current_transform = current_transform.scaled(Vector3(0.001, 0.001, 0.001))
-					multimesh_instance.multimesh.set_instance_transform(instance_index, current_transform)
-					
-					revealed_tiles[sub_key] = true
-					tiles_revealed += 1
+			# Check distance
+			var dist = Vector2(tile_world.x - player.global_position.x, 
+							   tile_world.z - player.global_position.z).length()
+			
+			if dist > reveal_radius:
+				continue
+			
+			# Check if this is a door tile
+			var is_door = false
+			if map_generator.has_method("has_door_at_position"):
+				is_door = map_generator.has_door_at_position(check_pos.x, check_pos.z)
+			
+			# Reveal if: door (always) or has LOS
+			if is_door or has_line_of_sight(player.global_position, tile_world):
+				# Hide this tile
+				var instance_index = tile_keys[key]
+				var current_transform = multimesh_instance.multimesh.get_instance_transform(instance_index)
+				current_transform = current_transform.scaled(Vector3(0.001, 0.001, 0.001))
+				multimesh_instance.multimesh.set_instance_transform(instance_index, current_transform)
+				revealed_tiles[key] = true
 
-func should_reveal_tile(check_pos: Vector3i, world_pos: Vector3) -> bool:
-	var tile_id = map_generator.get_cell_item(check_pos)
-	var tile_exists = false
-	var is_wall = false
-	
-	if tile_id != -1:
-		tile_exists = true
-		is_wall = is_wall_tile(tile_id)
-	else:
-		if map_generator.has_method("is_position_walkable"):
-			if map_generator.is_position_walkable(check_pos.x, check_pos.z):
-				tile_exists = true
-				is_wall = false
-		
-		if map_generator.has_method("has_door_at_position"):
-			if map_generator.has_door_at_position(check_pos.x, check_pos.z):
-				tile_exists = true
-				is_wall = true
-	
-	if not tile_exists:
-		return false
-	
-	if is_wall:
-		return has_line_of_sight_to_wall(player.global_position, world_pos)
-	else:
-		return has_line_of_sight(player.global_position, world_pos)
-
-func has_line_of_sight_to_wall(from: Vector3, to: Vector3) -> bool:
+func has_line_of_sight(from: Vector3, to: Vector3) -> bool:
 	var from_2d = Vector2(from.x, from.z)
 	var to_2d = Vector2(to.x, to.z)
 	var direction = (to_2d - from_2d).normalized()
@@ -381,48 +306,9 @@ func has_line_of_sight_to_wall(from: Vector3, to: Vector3) -> bool:
 		var check_grid = map_generator.local_to_map(check_pos_3d)
 		var check_tile_id = map_generator.get_cell_item(check_grid)
 		
-		if check_tile_id == -1 and map_generator.has_method("has_door_at_position"):
-			if map_generator.has_door_at_position(check_grid.x, check_grid.z):
-				if not is_door_open_at_position(check_pos_3d):
-					return false
-		
-		if check_tile_id == -1 and map_generator.has_method("is_position_walkable"):
-			if map_generator.is_position_walkable(check_grid.x, check_grid.z):
-				current_dist += step_size
-				continue
-		
-		if is_wall_tile(check_tile_id):
-			return false
-		
-		current_dist += step_size
-	
-	return true
-
-func has_line_of_sight(from: Vector3, to: Vector3) -> bool:
-	var from_2d = Vector2(from.x, from.z)
-	var to_2d = Vector2(to.x, to.z)
-	var direction = (to_2d - from_2d).normalized()
-	var distance = from_2d.distance_to(to_2d)
-	var step_size = 0.5
-	var current_dist = step_size
-	
-	while current_dist < distance:
-		var check_pos_2d = from_2d + direction * current_dist
-		var check_pos_3d = Vector3(check_pos_2d.x, 0, check_pos_2d.y)
-		var check_grid = map_generator.local_to_map(check_pos_3d)
-		var check_tile_id = map_generator.get_cell_item(check_grid)
-		
-		if check_tile_id == -1 and map_generator.has_method("has_door_at_position"):
-			if map_generator.has_door_at_position(check_grid.x, check_grid.z):
-				if not is_door_open_at_position(check_pos_3d):
-					return false
-		
-		if check_tile_id == -1 and map_generator.has_method("is_position_walkable"):
-			if map_generator.is_position_walkable(check_grid.x, check_grid.z):
-				current_dist += step_size
-				continue
-		
-		if is_wall_tile(check_tile_id):
+		# Only exterior walls block line of sight (doors no longer block)
+		var exterior_wall_id = map_generator.get("exterior_wall_tile_id")
+		if exterior_wall_id != null and check_tile_id == exterior_wall_id:
 			return false
 		
 		current_dist += step_size
@@ -439,88 +325,13 @@ func is_door_open_at_position(world_pos: Vector3) -> bool:
 				return true
 	return false
 
-func is_building_wall_tile(tile_id: int) -> bool:
-	"""Check if a tile is a building interior wall"""
-	if tile_id == -1:
-		return false
-	
-	var interior_wall_id = map_generator.get("interior_wall_tile_id")
-	if interior_wall_id != null and tile_id == interior_wall_id:
-		return true
-	
-	# Also check wall connector tiles
-	var wall_connector = map_generator.get("interior_wall_connector")
-	if wall_connector:
-		if tile_id == wall_connector.o_tile_id: return true
-		if tile_id == wall_connector.u_tile_id: return true
-		if tile_id == wall_connector.i_tile_id: return true
-		if tile_id == wall_connector.l_none_tile_id: return true
-		if tile_id == wall_connector.l_single_tile_id: return true
-		if tile_id == wall_connector.t_none_tile_id: return true
-		if tile_id == wall_connector.t_single_right_tile_id: return true
-		if tile_id == wall_connector.t_single_left_tile_id: return true
-		if tile_id == wall_connector.t_double_tile_id: return true
-		if tile_id == wall_connector.x_none_tile_id: return true
-		if tile_id == wall_connector.x_single_tile_id: return true
-		if tile_id == wall_connector.x_side_tile_id: return true
-		if tile_id == wall_connector.x_opposite_tile_id: return true
-		if tile_id == wall_connector.x_triple_tile_id: return true
-		if tile_id == wall_connector.x_quad_tile_id: return true
-	
-	return false
-
-func is_wall_tile(tile_id: int) -> bool:
-	if tile_id == -1:
-		return true
-	
-	var exterior_wall_id = map_generator.get("exterior_wall_tile_id")
-	var interior_wall_id = map_generator.get("interior_wall_tile_id")
-	var entrance_id = map_generator.get("entrance_tile_id")
-	var exit_id = map_generator.get("exit_tile_id")
-	var wall_connector = map_generator.get("interior_wall_connector")
-	
-	if exterior_wall_id != null and tile_id == exterior_wall_id:
-		return true
-	if interior_wall_id != null and tile_id == interior_wall_id:
-		return true
-	
-	if wall_connector:
-		if tile_id == wall_connector.o_tile_id: return true
-		if tile_id == wall_connector.u_tile_id: return true
-		if tile_id == wall_connector.i_tile_id: return true
-		if tile_id == wall_connector.l_none_tile_id: return true
-		if tile_id == wall_connector.l_single_tile_id: return true
-		if tile_id == wall_connector.t_none_tile_id: return true
-		if tile_id == wall_connector.t_single_right_tile_id: return true
-		if tile_id == wall_connector.t_single_left_tile_id: return true
-		if tile_id == wall_connector.t_double_tile_id: return true
-		if tile_id == wall_connector.x_none_tile_id: return true
-		if tile_id == wall_connector.x_single_tile_id: return true
-		if tile_id == wall_connector.x_side_tile_id: return true
-		if tile_id == wall_connector.x_opposite_tile_id: return true
-		if tile_id == wall_connector.x_triple_tile_id: return true
-		if tile_id == wall_connector.x_quad_tile_id: return true
-	
-	if entrance_id != null and tile_id == entrance_id:
-		return false
-	if exit_id != null and tile_id == exit_id:
-		return false
-	
-	return false
-
 func reveal_map_tiles():
 	"""Reveal only tiles that have actual map geometry (for passive maps)"""
 	if not multimesh_instance or not map_generator:
 		return
 	
-	var tiles_revealed = 0
-	
-	# Iterate through all tile keys (which are now quadrant keys)
-	for sub_key in tile_keys.keys():
-		# Convert quadrant key back to tile coords
-		var tile_x = int(sub_key.x / 2)
-		var tile_z = int(sub_key.y / 2)
-		var check_pos = Vector3i(tile_x, 0, tile_z)
+	for key in tile_keys.keys():
+		var check_pos = Vector3i(key.x, 0, key.y)
 		var tile_id = map_generator.get_cell_item(check_pos)
 		
 		# Check if this tile has actual geometry
@@ -534,12 +345,11 @@ func reveal_map_tiles():
 		
 		# Only reveal if tile exists
 		if has_tile:
-			var instance_index = tile_keys[sub_key]
+			var instance_index = tile_keys[key]
 			var current_transform = multimesh_instance.multimesh.get_instance_transform(instance_index)
 			current_transform = current_transform.scaled(Vector3(0.001, 0.001, 0.001))
 			multimesh_instance.multimesh.set_instance_transform(instance_index, current_transform)
-			revealed_tiles[sub_key] = true
-			tiles_revealed += 1
+			revealed_tiles[key] = true
 
 func reveal_all():
 	"""Reveal everything (debug/fallback)"""
